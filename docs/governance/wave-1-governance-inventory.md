@@ -17,7 +17,7 @@ This inventory maps the current repository against the Wave 1 requirements in th
 | Canonical Development Roadmap | Yes | Primary sequence and decision-gate authority | Must be versioned into the repository or referenced through an approved canonical-source policy |
 | Governing Architecture and Sovereignty Plan | Yes | Defines sovereign ownership and layer boundaries | Must be reconciled with the Constitution and later policies |
 | Master Build Bible, Volume I | Yes | Defines permanent authoring standard and Volume I deliverables | Many required deliverables remain unwritten |
-| Worker Reasoning Framework and Cognitive Identity Engine | No | Roadmap says it governs identity, mission, judgment, permissions, risk, and governance | Recover the source or create a Founder-approved replacement; do not infer missing detailed rules silently |
+| Worker Reasoning Framework and Cognitive Identity Engine | Original source missing; replacement version 1.0.0 Founder-approved | Roadmap says it governs identity, mission, judgment, permissions, risk, and governance | Commit the approved replacement; reconcile any recovered original through governed comparison |
 
 The connected source documents remain read-only reference material and were not modified.
 
@@ -34,9 +34,9 @@ The connected source documents remain read-only reference material and were not 
 
 | Requirement | Status | Current evidence or next action |
 | --- | --- | --- |
-| Finalize Constitution | Founder-approved; commit pending | `docs/governance/constitution.md`, version 1.0.0; approval granted 2026-08-04 |
+| Finalize Constitution | Complete and canonical | `docs/governance/constitution.md`, version 1.0.0; approval granted 2026-08-04 and recorded in commit `11ee67340f922ae3f0df6414d05066ff7debe3b8` |
 | Finalize Governing Architecture | Source available, not reconciled | Compare every architectural principle against the approved Constitution and record contradictions |
-| Finalize Worker Reasoning Framework | Blocked by missing source | Recover the referenced document or authorize a replacement specification |
+| Finalize Worker Reasoning Framework | Founder-approved; commit pending | `docs/governance/worker-reasoning-framework-and-cognitive-identity.md`, version 1.0.0; approval granted 2026-08-04 |
 | Define approval and authorization policy | Not started | Must specify action classes, typed approval, approval scope, expiry, reapproval, and denial behavior |
 | Define protected paths and branch policy | Not started | Must define protected files, branch naming, review, merge, force-push, and emergency-recovery rules |
 | Create private GitHub repository | Not satisfied | GitHub currently reports `stoic1712-IRIS/IRIS` visibility as public; Founder has accepted temporary public visibility, but the Wave 1 gate still requires private visibility |
@@ -61,7 +61,7 @@ The connected source documents remain read-only reference material and were not 
 
 | Gate condition | Status | Blocker |
 | --- | --- | --- |
-| Governing documents are mutually consistent | Not demonstrated | Constitution is approved, but the Worker Reasoning Framework is missing and the Governing Architecture sequence conflict remains unresolved |
+| Governing documents are mutually consistent | Not demonstrated | Constitution and replacement Worker Reasoning Framework are approved, but the Governing Architecture sequence conflict remains unresolved |
 | Repository is private | Failed | Repository is currently public |
 | Default-branch protections are confirmed | Unverified | No provider-authoritative protection evidence has been captured |
 | Local and remote commit equality confirmed | Passed for Wave 0 branch checkpoint | Must be repeated for the Wave 1 checkpoint |
@@ -75,9 +75,9 @@ Wave 1 is not complete. IRIS Kernel implementation must not begin while these bl
 
 The Roadmap requires one private authoritative repository. GitHub currently reports the repository as public. The Founder has accepted temporary public visibility during development, but this does not amend or satisfy the canonical Wave 1 gate. Resolution requires either making the repository private or approving a versioned Roadmap amendment with documented security and exposure consequences.
 
-### Missing Worker Reasoning Framework
+### Missing original Worker Reasoning Framework
 
-The Roadmap treats the Worker Reasoning Framework and Cognitive Identity Engine as a source foundation, but it is absent from the connected project materials. Until resolved, detailed identity, judgment, permission, delegation, and risk rules cannot be declared canonical.
+The Roadmap treats the Worker Reasoning Framework and Cognitive Identity Engine as a source foundation, but the original is absent from the connected project materials. The Founder approved replacement version 1.0.0 on 2026-08-04. It must be committed before canonicalization exists in repository history, and any recovered original must later be compared through governed reconciliation.
 
 ### Governing Architecture sequence conflict
 
@@ -85,8 +85,8 @@ The Governing Architecture describes an early OpenClaw baseline and private fork
 
 ## Recommended Order of Work
 
-1. Commit the Founder-approved Constitution to record canonicalization in repository history.
-2. Recover or replace the missing Worker Reasoning Framework and Cognitive Identity Engine.
+1. Preserve the canonical Constitution and ensure all later policies conform to it.
+2. Commit the Founder-approved Worker Reasoning Framework and Cognitive Identity Engine version 1.0.0.
 3. Reconcile the Governing Architecture against the approved Constitution and Roadmap sequence.
 4. Draft approval, authorization, protected-path, branch, secrets, licensing, security, evidence, and repository policies.
 5. Confirm or change repository visibility and capture provider-authoritative branch-protection evidence.

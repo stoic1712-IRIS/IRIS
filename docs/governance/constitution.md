@@ -1,6 +1,6 @@
 # STOIC-IRIS Constitution
 
-**Status:** Founder-approved; canonicalization commit pending
+**Status:** Canonical
 
 **Version:** 1.0.0
 
@@ -180,6 +180,6 @@ The Roadmap also identifies the Worker Reasoning Framework and Cognitive Identit
 
 **Decision date:** 2026-08-04
 
-**Approved version or commit:** Version 1.0.0; canonicalization commit pending
+**Approved version or commit:** Version 1.0.0; commit `11ee67340f922ae3f0df6414d05066ff7debe3b8`
 
 **Required amendments or notes:** None. Explicit approval recorded in the Founder conversation: "I approve the Constitution as canonical."
