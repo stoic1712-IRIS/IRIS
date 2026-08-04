@@ -35,10 +35,10 @@ The connected source documents remain read-only reference material and were not 
 | Requirement | Status | Current evidence or next action |
 | --- | --- | --- |
 | Finalize Constitution | Complete and canonical | `docs/governance/constitution.md`, version 1.0.0; approval granted 2026-08-04 and recorded in commit `11ee67340f922ae3f0df6414d05066ff7debe3b8` |
-| Finalize Governing Architecture | Source available, not reconciled | Compare every architectural principle against the approved Constitution and record contradictions |
+| Finalize Governing Architecture | Founder-approved; commit pending | `docs/governance/governing-architecture-reconciliation.md`, version 1.0.0 |
 | Finalize Worker Reasoning Framework | Complete and canonical | `docs/governance/worker-reasoning-framework-and-cognitive-identity.md`, version 1.0.0; approval granted 2026-08-04 and recorded in commit `87e9ae1` |
-| Define approval and authorization policy | Not started | Must specify action classes, typed approval, approval scope, expiry, reapproval, and denial behavior |
-| Define protected paths and branch policy | Not started | Must define protected files, branch naming, review, merge, force-push, and emergency-recovery rules |
+| Define approval and authorization policy | Founder-approved; commit pending | `docs/governance/approval-and-authorization-policy.md`, version 1.0.0 |
+| Define protected paths and branch policy | Founder-approved; commit pending | `docs/governance/protected-path-and-branch-policy.md`, version 1.0.0 |
 | Create private GitHub repository | Not satisfied | GitHub currently reports `stoic1712-IRIS/IRIS` visibility as public; Founder has accepted temporary public visibility, but the Wave 1 gate still requires private visibility |
 | Create canonical local repository | Complete | `C:\Projects\STOIC-IRIS` with remote `origin` |
 | Establish `iris/*` branch convention | Partially demonstrated | Current branch follows the convention; written policy is still required |
@@ -49,19 +49,19 @@ The connected source documents remain read-only reference material and were not 
 
 | Requirement | Status | Current evidence or next action |
 | --- | --- | --- |
-| Dependency attribution registry | Not started | Define schema before recording adopted dependencies |
-| Architecture decision record template | Not started | Create after repository documentation conventions are approved |
-| Evidence folder conventions | Provisional | `evidence/wave-0/` exists; formal naming, retention, sensitivity, and redaction rules are unresolved |
-| Secrets-handling policy | Not started | Must cover local files, environment variables, logs, prompts, CI, providers, and rotation |
-| Licensing policy | Not started | Constitution contains the governing principle; operational review procedure remains required |
-| Security baseline | Not started | Must define local, WSL, Docker, repository, dependency, network, and model-runtime controls |
-| Repository conventions | Not started | Must define layout, naming, ownership, documentation status, and generated artifacts |
+| Dependency attribution registry | Founder-approved baseline; commit pending | `docs/registries/dependency-attribution-registry.md` |
+| Architecture decision record template | Founder-approved; commit pending | `docs/architecture/decisions/ADR-000-template.md` |
+| Evidence folder conventions | Founder-approved; commit pending | `docs/governance/repository-documentation-and-evidence-conventions.md`, version 1.0.0 |
+| Secrets-handling policy | Founder-approved; commit pending | `docs/governance/security-and-secrets-policy.md`, version 1.0.0 |
+| Licensing policy | Founder-approved; commit pending | `docs/governance/licensing-and-dependency-policy.md`, version 1.0.0 |
+| Security baseline | Founder-approved; commit pending | `docs/governance/security-and-secrets-policy.md`, version 1.0.0 |
+| Repository conventions | Founder-approved; commit pending | `docs/governance/repository-documentation-and-evidence-conventions.md`, version 1.0.0 |
 
 ## Decision-Gate Evidence
 
 | Gate condition | Status | Blocker |
 | --- | --- | --- |
-| Governing documents are mutually consistent | Not demonstrated | Constitution and replacement Worker Reasoning Framework are approved, but the Governing Architecture sequence conflict remains unresolved |
+| Governing documents are mutually consistent | Locally demonstrated; canonical commit pending | Package review found no unresolved internal contradiction; canonical history and later implementation checks remain required |
 | Repository is private | Failed | Repository is currently public |
 | Default-branch protections are confirmed | Unverified | No provider-authoritative protection evidence has been captured |
 | Local and remote commit equality confirmed | Passed for Wave 0 branch checkpoint | Must be repeated for the Wave 1 checkpoint |
@@ -77,18 +77,18 @@ The Roadmap requires one private authoritative repository. GitHub currently repo
 
 ### Missing original Worker Reasoning Framework
 
-The Roadmap treats the Worker Reasoning Framework and Cognitive Identity Engine as a source foundation, but the original is absent from the connected project materials. The Founder approved replacement version 1.0.0 on 2026-08-04. It must be committed before canonicalization exists in repository history, and any recovered original must later be compared through governed reconciliation.
+The Roadmap treats the Worker Reasoning Framework and Cognitive Identity Engine as a source foundation, but the original is absent from the connected project materials. The Founder-approved replacement version 1.0.0 is canonical in commit `87e9ae1`. Any recovered original must later be compared through governed reconciliation rather than silently replacing the canonical record.
 
 ### Governing Architecture sequence conflict
 
-The Governing Architecture describes an early OpenClaw baseline and private fork, while the Canonical Development Roadmap places external technology evaluation in Wave 2 and a bootstrap orchestration adapter in Wave 5. Because the Roadmap declares itself the primary sequence authority, implementation must follow the Roadmap unless the Founder approves an amendment. The Governing Architecture should be updated or annotated during reconciliation so it cannot be misread as authority to install or fork OpenClaw now.
+The Governing Architecture describes an early OpenClaw baseline and private fork, while the Canonical Development Roadmap places external technology evaluation in Wave 2 and a bootstrap orchestration adapter in Wave 5. The draft reconciliation resolves sequence authority in favor of the Roadmap while preserving the Architecture's permanent ownership boundaries. Founder approval is still required before that reconciliation becomes canonical.
 
 ## Recommended Order of Work
 
 1. Preserve the canonical Constitution and ensure all later policies conform to it.
 2. Preserve the canonical Worker Reasoning Framework and ensure later authorization, worker, memory, and audit policies conform to it.
-3. Reconcile the Governing Architecture against the approved Constitution and Roadmap sequence.
-4. Draft approval, authorization, protected-path, branch, secrets, licensing, security, evidence, and repository policies.
+3. Commit the Founder-approved Wave 1 governance package and record its canonical provenance.
+4. Preserve the approved package as the authority for later security, repository, dependency, and implementation work.
 5. Confirm or change repository visibility and capture provider-authoritative branch-protection evidence.
 6. Only after the governance gate passes, create the empty TypeScript monorepo baseline and its build, test, lint, and formatting commands.
 
