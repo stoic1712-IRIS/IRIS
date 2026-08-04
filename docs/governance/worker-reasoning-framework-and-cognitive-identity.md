@@ -1,6 +1,6 @@
 # Worker Reasoning Framework and Cognitive Identity Engine
 
-**Status:** Founder-approved replacement; canonicalization commit pending
+**Status:** Canonical replacement
 
 **Version:** 1.0.0
 
@@ -370,6 +370,6 @@ It must be reconciled with any recovered earlier Worker Reasoning Framework or C
 
 **Decision date:** 2026-08-04
 
-**Approved version or commit:** Version 1.0.0; canonicalization commit pending
+**Approved version or commit:** Version 1.0.0; commit `87e9ae1`
 
 **Required amendments or notes:** None. Explicit approval recorded in the Founder conversation: "I approve Worker Reasoning Framework and Cognitive Identity Engine version 1.0.0 as canonical."

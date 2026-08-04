@@ -17,7 +17,7 @@ This inventory maps the current repository against the Wave 1 requirements in th
 | Canonical Development Roadmap | Yes | Primary sequence and decision-gate authority | Must be versioned into the repository or referenced through an approved canonical-source policy |
 | Governing Architecture and Sovereignty Plan | Yes | Defines sovereign ownership and layer boundaries | Must be reconciled with the Constitution and later policies |
 | Master Build Bible, Volume I | Yes | Defines permanent authoring standard and Volume I deliverables | Many required deliverables remain unwritten |
-| Worker Reasoning Framework and Cognitive Identity Engine | Original source missing; replacement version 1.0.0 Founder-approved | Roadmap says it governs identity, mission, judgment, permissions, risk, and governance | Commit the approved replacement; reconcile any recovered original through governed comparison |
+| Worker Reasoning Framework and Cognitive Identity Engine | Original source missing; replacement version 1.0.0 canonical | Roadmap says it governs identity, mission, judgment, permissions, risk, and governance | Canonical replacement recorded in commit `87e9ae1`; reconcile any recovered original through governed comparison |
 
 The connected source documents remain read-only reference material and were not modified.
 
@@ -36,7 +36,7 @@ The connected source documents remain read-only reference material and were not 
 | --- | --- | --- |
 | Finalize Constitution | Complete and canonical | `docs/governance/constitution.md`, version 1.0.0; approval granted 2026-08-04 and recorded in commit `11ee67340f922ae3f0df6414d05066ff7debe3b8` |
 | Finalize Governing Architecture | Source available, not reconciled | Compare every architectural principle against the approved Constitution and record contradictions |
-| Finalize Worker Reasoning Framework | Founder-approved; commit pending | `docs/governance/worker-reasoning-framework-and-cognitive-identity.md`, version 1.0.0; approval granted 2026-08-04 |
+| Finalize Worker Reasoning Framework | Complete and canonical | `docs/governance/worker-reasoning-framework-and-cognitive-identity.md`, version 1.0.0; approval granted 2026-08-04 and recorded in commit `87e9ae1` |
 | Define approval and authorization policy | Not started | Must specify action classes, typed approval, approval scope, expiry, reapproval, and denial behavior |
 | Define protected paths and branch policy | Not started | Must define protected files, branch naming, review, merge, force-push, and emergency-recovery rules |
 | Create private GitHub repository | Not satisfied | GitHub currently reports `stoic1712-IRIS/IRIS` visibility as public; Founder has accepted temporary public visibility, but the Wave 1 gate still requires private visibility |
@@ -86,7 +86,7 @@ The Governing Architecture describes an early OpenClaw baseline and private fork
 ## Recommended Order of Work
 
 1. Preserve the canonical Constitution and ensure all later policies conform to it.
-2. Commit the Founder-approved Worker Reasoning Framework and Cognitive Identity Engine version 1.0.0.
+2. Preserve the canonical Worker Reasoning Framework and ensure later authorization, worker, memory, and audit policies conform to it.
 3. Reconcile the Governing Architecture against the approved Constitution and Roadmap sequence.
 4. Draft approval, authorization, protected-path, branch, secrets, licensing, security, evidence, and repository policies.
 5. Confirm or change repository visibility and capture provider-authoritative branch-protection evidence.
