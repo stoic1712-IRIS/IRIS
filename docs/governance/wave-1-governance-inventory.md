@@ -35,10 +35,10 @@ The connected source documents remain read-only reference material and were not 
 | Requirement | Status | Current evidence or next action |
 | --- | --- | --- |
 | Finalize Constitution | Complete and canonical | `docs/governance/constitution.md`, version 1.0.0; approval granted 2026-08-04 and recorded in commit `11ee67340f922ae3f0df6414d05066ff7debe3b8` |
-| Finalize Governing Architecture | Founder-approved; commit pending | `docs/governance/governing-architecture-reconciliation.md`, version 1.0.0 |
+| Finalize Governing Architecture | Complete and canonical | `docs/governance/governing-architecture-reconciliation.md`, version 1.0.0; package commit `d0f9d50` |
 | Finalize Worker Reasoning Framework | Complete and canonical | `docs/governance/worker-reasoning-framework-and-cognitive-identity.md`, version 1.0.0; approval granted 2026-08-04 and recorded in commit `87e9ae1` |
-| Define approval and authorization policy | Founder-approved; commit pending | `docs/governance/approval-and-authorization-policy.md`, version 1.0.0 |
-| Define protected paths and branch policy | Founder-approved; commit pending | `docs/governance/protected-path-and-branch-policy.md`, version 1.0.0 |
+| Define approval and authorization policy | Complete and canonical | `docs/governance/approval-and-authorization-policy.md`, version 1.0.0; package commit `d0f9d50` |
+| Define protected paths and branch policy | Complete and canonical | `docs/governance/protected-path-and-branch-policy.md`, version 1.0.0; package commit `d0f9d50` |
 | Create private GitHub repository | Not satisfied | GitHub currently reports `stoic1712-IRIS/IRIS` visibility as public; Founder has accepted temporary public visibility, but the Wave 1 gate still requires private visibility |
 | Create canonical local repository | Complete | `C:\Projects\STOIC-IRIS` with remote `origin` |
 | Establish `iris/*` branch convention | Partially demonstrated | Current branch follows the convention; written policy is still required |
@@ -49,19 +49,19 @@ The connected source documents remain read-only reference material and were not 
 
 | Requirement | Status | Current evidence or next action |
 | --- | --- | --- |
-| Dependency attribution registry | Founder-approved baseline; commit pending | `docs/registries/dependency-attribution-registry.md` |
-| Architecture decision record template | Founder-approved; commit pending | `docs/architecture/decisions/ADR-000-template.md` |
-| Evidence folder conventions | Founder-approved; commit pending | `docs/governance/repository-documentation-and-evidence-conventions.md`, version 1.0.0 |
-| Secrets-handling policy | Founder-approved; commit pending | `docs/governance/security-and-secrets-policy.md`, version 1.0.0 |
-| Licensing policy | Founder-approved; commit pending | `docs/governance/licensing-and-dependency-policy.md`, version 1.0.0 |
-| Security baseline | Founder-approved; commit pending | `docs/governance/security-and-secrets-policy.md`, version 1.0.0 |
-| Repository conventions | Founder-approved; commit pending | `docs/governance/repository-documentation-and-evidence-conventions.md`, version 1.0.0 |
+| Dependency attribution registry | Canonical baseline | `docs/registries/dependency-attribution-registry.md`; package commit `d0f9d50` |
+| Architecture decision record template | Canonical | `docs/architecture/decisions/ADR-000-template.md`; package commit `d0f9d50` |
+| Evidence folder conventions | Complete and canonical | `docs/governance/repository-documentation-and-evidence-conventions.md`, version 1.0.0; package commit `d0f9d50` |
+| Secrets-handling policy | Complete and canonical | `docs/governance/security-and-secrets-policy.md`, version 1.0.0; package commit `d0f9d50` |
+| Licensing policy | Complete and canonical | `docs/governance/licensing-and-dependency-policy.md`, version 1.0.0; package commit `d0f9d50` |
+| Security baseline | Complete and canonical | `docs/governance/security-and-secrets-policy.md`, version 1.0.0; package commit `d0f9d50` |
+| Repository conventions | Complete and canonical | `docs/governance/repository-documentation-and-evidence-conventions.md`, version 1.0.0; package commit `d0f9d50` |
 
 ## Decision-Gate Evidence
 
 | Gate condition | Status | Blocker |
 | --- | --- | --- |
-| Governing documents are mutually consistent | Locally demonstrated; canonical commit pending | Package review found no unresolved internal contradiction; canonical history and later implementation checks remain required |
+| Governing documents are mutually consistent | Passed for version 1.0.0 package | Local package review found no unresolved internal contradiction; package recorded in commit `d0f9d50` |
 | Repository is private | Failed | Repository is currently public |
 | Default-branch protections are confirmed | Unverified | No provider-authoritative protection evidence has been captured |
 | Local and remote commit equality confirmed | Passed for Wave 0 branch checkpoint | Must be repeated for the Wave 1 checkpoint |
@@ -87,7 +87,7 @@ The Governing Architecture describes an early OpenClaw baseline and private fork
 
 1. Preserve the canonical Constitution and ensure all later policies conform to it.
 2. Preserve the canonical Worker Reasoning Framework and ensure later authorization, worker, memory, and audit policies conform to it.
-3. Commit the Founder-approved Wave 1 governance package and record its canonical provenance.
+3. Preserve the canonical Wave 1 governance package and its commit provenance.
 4. Preserve the approved package as the authority for later security, repository, dependency, and implementation work.
 5. Confirm or change repository visibility and capture provider-authoritative branch-protection evidence.
 6. Only after the governance gate passes, create the empty TypeScript monorepo baseline and its build, test, lint, and formatting commands.

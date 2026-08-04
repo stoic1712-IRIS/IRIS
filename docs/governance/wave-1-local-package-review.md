@@ -1,6 +1,6 @@
 # Wave 1 Local Governance Package Review
 
-**Status:** Founder-approved local verification record; canonicalization commit pending
+**Status:** Canonical local verification record
 
 **Prepared:** 2026-08-04
 

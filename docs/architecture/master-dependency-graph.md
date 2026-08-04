@@ -1,6 +1,6 @@
 # Master Dependency Graph
 
-**Status:** Founder-approved; canonicalization commit pending
+**Status:** Canonical
 
 ## Wave Graph
 

@@ -1,6 +1,6 @@
 # Dependency Attribution Registry
 
-**Status:** Founder-approved baseline; canonicalization commit pending
+**Status:** Canonical baseline
 
 ## Entry Schema
 

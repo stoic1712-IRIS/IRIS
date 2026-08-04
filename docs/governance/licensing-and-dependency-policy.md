@@ -1,6 +1,6 @@
 # Licensing and Dependency Policy
 
-**Status:** Founder-approved; canonicalization commit pending
+**Status:** Canonical
 
 **Version:** 1.0.0
 

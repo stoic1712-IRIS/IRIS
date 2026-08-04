@@ -1,6 +1,6 @@
 # ADR-NNN: Decision Title
 
-**Template status:** Founder-approved; canonicalization commit pending
+**Template status:** Canonical
 
 **Status:** Proposed
 

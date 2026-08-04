@@ -1,6 +1,6 @@
 # Wave 1 Governance Package Approval
 
-**Status:** Founder-approved; canonicalization commit pending
+**Status:** Canonical approval record
 
 **Package version:** 1.0.0
 
@@ -38,4 +38,4 @@ This approval did not authorize staging, committing, pushing, merging, dependenc
 
 ## Canonicalization
 
-The package becomes canonical in repository history when an explicitly authorized commit records these approved files. The canonical commit reference must then be added through a provenance-preserving follow-up record.
+The package became canonical in repository history through commit `d0f9d50`. This provenance record is preserved through a follow-up status commit.

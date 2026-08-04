@@ -1,6 +1,6 @@
 # Technology and Platform Registry
 
-**Status:** Founder-approved baseline; canonicalization commit pending
+**Status:** Canonical baseline
 
 ## Platforms
 

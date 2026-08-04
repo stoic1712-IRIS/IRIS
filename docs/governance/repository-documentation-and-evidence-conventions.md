@@ -1,6 +1,6 @@
 # Repository, Documentation, and Evidence Conventions
 
-**Status:** Founder-approved; canonicalization commit pending
+**Status:** Canonical
 
 **Version:** 1.0.0
 
