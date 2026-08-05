@@ -4,8 +4,10 @@ export const canonicalIdKinds = [
   "approval",
   "audit",
   "evidence",
+  "identity",
   "mission",
   "objective",
+  "policy",
   "proposal",
   "request",
   "worker",
@@ -15,7 +17,7 @@ export const canonicalIdKindSchema = z.enum(canonicalIdKinds);
 export type CanonicalIdKind = z.infer<typeof canonicalIdKindSchema>;
 
 const canonicalIdPattern =
-  /^(approval|audit|evidence|mission|objective|proposal|request|worker)_[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
+  /^(approval|audit|evidence|identity|mission|objective|policy|proposal|request|worker)_[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
 export const canonicalIdSchema = z.string().regex(canonicalIdPattern, {
   message: "Expected a canonical IRIS identifier with a governed kind prefix and UUID.",
