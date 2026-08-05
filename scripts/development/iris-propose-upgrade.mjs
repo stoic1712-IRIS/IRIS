@@ -240,7 +240,7 @@ const proposal = {
   objective: assessment.content,
   canonicalRepository: "stoic1712-IRIS/IRIS",
   baseRevision,
-  branch: "iris/wave-10-graduation-proof",
+  branch: `iris/wave-10-graduation-proof-${baseRevision.slice(0, 12)}`,
   allowedPaths,
   forbiddenPaths: ["docs/governance", ".github", "evidence"],
   changes,
