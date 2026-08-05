@@ -11,6 +11,7 @@ const requiredPackages = [
   "model-gateway",
   "orchestration",
   "memory",
+  "planning",
 ] as const;
 
 interface PackageManifest {
