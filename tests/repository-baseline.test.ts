@@ -67,8 +67,8 @@ describe("Wave 1 repository baseline", () => {
     }
   });
 
-  it("keeps every package source as an empty governed boundary", async () => {
-    for (const packageDirectory of requiredPackages) {
+  it("keeps later-wave package sources as empty governed boundaries", async () => {
+    for (const packageDirectory of ["kernel", "coordination", "model-gateway"] as const) {
       const sourceDirectory = path.join(repositoryRoot, "packages", packageDirectory, "src");
       expect(await readdir(sourceDirectory)).toEqual(["index.ts"]);
       const source = await readFile(path.join(sourceDirectory, "index.ts"), "utf8");
