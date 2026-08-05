@@ -54,6 +54,12 @@ importers:
         specifier: workspace:*
         version: link:../contracts
 
+  packages/development:
+    dependencies:
+      zod:
+        specifier: 4.4.3
+        version: 4.4.3
+
   packages/kernel:
     dependencies:
       '@stoic-iris/contracts':
