@@ -39,7 +39,7 @@ The connected source documents remain read-only reference material and were not 
 | Finalize Worker Reasoning Framework | Complete and canonical | `docs/governance/worker-reasoning-framework-and-cognitive-identity.md`, version 1.0.0; approval granted 2026-08-04 and recorded in commit `87e9ae1` |
 | Define approval and authorization policy | Complete and canonical | `docs/governance/approval-and-authorization-policy.md`, version 1.0.0; package commit `d0f9d50` |
 | Define protected paths and branch policy | Complete and canonical | `docs/governance/protected-path-and-branch-policy.md`, version 1.0.0; package commit `d0f9d50` |
-| Create private GitHub repository | Not satisfied | GitHub currently reports `stoic1712-IRIS/IRIS` visibility as public; Founder has accepted temporary public visibility, but the Wave 1 gate still requires private visibility |
+| Establish an authoritative GitHub repository with an approved exposure decision | Complete | `stoic1712-IRIS/IRIS` is public by explicit Founder decision; `docs/governance/repository-visibility-decision.md` supersedes private visibility as a current Wave 1 blocker |
 | Create canonical local repository | Complete | `C:\Projects\STOIC-IRIS` with remote `origin` |
 | Establish `iris/*` branch convention | Partially demonstrated | Current branch follows the convention; written policy is still required |
 | Scaffold TypeScript monorepo | Not started | Prohibited until canonical rules and repository protections exist |
@@ -62,9 +62,9 @@ The connected source documents remain read-only reference material and were not 
 | Gate condition | Status | Blocker |
 | --- | --- | --- |
 | Governing documents are mutually consistent | Passed for version 1.0.0 package | Local package review found no unresolved internal contradiction; package recorded in commit `d0f9d50` |
-| Repository is private | Failed | Repository is currently public |
-| Default-branch protections are confirmed | Unverified | No provider-authoritative protection evidence has been captured |
-| Local and remote commit equality confirmed | Passed for Wave 0 branch checkpoint | Must be repeated for the Wave 1 checkpoint |
+| Repository exposure is explicitly approved | Passed | Founder approved public operation; all repository history is treated as public disclosure |
+| Default-branch protections are confirmed | Passed | GitHub reported `Protect main` active for the public repository on 2026-08-04; pull requests required, deletion restricted, force-pushes blocked |
+| Local and remote commit equality confirmed | Passed for merged governance checkpoint | Local `main` and `origin/main` verified equal at merge commit `a3f2fe6324ad32450dad8fd30f7e1c7e72f5069e` |
 | Empty baseline build and tests pass | Not started | Governance and protections must be completed first |
 
 Wave 1 is not complete. IRIS Kernel implementation must not begin while these blockers remain.
@@ -73,7 +73,7 @@ Wave 1 is not complete. IRIS Kernel implementation must not begin while these bl
 
 ### Repository visibility
 
-The Roadmap requires one private authoritative repository. GitHub currently reports the repository as public. The Founder has accepted temporary public visibility during development, but this does not amend or satisfy the canonical Wave 1 gate. Resolution requires either making the repository private or approving a versioned Roadmap amendment with documented security and exposure consequences.
+The Roadmap's private-repository preference is superseded for current Wave 1 operation by the Founder-approved `Repository Visibility Decision`, version 1.0.0. The repository is intentionally public so GitHub Free enforces the `Protect main` ruleset. Public visibility is not a current Wave 1 blocker and must not be raised as one while that decision remains active. The permanent Phase 0 graduation requirement for a private checkpoint remains separate and is not waived.
 
 ### Missing original Worker Reasoning Framework
 
@@ -89,7 +89,7 @@ The Governing Architecture describes an early OpenClaw baseline and private fork
 2. Preserve the canonical Worker Reasoning Framework and ensure later authorization, worker, memory, and audit policies conform to it.
 3. Preserve the canonical Wave 1 governance package and its commit provenance.
 4. Preserve the approved package as the authority for later security, repository, dependency, and implementation work.
-5. Confirm or change repository visibility and capture provider-authoritative branch-protection evidence.
+5. Preserve the approved public-visibility decision and provider-authoritative branch-protection evidence.
 6. Only after the governance gate passes, create the empty TypeScript monorepo baseline and its build, test, lint, and formatting commands.
 
 ## Completion Evidence Required

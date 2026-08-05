@@ -6,7 +6,7 @@
 
 ## Blueprint
 
-The repository is a private-authority target with governed branches, IRIS-owned contracts, replaceable providers, reproducible tooling, and evidence-preserving workflows. Public visibility is currently a known temporary deviation from the Roadmap gate.
+The repository is a public-authority target with governed branches, IRIS-owned contracts, replaceable providers, reproducible tooling, and evidence-preserving workflows. Public visibility is the Founder-approved current operating state recorded in `docs/governance/repository-visibility-decision.md`; it is not a current Wave 1 blocker. All repository history and provider-visible activity must be treated as public disclosure.
 
 ## Current Map
 
@@ -30,7 +30,7 @@ The repository is a private-authority target with governed branches, IRIS-owned 
 | `packages/model-gateway/` | Ollama, LM Studio, and compatible provider adapters |
 | `tests/` | Cross-package acceptance and architecture tests |
 
-The planned structure is not authorization to scaffold. It activates only after governing documents, repository visibility, protections, and dependency decisions satisfy Wave 1 prerequisites.
+The planned structure is not authorization to scaffold. It activates only after governing documents, the approved visibility decision, provider-enforced protections, and dependency decisions satisfy Wave 1 prerequisites.
 
 ## Ownership
 

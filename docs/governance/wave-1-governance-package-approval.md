@@ -34,6 +34,10 @@ The approval applies to the version 1.0.0 governance package consisting of:
 
 This approval does not declare Wave 1 complete. Repository privacy, provider-authoritative branch protection, dependency selection and installation, the TypeScript monorepo baseline, build/test/lint/format verification, final completion evidence, merge, and remote equality remain outstanding.
 
+## Subsequent Resolution
+
+The privacy item above records the package state at approval time. It was subsequently superseded for current Wave 1 operation by the Founder-approved `Repository Visibility Decision`, version 1.0.0. The repository is intentionally public and GitHub reports the `Protect main` ruleset active. Public visibility is no longer a current Wave 1 blocker. The future Phase 0 private-checkpoint criterion remains unchanged.
+
 This approval did not authorize staging, committing, pushing, merging, dependency installation, GitHub settings changes, destructive actions, credentials, spending, or deployment.
 
 ## Canonicalization
