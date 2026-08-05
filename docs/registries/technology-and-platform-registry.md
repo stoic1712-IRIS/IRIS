@@ -8,7 +8,7 @@
 | --- | --- | --- | --- |
 | Windows 11 | Founder workstation host | Operational | Replaceable environment |
 | Ubuntu 26.04 LTS on WSL2 | Primary Linux development environment | Certified | Replaceable environment |
-| GitHub `stoic1712-IRIS/IRIS` | Remote repository | Operational; currently public | Repository provider, not governance owner |
+| GitHub `stoic1712-IRIS/IRIS` | Remote repository | Operational; Founder-approved public visibility; `Protect main` active | Repository provider, not governance owner; all history treated as public disclosure |
 | Docker Desktop / Engine | Disposable container runtime | Certified | Replaceable execution provider |
 | Ollama | Local model runtime | Certified with Qwen3 8B | Replaceable model provider |
 | LM Studio | Model laboratory and fallback API | Installed; no LLM/server in certification | Replaceable model provider |

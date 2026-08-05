@@ -42,6 +42,10 @@ This review covers the locally drafted Wave 1 governance and repository-foundati
 4. Baseline dependency identities and pins are not yet approved.
 5. TypeScript monorepo and empty build/test/lint/format proof are not yet created.
 
+## Subsequent Resolution
+
+Items 1-3 above are historical findings from the local package review. Founder approval and canonicalization were completed, the governance package was merged into `main` through pull request #1, and the Founder-approved `Repository Visibility Decision`, version 1.0.0, establishes public visibility as the current operating state. GitHub reported the `Protect main` ruleset active after public visibility was restored. Public visibility must not be carried forward as a current Wave 1 blocker.
+
 ## Local Verification
 
 Markdown whitespace, status labels, cross-document terminology, prohibited premature-completion claims, source-gap disclosure, and repository scope must be checked before any staging request. Results are reported separately through the working-tree review.
