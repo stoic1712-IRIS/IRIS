@@ -2,6 +2,9 @@ import { z } from "zod";
 
 import { canonicalIdSchema, riskClassSchema, timestampSchema } from "@stoic-iris/contracts";
 
+export * from "./approval-evaluator.js";
+export * from "./audit-store.js";
+
 export const objectiveInputSchema = z
   .object({
     objectiveId: canonicalIdSchema.refine(
