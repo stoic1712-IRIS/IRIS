@@ -66,6 +66,18 @@ importers:
         specifier: 4.4.3
         version: 4.4.3
 
+  packages/orchestration:
+    dependencies:
+      '@stoic-iris/contracts':
+        specifier: workspace:*
+        version: link:../contracts
+      '@stoic-iris/coordination':
+        specifier: workspace:*
+        version: link:../coordination
+      zod:
+        specifier: 4.4.3
+        version: 4.4.3
+
 packages:
 
   '@eslint-community/eslint-utils@4.10.1':

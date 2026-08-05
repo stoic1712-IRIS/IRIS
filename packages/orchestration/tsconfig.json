@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "types": ["node"],
+    "rootDir": "src",
+    "outDir": "dist",
+    "tsBuildInfoFile": "dist/orchestration.tsbuildinfo"
+  },
+  "references": [{ "path": "../contracts" }, { "path": "../coordination" }],
+  "include": ["src/**/*.ts"]
+}

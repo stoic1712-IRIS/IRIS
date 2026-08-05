@@ -4,6 +4,7 @@
     { "path": "./packages/contracts" },
     { "path": "./packages/kernel" },
     { "path": "./packages/coordination" },
+    { "path": "./packages/orchestration" },
     { "path": "./packages/model-gateway" }
   ]
 }

@@ -1,0 +1,20 @@
+{
+  "name": "@stoic-iris/orchestration",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@stoic-iris/contracts": "workspace:*",
+    "@stoic-iris/coordination": "workspace:*",
+    "zod": "4.4.3"
+  }
+}

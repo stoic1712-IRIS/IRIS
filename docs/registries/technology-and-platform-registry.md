@@ -27,7 +27,7 @@ The Founder approved ADR-001 through ADR-004 as architectural direction on 2026-
 | Canonical memory | PostgreSQL 18.4 | PostgreSQL remains behind IRIS-owned repositories and schemas | `ADR-002` |
 | Vector retrieval | pgvector 0.8.6 initially | Qdrant retained as specialist alternative; LanceDB for rebuildable indexes; Chroma and Deep Lake deferred | `ADR-002`; Wave 2 disposable evaluation |
 | Model runtimes | Ollama primary; LM Studio laboratory/fallback | llama.cpp and vLLM deferred | `ADR-003` |
-| Bootstrap orchestration | No adoption during Wave 2; later bounded OpenClaw adapter proof may be proposed | Hivemind and Gamut patterns only; Shoal blocked on identity | `ADR-004`; Wave 2 disposable evaluation |
+| Bootstrap orchestration | IRIS-owned adapter accepted; OpenClaw retained only as a removable, digest-pinned bootstrap provider | Hivemind and Gamut patterns only; Shoal blocked on identity | `ADR-004`; Wave 2 evaluation; Wave 5 bounded proof |
 
 ## Registry Update Rule
 
