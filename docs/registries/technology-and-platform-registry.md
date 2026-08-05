@@ -34,6 +34,8 @@ The Founder approved ADR-001 through ADR-004 as architectural direction on 2026-
 | Sovereign development | IRIS-owned proposal, approval, disposable-worktree, execution, verification, checkpoint, rollback, cleanup, and GitHub Actions provider-verification runtime | Phase 0 graduation passed at checkpoint `468f81e4`; provider-authoritative zero resources verified | Wave 10 graduation evidence and private checkpoint |
 | Infrastructure blueprints | IRIS-owned portable `iris.stoic/v1` schema, validator, profiles, Compose compiler, rollback and removal manifests | Wave 11 implemented and locally verified | ADR-005; Wave 11 specification and evidence |
 | Visual infrastructure editing | React Flow `12.11.2` with ELK.js `0.12.0` behind IRIS-owned conversion/layout boundaries | Wave 11 composer implemented; no deployment or self-approval authority | ADR-005; Wave 11 evidence |
+| Application Factory | IRIS-owned exact application specification, capability approval, private-repository proposal, integration-file generation, blueprint, verification, lifecycle, and maintenance planning | Wave 12 implemented with disposable local proof; no external application repository created | ADR-006; Wave 12 specification and evidence |
+| Continuous Evolution | IRIS-owned research intake, benchmarks, comparisons, upgrade/deprecation/native-replacement/roadmap/self-improvement proposals | Wave 12 implemented; every proposal remains pending Founder approval and non-executable | ADR-006; Wave 12 specification and evidence |
 
 ## Registry Update Rule
 

@@ -64,6 +64,15 @@ importers:
         specifier: 8.2.0
         version: 8.2.0(@types/node@24.13.3)
 
+  packages/applications:
+    dependencies:
+      '@stoic-iris/blueprints':
+        specifier: workspace:*
+        version: link:../blueprints
+      zod:
+        specifier: 4.4.3
+        version: 4.4.3
+
   packages/blueprints:
     dependencies:
       zod:

@@ -34,6 +34,7 @@ The repository is a public-authority target with governed branches, IRIS-owned c
 | `packages/workers/` | Governed temporary-worker specifications, bounded context, permission calculation, model assignment, lifecycle, revocation, and cleanup |
 | `packages/capabilities/` | Candidate intake, provenance/license/security review, capability mapping, pattern extraction, decisions, and original worker proposals |
 | `packages/development/` | Exact self-upgrade proposals, typed approvals, disposable Git workspaces, governed execution, checkpoints, rollback, cleanup, and provider-zero verification |
+| `packages/applications/` | Layer 4 application specifications, approved capability selections, private-repository proposals, generated bundles, disposable lifecycle plans, research intake, benchmarks, and governed evolution proposals |
 | `tests/` | Cross-package acceptance and architecture tests |
 
 The planned structure is not authorization to scaffold. It activates only after governing documents, the approved visibility decision, provider-enforced protections, and dependency decisions satisfy Wave 1 prerequisites.
