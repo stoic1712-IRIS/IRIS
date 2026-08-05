@@ -28,6 +28,7 @@ The Founder approved ADR-001 through ADR-004 as architectural direction on 2026-
 | Vector retrieval | pgvector 0.8.6 initially | Wave 6 exact retrieval and model-versioned rebuildable embeddings verified; vector-disabled text retrieval remains available | `ADR-002`; Wave 6 evidence |
 | Model runtimes | Ollama primary; LM Studio laboratory/fallback | llama.cpp and vLLM deferred | `ADR-003` |
 | Bootstrap orchestration | IRIS-owned adapter accepted; OpenClaw retained only as a removable, digest-pinned bootstrap provider | Hivemind and Gamut patterns only; Shoal blocked on identity | `ADR-004`; Wave 2 evaluation; Wave 5 bounded proof |
+| Temporary workers | IRIS-owned Worker Factory and Cognitive Process Manager; digest-pinned Node container only for the Wave 8 deterministic acceptance worker | Docker supplies replaceable isolation; worker identity, permissions, context, lifecycle, revocation, evidence, and cleanup remain IRIS-owned | Wave 8 specification and evidence |
 
 ## Registry Update Rule
 
