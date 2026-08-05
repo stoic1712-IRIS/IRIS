@@ -3,16 +3,25 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    ignores: ["**/dist/**", "**/node_modules/**", "**/coverage/**"],
+    ignores: ["**/dist/**", "**/dist-types/**", "**/node_modules/**", "**/coverage/**"],
   },
   eslint.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
   {
-    files: ["**/*.ts"],
+    files: ["**/*.{ts,tsx}"],
     languageOptions: {
       parserOptions: {
         project: "./tsconfig.check.json",
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+  {
+    files: ["apps/visual-composer/**/*.{ts,tsx}"],
+    languageOptions: {
+      parserOptions: {
+        project: "./apps/visual-composer/tsconfig.check.json",
         tsconfigRootDir: import.meta.dirname,
       },
     },

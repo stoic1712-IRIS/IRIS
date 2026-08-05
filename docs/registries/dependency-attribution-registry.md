@@ -16,7 +16,7 @@ Each entry must include identity, category, purpose, owner, source, exact versio
 | NVIDIA driver / CUDA container | GPU runtime | Local GPU inference and disposable test | Driver 610.88; `nvidia/cuda:12.9.1-base-ubuntu24.04` | NVIDIA terms require formal review | Existing test dependency | Record immutable image digest and redistribution limits |
 | Node.js | Development runtime | Future TypeScript baseline | 24.19.0 LTS | Open-source licenses; formal attribution review pending | Installed tool | Review distribution notices before packaging |
 | npm | Package manager | Bundled Node.js tooling | 11.17.0 | Open-source; formal review pending | Installed tool | Record source and license |
-| pnpm | Package manager | Planned workspace manager | 11.20.0 | Open-source; formal review pending | Installed tool, not yet project-pinned | Review license and pin project version before scaffold |
+| pnpm | Package manager | Workspace manager | 11.20.0 | MIT | Exact project and engine pin | Preserve pin and notices |
 | Zod | Runtime schema validation | Shared contracts, Kernel boundaries, and Model Gateway structured-output validation | 4.4.3 | MIT | Exact project pin; no install scripts and no runtime network access | Preserve pin and review notices before redistribution |
 | Python | Development runtime | Diagnostics and support tooling | 3.14.4 | PSF license family; formal review pending | Installed tool | Record source and notices if distributed |
 | Git | Version control | Canonical repository history | 2.53.0 | GPL; use only, not embedded | Installed tool | Record exact distribution source |
@@ -24,6 +24,12 @@ Each entry must include identity, category, purpose, owner, source, exact versio
 | Ollama | Model runtime | Verified local inference API | 0.32.5 | Formal product/source review pending | Existing evaluated runtime | Review exact source, license, telemetry, update and API behavior in Wave 2 |
 | LM Studio | Model laboratory/API fallback | CLI installed; server stopped in evidence | CLI commit `71bd99c` | Proprietary product terms; API use only unless terms allow more | Existing evaluation tool | Review terms, network behavior, and data paths in Wave 2 |
 | Qwen3 8B via Ollama | Local model | Structured-response workstation test | Ollama ID `500a1f067a9f` | Registry reports Apache-2.0; formal model-card and attribution review pending | Evaluation only | Record upstream model identity, files, license, and limitations before adoption |
+| React | Visual composer UI runtime | Component rendering | 19.2.8 | MIT | Exact Wave 11 pin | Preserve license notice before distribution |
+| React DOM | Visual composer browser renderer | Browser rendering | 19.2.8 | MIT | Exact Wave 11 pin | Preserve license notice before distribution |
+| React Flow (`@xyflow/react`) | Editable infrastructure graph | Canvas, custom nodes/edges, keyboard and screen-reader interaction | 12.11.2 | MIT | Selected behind IRIS-owned model conversion | Recheck large-graph performance and accessibility each major upgrade |
+| ELK.js | Replaceable graph layout engine | Layered and orthogonal blueprint layout | 0.12.0 | EPL-2.0 | Selected behind layout adapter; no canonical state ownership | Preserve EPL notices and verify distribution obligations |
+| Vite | Visual composer build tool | Development and production web build | 8.2.0 | MIT | Exact Wave 11 development pin | Review release/security changes before upgrade |
+| `@vitejs/plugin-react` | Vite React integration | JSX transform and development integration | 6.0.5 | MIT | Exact Wave 11 development pin | Upgrade with Vite compatibility review |
 
 ## Wave 2 Evaluated Candidates
 

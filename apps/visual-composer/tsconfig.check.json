@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "composite": false,
+    "noEmit": true,
+    "rootDir": "../..",
+    "paths": {
+      "@stoic-iris/blueprints": ["../../packages/blueprints/src/index.ts"]
+    }
+  },
+  "references": []
+}
