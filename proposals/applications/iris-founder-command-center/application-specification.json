@@ -1,0 +1,32 @@
+{
+  "applicationId": "iris-founder-command-center",
+  "name": "IRIS Founder Command Center",
+  "classification": "layer-4",
+  "separateRepository": true,
+  "owner": "Founder",
+  "purpose": "Provide the Founder with one local-first governed interface for submitting objectives, reviewing proposals and approvals, inspecting missions, workers, evidence, audit history, blueprints, and IRIS health without granting the interface independent execution authority.",
+  "functionalRequirements": [
+    "Accept a Founder objective as a draft and display its risk and authorization classification before any action workflow begins.",
+    "Display exact proposals, bound digests, requested authority, affected resources, verification plans, rollback plans, and approval state.",
+    "Require the existing IRIS approval boundary to validate and consume protected approvals; the application must never self-approve.",
+    "Show mission decomposition, dependencies, blockers, evidence requirements, progress, and recommended next work.",
+    "Show temporary-worker identity, mission, permissions, runtime limits, lifecycle, results, termination, and cleanup evidence.",
+    "Show evidence-linked audit history and integrity status without permitting record mutation.",
+    "Open canonical infrastructure blueprints and their validation, provenance, security, resource, cost, rollback, and cleanup information.",
+    "Show local IRIS component and model-runtime health without exposing secrets, chain-of-thought, credentials, or unrestricted logs.",
+    "Operate on local development data with no public listener, cloud dependency, telemetry, paid service, or external account in the first release.",
+    "Fail closed when identity, policy, evidence, model, repository, or service state is unavailable or contradictory."
+  ],
+  "requestedCapabilities": [
+    "objective-intake",
+    "approval-review",
+    "mission-planning",
+    "audit-evidence",
+    "blueprint-navigation",
+    "system-health"
+  ],
+  "dataClassification": "confidential",
+  "targetProfile": "development",
+  "maximumHourlyCostUsd": 0,
+  "createdAt": "2026-08-05T12:35:00-06:00"
+}

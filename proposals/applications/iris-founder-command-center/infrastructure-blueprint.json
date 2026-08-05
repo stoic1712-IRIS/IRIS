@@ -1,0 +1,75 @@
+{
+  "apiVersion": "iris.stoic/v1",
+  "id": "iris-founder-command-center",
+  "name": "IRIS Founder Command Center",
+  "profile": "development",
+  "approvalStatus": "pending",
+  "nodes": [
+    {
+      "id": "command-center-ui",
+      "name": "Founder Command Center UI",
+      "kind": "service",
+      "image": {
+        "repository": "example.invalid/iris-founder-command-center",
+        "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "command": ["node", "server.mjs"],
+      "environment": {
+        "NODE_ENV": "development",
+        "IRIS_DATA_MODE": "synthetic",
+        "IRIS_AUTHORITY_MODE": "none"
+      },
+      "ports": [
+        {
+          "container": 4173,
+          "host": 5174,
+          "protocol": "tcp",
+          "exposure": "host"
+        }
+      ],
+      "networks": ["command-center-private"],
+      "secrets": [],
+      "resources": {
+        "cpuCores": 1,
+        "memoryMiB": 512,
+        "storageGiB": 0,
+        "gpuCount": 0,
+        "hourlyCostUsd": 0
+      },
+      "security": {
+        "runAsNonRoot": true,
+        "readOnlyRootFilesystem": true,
+        "dropAllCapabilities": true,
+        "noNewPrivileges": true
+      },
+      "provenance": {
+        "source": "IRIS original Layer 4 proposal",
+        "license": "UNLICENSED",
+        "version": "0.0.0"
+      },
+      "healthcheck": {
+        "test": ["CMD", "node", "healthcheck.mjs"],
+        "intervalSeconds": 30
+      }
+    }
+  ],
+  "edges": [],
+  "networks": [
+    {
+      "id": "command-center-private",
+      "internal": true
+    }
+  ],
+  "secrets": [],
+  "policy": {
+    "allowPublicExposure": false,
+    "requireDigestLocks": true,
+    "requireNonRoot": true,
+    "maxHourlyCostUsd": 0
+  },
+  "metadata": {
+    "createdBy": "IRIS Application Factory proposal",
+    "createdAt": "2026-08-05T12:35:00-06:00",
+    "sourceRevision": "proposal-244748483dc3b7e7"
+  }
+}
