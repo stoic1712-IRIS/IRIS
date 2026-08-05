@@ -12,6 +12,7 @@
     { "path": "./packages/development" },
     { "path": "./packages/model-gateway" },
     { "path": "./packages/blueprints" },
+    { "path": "./packages/applications" },
     { "path": "./apps/visual-composer" }
   ]
 }
