@@ -9,26 +9,18 @@ import type {
   CommandResult,
   DevelopmentAdapter,
   DevelopmentWorkspace,
+  PaidResourceProvider,
 } from "./sovereign-development-runtime.js";
 
 const executeFile = promisify(execFile);
 
 export class GitDevelopmentAdapter implements DevelopmentAdapter {
   readonly #canonicalPath: string;
-  readonly #paidResourceProvider: {
-    terminate: () => Promise<string[]>;
-    list: () => Promise<string[]>;
-  };
+  readonly #paidResourceProvider: PaidResourceProvider;
 
-  constructor(options: {
-    canonicalPath: string;
-    paidResourceProvider?: { terminate: () => Promise<string[]>; list: () => Promise<string[]> };
-  }) {
+  constructor(options: { canonicalPath: string; paidResourceProvider: PaidResourceProvider }) {
     this.#canonicalPath = resolve(options.canonicalPath);
-    this.#paidResourceProvider = options.paidResourceProvider ?? {
-      terminate: () => Promise.resolve([]),
-      list: () => Promise.resolve([]),
-    };
+    this.#paidResourceProvider = options.paidResourceProvider;
   }
 
   async createWorkspace(proposal: DevelopmentProposal): Promise<DevelopmentWorkspace> {
@@ -131,6 +123,9 @@ export class GitDevelopmentAdapter implements DevelopmentAdapter {
   }
   terminatePaidResources() {
     return this.#paidResourceProvider.terminate();
+  }
+  provisionPaidResources() {
+    return this.#paidResourceProvider.provision();
   }
   providerResources() {
     return this.#paidResourceProvider.list();

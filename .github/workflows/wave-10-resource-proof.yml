@@ -1,0 +1,21 @@
+name: Wave 10 Provider Resource Proof
+run-name: IRIS provider proof ${{ inputs.scope }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: Unique IRIS graduation resource scope
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  hold:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Hold bounded provider resource for IRIS termination
+        run: sleep 600

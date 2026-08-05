@@ -19,6 +19,11 @@ export interface CommandResult {
   exitCode: number;
   outputDigest: string;
 }
+export interface PaidResourceProvider {
+  provision(): Promise<string[]>;
+  terminate(): Promise<string[]>;
+  list(): Promise<string[]>;
+}
 export interface DevelopmentAdapter {
   createWorkspace(proposal: DevelopmentProposal): Promise<DevelopmentWorkspace>;
   readFile(workspace: DevelopmentWorkspace, path: string): Promise<string | null>;
@@ -35,6 +40,7 @@ export interface DevelopmentAdapter {
     checkpoint: string,
   ): Promise<{ command: string; preservesHistory: true }>;
   cleanup(workspace: DevelopmentWorkspace): Promise<boolean>;
+  provisionPaidResources(): Promise<string[]>;
   terminatePaidResources(): Promise<string[]>;
   providerResources(): Promise<string[]>;
 }
@@ -87,6 +93,10 @@ export class SovereignDevelopmentRuntime {
         "DevelopmentApproved",
         `Approval ${approval.approvalId} matched the immutable proposal.`,
       );
+      const provisioned = await this.#adapter.provisionPaidResources();
+      if (provisioned.length === 0)
+        throw new Error("Provider-authoritative resource proof was not provisioned.");
+      emit("PaidResourcesProvisioned", `${String(provisioned.length)} resources provisioned.`);
       workspace = await this.#adapter.createWorkspace(proposal);
       if (workspace.baseRevision !== proposal.baseRevision)
         throw new Error("Workspace base is not exact and disposable.");
