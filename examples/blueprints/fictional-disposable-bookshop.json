@@ -1,0 +1,101 @@
+{
+  "apiVersion": "iris.stoic/v1",
+  "id": "fictional-bookshop",
+  "name": "Fictional Disposable Bookshop",
+  "profile": "test",
+  "approvalStatus": "draft",
+  "networks": [{ "id": "bookshop-private", "internal": true }],
+  "secrets": [{ "id": "bookshop-database-password", "provider": "environment" }],
+  "policy": {
+    "allowPublicExposure": false,
+    "requireDigestLocks": true,
+    "requireNonRoot": true,
+    "maxHourlyCostUsd": 0
+  },
+  "metadata": {
+    "createdBy": "IRIS Wave 11 acceptance fixture",
+    "createdAt": "2026-08-05T12:05:00-06:00",
+    "sourceRevision": "b5a91a2db02c1252bc907c4bf7d84d75a1bbd7b1"
+  },
+  "nodes": [
+    {
+      "id": "bookshop-api",
+      "name": "Bookshop API",
+      "kind": "service",
+      "image": {
+        "repository": "example.invalid/fictional/bookshop-api",
+        "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "source": {
+        "repository": "https://example.invalid/fictional/bookshop-api.git",
+        "revision": "2222222222222222222222222222222222222222"
+      },
+      "command": ["node", "server.mjs"],
+      "environment": { "NODE_ENV": "test" },
+      "ports": [{ "container": 8080, "host": 18080, "protocol": "tcp", "exposure": "host" }],
+      "networks": ["bookshop-private"],
+      "secrets": ["bookshop-database-password"],
+      "resources": {
+        "cpuCores": 1,
+        "memoryMiB": 512,
+        "storageGiB": 0,
+        "gpuCount": 0,
+        "hourlyCostUsd": 0
+      },
+      "security": {
+        "runAsNonRoot": true,
+        "readOnlyRootFilesystem": true,
+        "dropAllCapabilities": true,
+        "noNewPrivileges": true
+      },
+      "provenance": {
+        "source": "IRIS fictional acceptance fixture",
+        "license": "UNLICENSED",
+        "version": "0.0.0-test"
+      },
+      "healthcheck": { "test": ["CMD", "node", "healthcheck.mjs"], "intervalSeconds": 10 }
+    },
+    {
+      "id": "bookshop-database",
+      "name": "Bookshop Database",
+      "kind": "database",
+      "image": {
+        "repository": "example.invalid/fictional/bookshop-database",
+        "digest": "sha256:3333333333333333333333333333333333333333333333333333333333333333"
+      },
+      "command": [],
+      "environment": {},
+      "ports": [],
+      "networks": ["bookshop-private"],
+      "secrets": ["bookshop-database-password"],
+      "resources": {
+        "cpuCores": 1,
+        "memoryMiB": 1024,
+        "storageGiB": 5,
+        "gpuCount": 0,
+        "hourlyCostUsd": 0
+      },
+      "security": {
+        "runAsNonRoot": true,
+        "readOnlyRootFilesystem": false,
+        "dropAllCapabilities": true,
+        "noNewPrivileges": true
+      },
+      "provenance": {
+        "source": "IRIS fictional acceptance fixture",
+        "license": "UNLICENSED",
+        "version": "0.0.0-test"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "bookshop-api-database",
+      "source": "bookshop-api",
+      "target": "bookshop-database",
+      "kind": "dependency",
+      "required": true,
+      "network": "bookshop-private"
+    }
+  ]
+}

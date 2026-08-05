@@ -1,6 +1,6 @@
 # Wave 11 Blueprint Engine and Visual Composer Evidence
 
-**Status:** Passed locally
+**Status:** Decision gate passed
 
 **Date:** 2026-08-05
 
@@ -13,6 +13,9 @@
 - The command-line example compiled successfully before visual acceptance.
 - The visual model passed blueprint-to-canvas round-trip, diff, and ELK layout tests.
 - The application provides canvas editing, inspection, operational status, approval visibility, and independent exports while withholding deployment authority.
+- The canonical `iris-local-stack` blueprint and the independent `fictional-disposable-bookshop` application blueprint both pass schema and architecture validation.
+- The fictional application compiles deterministically with an internal network, immutable image and source locks, secret references without values, bounded test resources, and non-root security policy.
+- Exact cleanup coverage includes the Compose project, both fictional services in reverse dependency order, the private network, and the secret reference; rollback preserves repository history.
 
 ## Selected Visual Dependencies
 
@@ -20,4 +23,4 @@ React Flow `12.11.2` (MIT) supplies accessible graph interaction and custom node
 
 ## Verification Commands
 
-The Wave 11 test file, CLI compiler, and full `pnpm verify` suite were executed with the certified WSL Node `24.19.0` and pnpm `11.20.0` toolchain. Generated CLI output was disposable and excluded from canonical source.
+The Wave 11 test files, both blueprint fixtures, CLI compiler, and full `pnpm verify` suite were executed with the certified WSL Node `24.19.0` and pnpm `11.20.0` toolchain. Generated CLI output was disposable and excluded from canonical source. The fictional application uses the reserved `example.invalid` domain and creates no external application, repository, credential, deployment, or paid resource.
