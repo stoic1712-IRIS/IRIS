@@ -23,6 +23,7 @@ export const protectedActionTypes = [
   "destructive-action",
   "canonical-governance-adoption",
   "identity-amendment",
+  "worker-activation",
 ] as const;
 
 export const protectedActionTypeSchema = z.enum(protectedActionTypes);

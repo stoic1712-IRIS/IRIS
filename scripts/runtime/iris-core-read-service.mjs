@@ -3,9 +3,9 @@ import { createServer } from "node:http";
 import {
   attestCoreResponse,
   createCoreReadEnvelope,
-  parseCoreReadRequest,
   verifyCoreRequest,
-} from "../../packages/kernel/dist/index.js";
+} from "../../packages/kernel/dist/read-model.js";
+import { parseCoreReadRequest } from "../../packages/kernel/dist/read-service.js";
 
 const host = "127.0.0.1";
 const port = 4181;

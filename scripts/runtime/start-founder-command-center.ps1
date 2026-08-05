@@ -8,10 +8,6 @@ if (-not (Test-Path -LiteralPath (Join-Path $commandCenter "scripts\local-gatewa
     throw "The canonical Founder Command Center workspace was not found."
 }
 
-$wslCommand = @"
-source "`$HOME/.nvm/nvm.sh"
-cd /mnt/c/Projects/iris-founder-command-center
-node scripts/local-gateway.mjs
-"@
+$wslCommand = 'source "$HOME/.nvm/nvm.sh"; cd /mnt/c/Projects/iris-founder-command-center; node scripts/local-gateway.mjs'
 
 wsl -d Ubuntu -- bash -lc $wslCommand
