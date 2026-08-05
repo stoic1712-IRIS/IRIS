@@ -1,0 +1,70 @@
+{
+  "proposalId": "founder-command-center-release-three-mock-live-read",
+  "state": "pending-founder-approval",
+  "executionAuthorized": false,
+  "applicationRepository": "stoic1712-IRIS/iris-founder-command-center",
+  "baseRevision": "b223f61fced170bdcb4b7ef7a76fb0c837369e46",
+  "contract": {
+    "path": "proposals/applications/iris-founder-command-center/release-three-live-read-contract.md",
+    "digest": "sha256:82f80b521162afa5b605684337af12e01cc2b277c6c5d19e7013f6585122870e",
+    "version": "iris.stoic/read-model/v1"
+  },
+  "objective": "Implement and locally verify a disposable mock loopback read-model service and client adapter against the exact proposed contract without connecting to IRIS Core or using credentials.",
+  "implementation": {
+    "branch": "iris/release-three-mock-live-read-proof",
+    "mockAddress": "127.0.0.1",
+    "mockPort": 4180,
+    "method": "GET",
+    "path": "/v1/read-model",
+    "dependencies": "Node.js standard library only",
+    "newDependencyFamilies": [],
+    "data": "deterministic fictional fixtures only",
+    "persistence": false,
+    "publicExposure": false,
+    "credentials": false,
+    "irisCoreConnectivity": false,
+    "mutationRoutes": 0,
+    "maximumHourlyCostUsd": 0
+  },
+  "plannedFiles": [
+    "src/read-client.ts",
+    "tests/read-client.test.ts",
+    "scripts/mock-read-service.mjs",
+    "tests/mock-read-service.test.ts",
+    "README.md"
+  ],
+  "requiredVerification": [
+    "format",
+    "strict-lint",
+    "typecheck",
+    "tests",
+    "production-build",
+    "dependency-audit",
+    "secret-scan",
+    "bundle-destination-scan",
+    "exact-method-path-origin-tests",
+    "missing-stale-expired-oversized-undeclared-contradictory-unauthenticated-unsigned-secret-fixtures",
+    "zero-mutation-route-proof",
+    "zero-browser-credential-persistence-proof",
+    "loopback-startup-shutdown-port-closure-cleanup",
+    "zero-provider-runtime-resources"
+  ],
+  "rollbackRevision": "b223f61fced170bdcb4b7ef7a76fb0c837369e46",
+  "excludedAuthority": [
+    "actual IRIS Core connectivity",
+    "credentials or token issuance",
+    "deployment",
+    "public or LAN exposure",
+    "mutation authority",
+    "approval submission or consumption",
+    "repository or provider actions from the application",
+    "spending",
+    "provider resources",
+    "staging",
+    "committing",
+    "pushing",
+    "pull-request creation",
+    "merging"
+  ],
+  "createdAt": "2026-08-05T13:45:00-06:00"
+}
