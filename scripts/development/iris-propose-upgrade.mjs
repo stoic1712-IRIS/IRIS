@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readFile, writeFile } from "node:fs/promises";
+import { writeFile } from "node:fs/promises";
 import { execFileSync } from "node:child_process";
 import { resolve } from "node:path";
 
@@ -16,6 +16,11 @@ if (
   throw new Error("The unapproved proposal must be written outside the canonical repository.");
 
 const git = (...args) => execFileSync("git", args, { cwd: repository, encoding: "utf8" }).trim();
+const gitBlob = (revision, path) =>
+  execFileSync("git", ["show", `${revision}:${path}`], {
+    cwd: repository,
+    encoding: "utf8",
+  });
 if (git("status", "--porcelain") !== "")
   throw new Error("Canonical repository must be clean before model inspection.");
 const baseRevision = git("rev-parse", "HEAD");
@@ -29,7 +34,7 @@ const paths = [
 const sources = [];
 for (const path of paths) {
   try {
-    sources.push({ path, content: await readFile(resolve(repository, path), "utf8") });
+    sources.push({ path, content: gitBlob(baseRevision, path) });
   } catch {
     sources.push({ path, content: "<absent>" });
   }
@@ -217,7 +222,7 @@ for (const change of modelChanges) {
     throw new Error(`Model proposed disallowed path: ${normalized}`);
   let previous = null;
   try {
-    previous = await readFile(resolve(repository, normalized), "utf8");
+    previous = gitBlob(baseRevision, normalized);
   } catch {}
   if ((previous === null) !== (change.operation === "create"))
     throw new Error(`Model operation does not match repository: ${normalized}`);
