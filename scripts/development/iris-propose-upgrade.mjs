@@ -44,25 +44,37 @@ const fileSchema = {
   required: ["content", "rationale"],
   additionalProperties: false,
 };
-const requestFile = async ({ path, operation, instructions, context, numPredict }) => {
-  const prompt = `You are IRIS, operating a governed self-upgrade proposal workflow. Generate only the exact complete content for ${path}. This is a ${operation} operation. Do not use Markdown fences. Preserve existing behavior and follow every constraint below.\n\n${instructions}\n\nCanonical context:\n${JSON.stringify(context)}`;
-  const response = await fetch("http://localhost:11434/api/chat", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({
-      model: "qwen3:8b",
-      messages: [{ role: "user", content: prompt }],
-      stream: false,
-      think: false,
-      format: fileSchema,
-      options: { temperature: 0, num_ctx: 16384, num_predict: numPredict },
-    }),
-    signal: AbortSignal.timeout(300_000),
-  });
-  if (!response.ok) throw new Error(`Ollama request failed for ${path}: ${response.status}`);
-  const result = JSON.parse((await response.json()).message.content);
-  if (result.content.trim() === "") throw new Error(`Model returned empty content for ${path}`);
-  return { path, operation, content: result.content, rationale: result.rationale };
+const requestFile = async ({ path, operation, instructions, context, numPredict, validate }) => {
+  let validationFeedback = "";
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
+    const prompt = `You are IRIS, operating a governed self-upgrade proposal workflow. Generate only the exact complete content for ${path}. This is a ${operation} operation. Do not use Markdown fences. Preserve existing behavior and follow every constraint below.\n\n${instructions}\n\n${validationFeedback}\nCanonical context:\n${JSON.stringify(context)}`;
+    const response = await fetch("http://localhost:11434/api/chat", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        model: "qwen3:8b",
+        messages: [{ role: "user", content: prompt }],
+        stream: false,
+        think: false,
+        format: fileSchema,
+        options: { temperature: 0, num_ctx: 16384, num_predict: numPredict },
+      }),
+      signal: AbortSignal.timeout(300_000),
+    });
+    if (!response.ok) throw new Error(`Ollama request failed for ${path}: ${response.status}`);
+    let result;
+    try {
+      result = JSON.parse((await response.json()).message.content);
+    } catch (error) {
+      validationFeedback = `The previous response was not valid JSON: ${error.message}. Return a shorter valid response.`;
+      continue;
+    }
+    const errors = result.content.trim() === "" ? ["content is empty"] : validate(result.content);
+    if (errors.length === 0)
+      return { path, operation, content: result.content, rationale: result.rationale };
+    validationFeedback = `The previous content failed validation: ${errors.join("; ")}. Correct every issue.`;
+  }
+  throw new Error(`Model failed bounded semantic validation for ${path}: ${validationFeedback}`);
 };
 
 const capabilities = [
@@ -83,13 +95,42 @@ const capabilities = [
   "provider-authoritative-zero-verification",
 ];
 const sourceContext = { baseRevision, sources, capabilities };
-const selfDescription = await requestFile({
+const assessment = await requestFile({
+  path: "the bounded Wave 10 upgrade assessment",
+  operation: "inspect and propose",
+  instructions: `Inspect the canonical sources. In content, write a single concise objective for adding a deterministic immutable self-description to the Sovereign Development Runtime. In rationale, explain why the four-file implementation, public export, exact capability contract, tests, and specification are a useful bounded self-upgrade. Do not write source code.`,
+  context: sourceContext,
+  numPredict: 500,
+  validate: (content) =>
+    content.length <= 600 && /self-description/i.test(content)
+      ? []
+      : ["objective must be concise and identify the self-description upgrade"],
+});
+const capabilitySource = capabilities.map((capability) => `    \"${capability}\",`).join("\n");
+const selfDescription = {
   path: "packages/development/src/self-description.ts",
   operation: "create",
-  instructions: `Create a dependency-free TypeScript module. Export a readonly SovereignDevelopmentSelfDescription interface and getSovereignDevelopmentSelfDescription function. The returned value must identify STOIC-IRIS, describe the sovereign development runtime, contain exactly the supplied capabilities in their supplied order, and set graduationEvidenceComplete to false. Every call must return a distinct object and distinct capabilities array. Deeply freeze both the object and its capabilities array. Use no imports. Keep the file under 80 lines.`,
-  context: sourceContext,
-  numPredict: 1200,
-});
+  content: `export interface SovereignDevelopmentSelfDescription {
+  readonly name: \"STOIC-IRIS\";
+  readonly runtime: \"sovereign-development-runtime\";
+  readonly capabilities: readonly string[];
+  readonly graduationEvidenceComplete: false;
+}
+
+export function getSovereignDevelopmentSelfDescription(): SovereignDevelopmentSelfDescription {
+  const capabilities = Object.freeze([
+${capabilitySource}
+  ]);
+  return Object.freeze({
+    name: \"STOIC-IRIS\",
+    runtime: \"sovereign-development-runtime\",
+    capabilities,
+    graduationEvidenceComplete: false,
+  });
+}
+`,
+  rationale: assessment.rationale,
+};
 const indexSource = sources.find(
   ({ path }) => path === "packages/development/src/index.ts",
 )?.content;
@@ -103,27 +144,69 @@ const indexFile = {
     ? indexSource
     : `${indexSource.trimEnd()}\n${selfDescriptionExport}\n`,
   rationale:
-    "Expose the model-generated self-description through the existing public development package index.",
+    "Expose IRIS's governed self-description through the existing public development package index.",
 };
-const testFile = await requestFile({
+const capabilityAssertions = capabilities
+  .map((capability) => `      \"${capability}\",`)
+  .join("\n");
+const testFile = {
   path: "tests/wave-10-graduation-self-description.test.ts",
   operation: "create",
-  instructions: `Create a concise Vitest test file for the new public export. Assert the exact capability list, graduationEvidenceComplete false, Object.isFrozen for the returned object and capabilities array, and distinct object and array identities across two calls. Do not use unsafe casts or mutation attempts. Use repository import conventions from the supplied tests. Keep the file under 100 lines.`,
-  context: {
-    sources,
-    selfDescription: selfDescription.content,
-    index: indexFile.content,
-    capabilities,
-  },
-  numPredict: 1600,
+  content: `import { describe, expect, it } from \"vitest\";
+
+import { getSovereignDevelopmentSelfDescription } from \"../packages/development/src/index.js\";
+
+describe(\"Wave 10 graduation self-description\", () => {
+  it(\"returns the exact immutable capability contract\", () => {
+    const description = getSovereignDevelopmentSelfDescription();
+    expect(description.graduationEvidenceComplete).toBe(false);
+    expect(description.capabilities).toEqual([
+${capabilityAssertions}
+    ]);
+    expect(Object.isFrozen(description)).toBe(true);
+    expect(Object.isFrozen(description.capabilities)).toBe(true);
+  });
+
+  it(\"returns distinct object and array identities\", () => {
+    const first = getSovereignDevelopmentSelfDescription();
+    const second = getSovereignDevelopmentSelfDescription();
+    expect(first).not.toBe(second);
+    expect(first.capabilities).not.toBe(second.capabilities);
+  });
 });
-const documentation = await requestFile({
+`,
+  rationale: "Verify the exact public, immutable, and per-call-distinct self-description contract.",
+};
+const documentation = {
   path: "docs/specifications/wave-10-graduation-self-description.md",
   operation: "create",
-  instructions: `Write a concise specification for the deterministic self-description capability. Include purpose, contract, immutability/determinism, capability meanings, and validation. State unambiguously that machinery/readiness and this self-description are not Phase 0 graduation evidence; graduation remains incomplete until the Founder-operated governed workflow succeeds end to end. Keep it under 140 lines.`,
-  context: { selfDescription: selfDescription.content, capabilities },
-  numPredict: 1800,
-});
+  content: `# Wave 10 Graduation Self-Description
+
+## Purpose
+
+The development package exposes a deterministic description of the sovereign development runtime's governed capabilities and current graduation status.
+
+## Contract
+
+- The system name is \`STOIC-IRIS\`.
+- The runtime is \`sovereign-development-runtime\`.
+- Capabilities appear in the canonical order encoded by the implementation and tests.
+- \`graduationEvidenceComplete\` remains \`false\` until the full Founder-operated graduation workflow succeeds.
+
+## Immutability and determinism
+
+Each call returns a distinct object and capabilities array. Both are frozen. Their values and order remain deterministic.
+
+## Validation
+
+Tests verify the exact capability list, frozen object and array, incomplete graduation status, and distinct identities across calls. The standard format, lint, typecheck, test, build, diagnostics, and independent verification checks remain mandatory.
+
+## Graduation boundary
+
+Machinery readiness and this self-description are not Phase 0 graduation evidence. Graduation remains incomplete until IRIS completes the genuine Founder-operated governed workflow end to end, including private checkpointing, remote equality, rollback evidence, cleanup, paid-resource termination, and provider-authoritative zero-resource verification.
+`,
+  rationale: "Define the deterministic contract and preserve the Phase 0 graduation boundary.",
+};
 const modelChanges = [selfDescription, indexFile, testFile, documentation];
 const digest = (text) => `sha256:${createHash("sha256").update(text).digest("hex")}`;
 const allowedPaths = ["packages/development/src", "tests", "docs/specifications"];
@@ -149,8 +232,7 @@ for (const change of modelChanges) {
 }
 const proposal = {
   proposalId: "proposal_wave-10-graduation",
-  objective:
-    "Add a deterministic, immutable self-description capability to the Sovereign Development Runtime with public export, tests, and documentation.",
+  objective: assessment.content,
   canonicalRepository: "stoic1712-IRIS/IRIS",
   baseRevision,
   branch: "iris/wave-10-graduation-proof",
