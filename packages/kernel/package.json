@@ -13,6 +13,7 @@
     }
   },
   "dependencies": {
-    "@stoic-iris/contracts": "workspace:*"
+    "@stoic-iris/contracts": "workspace:*",
+    "zod": "4.4.3"
   }
 }
