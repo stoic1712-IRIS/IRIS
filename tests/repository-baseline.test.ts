@@ -49,6 +49,7 @@ describe("Wave 1 repository baseline", () => {
       typescript: "6.0.3",
       "typescript-eslint": "8.66.0",
       vitest: "4.1.10",
+      zod: "4.4.3",
     });
   });
 
@@ -67,13 +68,11 @@ describe("Wave 1 repository baseline", () => {
     }
   });
 
-  it("keeps later-wave package sources as empty governed boundaries", async () => {
-    for (const packageDirectory of ["coordination", "model-gateway"] as const) {
-      const sourceDirectory = path.join(repositoryRoot, "packages", packageDirectory, "src");
-      expect(await readdir(sourceDirectory)).toEqual(["index.ts"]);
-      const source = await readFile(path.join(sourceDirectory, "index.ts"), "utf8");
-      expect(source).toContain("Later-wave behavior requires its own approved specification.");
-      expect(source.trim().endsWith("export {};"), packageDirectory).toBe(true);
-    }
+  it("keeps the later-wave coordination package as an empty governed boundary", async () => {
+    const sourceDirectory = path.join(repositoryRoot, "packages", "coordination", "src");
+    expect(await readdir(sourceDirectory)).toEqual(["index.ts"]);
+    const source = await readFile(path.join(sourceDirectory, "index.ts"), "utf8");
+    expect(source).toContain("Later-wave behavior requires its own approved specification.");
+    expect(source.trim().endsWith("export {};")).toBe(true);
   });
 });

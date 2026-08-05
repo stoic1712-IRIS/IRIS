@@ -17,6 +17,7 @@ Each entry must include identity, category, purpose, owner, source, exact versio
 | Node.js | Development runtime | Future TypeScript baseline | 24.19.0 LTS | Open-source licenses; formal attribution review pending | Installed tool | Review distribution notices before packaging |
 | npm | Package manager | Bundled Node.js tooling | 11.17.0 | Open-source; formal review pending | Installed tool | Record source and license |
 | pnpm | Package manager | Planned workspace manager | 11.20.0 | Open-source; formal review pending | Installed tool, not yet project-pinned | Review license and pin project version before scaffold |
+| Zod | Runtime schema validation | Shared contracts, Kernel boundaries, and Model Gateway structured-output validation | 4.4.3 | MIT | Exact project pin; no install scripts and no runtime network access | Preserve pin and review notices before redistribution |
 | Python | Development runtime | Diagnostics and support tooling | 3.14.4 | PSF license family; formal review pending | Installed tool | Record source and notices if distributed |
 | Git | Version control | Canonical repository history | 2.53.0 | GPL; use only, not embedded | Installed tool | Record exact distribution source |
 | Visual Studio Code | Editor | Founder development environment | 1.131.0 | Microsoft product terms | Existing tool | No redistribution planned |
