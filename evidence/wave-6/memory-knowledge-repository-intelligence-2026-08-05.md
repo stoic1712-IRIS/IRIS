@@ -47,13 +47,13 @@ Image: `pgvector/pgvector@sha256:691673308c99d2161ba298736f3147f1f22d79de2fb7ec9
 
 Observed versions: PostgreSQL `18.4`; pgvector `0.8.6`.
 
-The proof ran with Docker network `none`, zero published ports, zero host mounts, a tmpfs data directory, 768 MiB memory, one CPU, a 256-process limit, and a fictional password. It passed schema constraints, transaction rollback, row-level public-only access for a restricted role, append-only audit capture, exact vector ordering, citation persistence, relational operation without vector retrieval, dump/restore, and restored-row verification.
+The proof ran with Docker network `none`, zero published ports, zero host mounts, a tmpfs data directory, 768 MiB memory, one CPU, a 256-process limit, and a fictional password. It passed schema constraints, transaction rollback, row-level public-only access for a restricted role, append-only audit capture, exact vector ordering, HNSW fixture recall against the exact result, HNSW index rebuild, embedding-model replacement, citation persistence, relational operation without vector retrieval, dump/restore, and restored-row verification.
 
 The exact disposable container `iris-wave6-postgres-proof` was removed in `finally`. A post-removal exact-name query returned no container. No persistent volume or network was created.
 
 ## Limits
 
-No persistent database was deployed. No production credential, host repository mount, Docker socket mount, external network, paid resource, approximate-index performance claim, or unrestricted worker memory role was introduced. Approximate recall remains a scale-triggered benchmark before an approximate index can be authoritative; exact search is the verified Wave 6 path.
+No persistent database was deployed. No production credential, host repository mount, Docker socket mount, external network, paid resource, large-scale approximate-index performance claim, or unrestricted worker memory role was introduced. The HNSW result is a bounded functional recall fixture; production scale and latency remain future operational benchmarks, and vectors remain non-authoritative.
 
 ## Gate Result
 

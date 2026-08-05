@@ -36,7 +36,7 @@ ADR-002's PostgreSQL 18.4 and pgvector 0.8.6 decision is represented by an IRIS-
 - model-versioned derived vector records; and
 - ordered rollback statements.
 
-The disposable proof uses the recorded image digest with network disabled, no published ports, no host mounts, bounded memory, CPU, and process count, and fictional credentials. It verifies transactions, row access, audit capture, exact vector ordering, relational reads without vector search, backup/restore, and teardown. It does not deploy persistent infrastructure.
+The disposable proof uses the recorded image digest with network disabled, no published ports, no host mounts, bounded memory, CPU, and process count, and fictional credentials. It verifies transactions, row access, audit capture, exact vector ordering, HNSW fixture recall, index rebuild, embedding-model replacement, relational reads without vector search, backup/restore, and teardown. It does not deploy persistent infrastructure.
 
 ## Gate
 
