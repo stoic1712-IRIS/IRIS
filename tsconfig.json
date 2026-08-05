@@ -5,6 +5,7 @@
     { "path": "./packages/kernel" },
     { "path": "./packages/coordination" },
     { "path": "./packages/orchestration" },
+    { "path": "./packages/memory" },
     { "path": "./packages/model-gateway" }
   ]
 }
