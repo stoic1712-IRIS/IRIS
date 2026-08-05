@@ -245,6 +245,7 @@ const proposal = {
   forbiddenPaths: ["docs/governance", ".github", "evidence"],
   changes,
   commands: [
+    ["pnpm", "install", "--offline", "--frozen-lockfile"],
     ["pnpm", "format:check"],
     ["pnpm", "lint"],
     ["pnpm", "typecheck"],
