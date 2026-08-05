@@ -1,6 +1,6 @@
 # Wave 2 Disposable Candidate Evaluation
 
-**Status:** Local evidence; not canonical until approved and committed
+**Status:** Decision gate passed and evidence canonical
 
 **Date:** 2026-08-04
 
@@ -97,4 +97,4 @@ Before this evaluation is declared complete, all `iris-wave2-*` containers, volu
 - All six named evaluation volumes and the `iris-wave2-eval-net` network were removed.
 - A provider-state query returned no remaining container, volume, or network whose name begins with `iris-wave2`.
 - Pulled immutable images remain in Docker's local image cache; they are stopped and hold no evaluation volume state.
-- The temporary read-only Hivemind source checkout at `C:\Users\Admin\AppData\Local\Temp\iris-wave2-eval-20260804` remains because the host safety guard rejected recursive directory removal. It contains the public pinned source checkout only, with no generated `.env`, credentials, build output, container, or running process. Manual removal or a separately authorized recoverable cleanup mechanism remains outstanding.
+- The temporary read-only Hivemind source checkout at `C:\Users\Admin\AppData\Local\Temp\iris-wave2-eval-20260804` was moved to the Windows Recycle Bin during the Waves 0-12 closure audit on 2026-08-05. Its original path is absent. The operation is recoverable through the Recycle Bin and removed no credential, generated environment, container, or provider state.

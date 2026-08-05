@@ -1,6 +1,6 @@
 # Wave 11 Blueprint Engine and Visual Composer
 
-**Status:** Implemented and locally verified
+**Status:** Canonical and implemented; Wave 11 decision gate passed
 
 **Date:** 2026-08-05
 

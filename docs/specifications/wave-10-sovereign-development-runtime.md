@@ -1,6 +1,6 @@
 # Wave 10 Sovereign Development Runtime
 
-**Status:** Runtime implemented; graduation proof requires IRIS execution and exact typed Founder approval
+**Status:** Canonical; runtime implemented and sovereign graduation gate passed
 
 ## Purpose
 

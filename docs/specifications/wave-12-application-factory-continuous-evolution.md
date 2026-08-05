@@ -1,6 +1,6 @@
 # Wave 12 Application Factory and Continuous Evolution
 
-**Status:** Implemented and locally verified
+**Status:** Canonical and implemented; Wave 12 decision gate passed
 
 **Date:** 2026-08-05
 

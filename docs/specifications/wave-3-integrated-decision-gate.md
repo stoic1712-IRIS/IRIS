@@ -1,6 +1,6 @@
 # Wave 3 Integrated Decision Gate Specification
 
-**Status:** Draft implementation specification
+**Status:** Canonical and implemented; Wave 3 decision gate passed
 
 **Version:** 0.1.0
 

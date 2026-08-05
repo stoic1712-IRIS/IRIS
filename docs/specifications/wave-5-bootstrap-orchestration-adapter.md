@@ -1,6 +1,6 @@
 # Wave 5 Bootstrap Orchestration Adapter Specification
 
-**Status:** Local implementation candidate
+**Status:** Canonical and implemented; Wave 5 decision gate passed
 
 ## Purpose
 

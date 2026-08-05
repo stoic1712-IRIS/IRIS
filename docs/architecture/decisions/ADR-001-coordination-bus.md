@@ -1,6 +1,6 @@
 # ADR-001: Coordination Bus Progression
 
-**Status:** Founder-approved; pending canonical commit
+**Status:** Canonical; Wave 4 implementation and decision gate verified
 
 **Date:** 2026-08-04
 
@@ -43,7 +43,7 @@ Disable the provider adapter, drain and export required events, verify PostgreSQ
 
 ## Approval
 
-Founder approval granted in the Founder conversation on 2026-08-04: "I approve ADR-001 through ADR-004 as the architectural direction for coordination, canonical memory, model runtime adapters, and bootstrap orchestration." Canonical effect remains pending repository commit. This approval does not authorize provider installation into the canonical stack.
+Founder approval granted in the Founder conversation on 2026-08-04: "I approve ADR-001 through ADR-004 as the architectural direction for coordination, canonical memory, model runtime adapters, and bootstrap orchestration." The decision and its Wave 4 implementation are canonical. This approval does not authorize provider installation into the canonical stack.
 
 ## Supersession
 

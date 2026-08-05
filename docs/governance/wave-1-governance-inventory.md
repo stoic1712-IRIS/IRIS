@@ -1,6 +1,6 @@
 # Wave 1 Governance and Repository Inventory
 
-**Status:** Working inventory; not a completion declaration
+**Status:** Canonical completion inventory; reconciled 2026-08-05
 
 **Prepared:** 2026-08-04
 
@@ -41,9 +41,9 @@ The connected source documents remain read-only reference material and were not 
 | Define protected paths and branch policy | Complete and canonical | `docs/governance/protected-path-and-branch-policy.md`, version 1.0.0; package commit `d0f9d50` |
 | Establish an authoritative GitHub repository with an approved exposure decision | Complete | `stoic1712-IRIS/IRIS` is public by explicit Founder decision; `docs/governance/repository-visibility-decision.md` supersedes private visibility as a current Wave 1 blocker |
 | Create canonical local repository | Complete | `C:\Projects\STOIC-IRIS` with remote `origin` |
-| Establish `iris/*` branch convention | Partially demonstrated | Current branch follows the convention; written policy is still required |
-| Scaffold TypeScript monorepo | Not started | Prohibited until canonical rules and repository protections exist |
-| Add test, lint, format, and build commands | Not started | Must accompany the empty baseline scaffold and pass before Wave 1 completion |
+| Establish `iris/*` branch convention | Complete | Canonical protected-path and branch policy plus the complete PR history use governed `iris/*` branches |
+| Scaffold TypeScript monorepo | Complete and canonical | Wave 1 scaffold merged through PR #4 at `a65cede` and remains the repository foundation |
+| Add test, lint, format, and build commands | Complete and canonical | Root formatting, linting, type checking, testing, build, and diagnostics commands pass in the closure audit |
 
 ## Wave 1 Supporting Track
 
@@ -65,9 +65,9 @@ The connected source documents remain read-only reference material and were not 
 | Repository exposure is explicitly approved | Passed | Founder approved public operation; all repository history is treated as public disclosure |
 | Default-branch protections are confirmed | Passed | GitHub reported `Protect main` active for the public repository on 2026-08-04; pull requests required, deletion restricted, force-pushes blocked |
 | Local and remote commit equality confirmed | Passed for merged governance checkpoint | Local `main` and `origin/main` verified equal at merge commit `a3f2fe6324ad32450dad8fd30f7e1c7e72f5069e` |
-| Empty baseline build and tests pass | Not started | Governance and protections must be completed first |
+| Empty baseline build and tests pass | Passed | The Wave 1 baseline merged through PR #4; the expanded canonical repository continues to pass every root verification command |
 
-Wave 1 is not complete. IRIS Kernel implementation must not begin while these blockers remain.
+Wave 1 is complete. Its governance, repository, branch, scaffold, and verification foundations are canonical and every recorded merge revision is an ancestor of `main`.
 
 ## Contradictions and Open Decisions
 
@@ -81,7 +81,7 @@ The Roadmap treats the Worker Reasoning Framework and Cognitive Identity Engine 
 
 ### Governing Architecture sequence conflict
 
-The Governing Architecture describes an early OpenClaw baseline and private fork, while the Canonical Development Roadmap places external technology evaluation in Wave 2 and a bootstrap orchestration adapter in Wave 5. The draft reconciliation resolves sequence authority in favor of the Roadmap while preserving the Architecture's permanent ownership boundaries. Founder approval is still required before that reconciliation becomes canonical.
+The Governing Architecture describes an early OpenClaw baseline and private fork, while the Canonical Development Roadmap places external technology evaluation in Wave 2 and a bootstrap orchestration adapter in Wave 5. The canonical reconciliation resolves sequence authority in favor of the Roadmap while preserving the Architecture's permanent ownership boundaries. Wave 2 and Wave 5 subsequently implemented that sequence.
 
 ## Recommended Order of Work
 
@@ -90,11 +90,11 @@ The Governing Architecture describes an early OpenClaw baseline and private fork
 3. Preserve the canonical Wave 1 governance package and its commit provenance.
 4. Preserve the approved package as the authority for later security, repository, dependency, and implementation work.
 5. Preserve the approved public-visibility decision and provider-authoritative branch-protection evidence.
-6. Only after the governance gate passes, create the empty TypeScript monorepo baseline and its build, test, lint, and formatting commands.
+6. Preserve the canonical TypeScript monorepo baseline and its build, test, lint, formatting, and diagnostic commands.
 
 ## Completion Evidence Required
 
-Before Wave 1 may be declared complete, preserve:
+Wave 1 completion preserves:
 
 - exact files and components changed;
 - exact branch and revision;
