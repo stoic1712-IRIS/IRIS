@@ -2,7 +2,9 @@
 
 **Date:** 2026-08-05
 
-**Result:** Passed locally; non-executable proposal only
+**Proposal result:** Passed locally; immutable non-executable proposal
+
+**Realization:** Release One implemented and verified separately at private commit `270e39ad68ec60b1b803f56133b92970cb1237b0`; pending final Founder visual acceptance
 
 ## Deterministic Results
 
@@ -38,6 +40,8 @@ The proposal contains no credential, secret, real approval, real application rep
 - The interface design uses synthetic states and grants no operational authority.
 - Live IRIS contracts, authenticated actor transport, approval submission, data persistence, and provider access require later bounded proposals and separate authorization.
 - No implementation tests or production build exist yet because implementation and dependency installation were expressly excluded from this authorization.
+
+The preceding sentence describes this proposal verification event. It was superseded operationally—not historically—by the separately authorized Release One realization. That realization passed formatting, strict linting, type checking, seven tests, production build, dependency audit, loopback HTTP proof, protected-control inspection, shutdown, port-closure, and zero-container verification. See the canonical realization evidence for exact scope.
 
 ## Rollback
 
