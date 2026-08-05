@@ -29,6 +29,7 @@ The Founder approved ADR-001 through ADR-004 as architectural direction on 2026-
 | Model runtimes | Ollama primary; LM Studio laboratory/fallback | llama.cpp and vLLM deferred | `ADR-003` |
 | Bootstrap orchestration | IRIS-owned adapter accepted; OpenClaw retained only as a removable, digest-pinned bootstrap provider | Hivemind and Gamut patterns only; Shoal blocked on identity | `ADR-004`; Wave 2 evaluation; Wave 5 bounded proof |
 | Temporary workers | IRIS-owned Worker Factory and Cognitive Process Manager; digest-pinned Node container only for the Wave 8 deterministic acceptance worker | Docker supplies replaceable isolation; worker identity, permissions, context, lifecycle, revocation, evidence, and cleanup remain IRIS-owned | Wave 8 specification and evidence |
+| Capability learning and worker generation | IRIS-owned Capability Learning Engine and Worker Foundry; OpenClaw contributes only an approved bounded-execution pattern | Generated workers are original proposals with zero external-runtime dependencies and cannot approve or activate themselves | Wave 9 specification and evidence |
 
 ## Registry Update Rule
 

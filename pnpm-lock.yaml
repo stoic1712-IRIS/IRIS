@@ -33,6 +33,15 @@ importers:
         specifier: 4.4.3
         version: 4.4.3
 
+  packages/capabilities:
+    dependencies:
+      '@stoic-iris/workers':
+        specifier: workspace:*
+        version: link:../workers
+      zod:
+        specifier: 4.4.3
+        version: 4.4.3
+
   packages/contracts:
     dependencies:
       zod:
