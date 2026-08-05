@@ -1,5 +1,1 @@
-/**
- * Package boundary reserved by the canonical repository blueprint.
- * Later-wave behavior requires its own approved specification.
- */
-export {};
+export * from "./in-process-bus.js";

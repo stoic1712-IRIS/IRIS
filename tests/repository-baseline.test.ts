@@ -68,11 +68,10 @@ describe("Wave 1 repository baseline", () => {
     }
   });
 
-  it("keeps the later-wave coordination package as an empty governed boundary", async () => {
+  it("activates only the approved Wave 4 in-process coordination boundary", async () => {
     const sourceDirectory = path.join(repositoryRoot, "packages", "coordination", "src");
-    expect(await readdir(sourceDirectory)).toEqual(["index.ts"]);
+    expect((await readdir(sourceDirectory)).sort()).toEqual(["in-process-bus.ts", "index.ts"]);
     const source = await readFile(path.join(sourceDirectory, "index.ts"), "utf8");
-    expect(source).toContain("Later-wave behavior requires its own approved specification.");
-    expect(source.trim().endsWith("export {};")).toBe(true);
+    expect(source.trim()).toBe('export * from "./in-process-bus.js";');
   });
 });
