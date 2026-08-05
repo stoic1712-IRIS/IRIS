@@ -4,7 +4,13 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const repositoryRoot = process.cwd();
-const requiredPackages = ["contracts", "kernel", "coordination", "model-gateway"] as const;
+const requiredPackages = [
+  "contracts",
+  "kernel",
+  "coordination",
+  "model-gateway",
+  "orchestration",
+] as const;
 
 interface PackageManifest {
   name?: string;

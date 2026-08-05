@@ -1,6 +1,6 @@
 # ADR-004: Bootstrap Orchestration Adapter
 
-**Status:** Founder-approved; pending canonical commit
+**Status:** Canonical; Wave 5 bounded adapter implemented and verified
 
 **Date:** 2026-08-04
 
