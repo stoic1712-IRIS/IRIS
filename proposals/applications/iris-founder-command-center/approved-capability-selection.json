@@ -1,0 +1,58 @@
+{
+  "selectionId": "founder-command-capabilities",
+  "applicationId": "iris-founder-command-center",
+  "specificationDigest": "sha256:244748483dc3b7e79157adb828c6db881f561d379987709209ac0ece97c0dd8e",
+  "actor": "Founder",
+  "decision": "approved",
+  "approvedAt": "2026-08-05T12:45:00-06:00",
+  "capabilities": [
+    {
+      "capabilityId": "objective-intake",
+      "source": "iris-core",
+      "version": "0.0.0",
+      "license": "UNLICENSED",
+      "licenseApproved": true,
+      "securityApproved": true
+    },
+    {
+      "capabilityId": "approval-review",
+      "source": "iris-core",
+      "version": "0.0.0",
+      "license": "UNLICENSED",
+      "licenseApproved": true,
+      "securityApproved": true
+    },
+    {
+      "capabilityId": "mission-planning",
+      "source": "iris-core",
+      "version": "0.0.0",
+      "license": "UNLICENSED",
+      "licenseApproved": true,
+      "securityApproved": true
+    },
+    {
+      "capabilityId": "audit-evidence",
+      "source": "iris-core",
+      "version": "0.0.0",
+      "license": "UNLICENSED",
+      "licenseApproved": true,
+      "securityApproved": true
+    },
+    {
+      "capabilityId": "blueprint-navigation",
+      "source": "iris-owned-adapter",
+      "version": "0.0.0",
+      "license": "UNLICENSED",
+      "licenseApproved": true,
+      "securityApproved": true
+    },
+    {
+      "capabilityId": "system-health",
+      "source": "original-layer-4",
+      "version": "0.0.0",
+      "license": "UNLICENSED",
+      "licenseApproved": true,
+      "securityApproved": true
+    }
+  ]
+}

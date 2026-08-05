@@ -1,0 +1,64 @@
+{
+  "selectionId": "founder-command-capabilities",
+  "applicationId": "iris-founder-command-center",
+  "specificationDigest": "sha256:244748483dc3b7e79157adb828c6db881f561d379987709209ac0ece97c0dd8e",
+  "state": "pending-founder-approval",
+  "executionAuthorized": false,
+  "actorRequired": "Founder",
+  "capabilities": [
+    {
+      "capabilityId": "objective-intake",
+      "source": "iris-core",
+      "version": "0.0.0",
+      "license": "UNLICENSED",
+      "licenseApproved": true,
+      "securityApproved": true,
+      "access": "submit through governed Kernel intake; no direct execution"
+    },
+    {
+      "capabilityId": "approval-review",
+      "source": "iris-core",
+      "version": "0.0.0",
+      "license": "UNLICENSED",
+      "licenseApproved": true,
+      "securityApproved": true,
+      "access": "review exact proposals and delegate approval validation and consumption to IRIS Core"
+    },
+    {
+      "capabilityId": "mission-planning",
+      "source": "iris-core",
+      "version": "0.0.0",
+      "license": "UNLICENSED",
+      "licenseApproved": true,
+      "securityApproved": true,
+      "access": "read mission, dependency, blocker, evidence, and recommendation views"
+    },
+    {
+      "capabilityId": "audit-evidence",
+      "source": "iris-core",
+      "version": "0.0.0",
+      "license": "UNLICENSED",
+      "licenseApproved": true,
+      "securityApproved": true,
+      "access": "read redacted evidence-linked audit records and integrity state"
+    },
+    {
+      "capabilityId": "blueprint-navigation",
+      "source": "iris-owned-adapter",
+      "version": "0.0.0",
+      "license": "UNLICENSED",
+      "licenseApproved": true,
+      "securityApproved": true,
+      "access": "open validated canonical blueprints through a read-only adapter"
+    },
+    {
+      "capabilityId": "system-health",
+      "source": "original-layer-4",
+      "version": "0.0.0",
+      "license": "UNLICENSED",
+      "licenseApproved": true,
+      "securityApproved": true,
+      "access": "aggregate allowlisted local health summaries without secrets or unrestricted logs"
+    }
+  ]
+}

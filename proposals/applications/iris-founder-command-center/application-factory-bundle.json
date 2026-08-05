@@ -1,0 +1,116 @@
+{
+  "bundleId": "bundle-iris-founder-command-center",
+  "applicationId": "iris-founder-command-center",
+  "state": "proposal",
+  "executionAuthorized": false,
+  "repository": {
+    "owner": "stoic1712-IRIS",
+    "name": "iris-founder-command-center",
+    "visibility": "private",
+    "createRequested": true,
+    "created": false,
+    "coreRepositoryMutationAllowed": false
+  },
+  "files": [
+    {
+      "path": "package.json",
+      "content": "{\n  \"name\": \"@stoic-iris-apps/iris-founder-command-center\",\n  \"version\": \"0.0.0\",\n  \"private\": true,\n  \"type\": \"module\",\n  \"scripts\": {\n    \"test\": \"node --test\",\n    \"start\": \"node src/index.mjs\"\n  }\n}\n",
+      "digest": "sha256:8fef0c776bde591a23d8b49299192bb42f34a48eb38fd2fcd5fd303c5df89086",
+      "purpose": "Exact tool boundary"
+    },
+    {
+      "path": "README.md",
+      "content": "# IRIS Founder Command Center\n\nLayer 4 application generated as a proposal by IRIS.\n\nPurpose: Provide the Founder with one local-first governed interface for submitting objectives, reviewing proposals and approvals, inspecting missions, workers, evidence, audit history, blueprints, and IRIS health without granting the interface independent execution authority.\n",
+      "digest": "sha256:a0ab63f75f0ec37364d906e4856623182b699fe629019010a8c6ccd57cd2f0f4",
+      "purpose": "Layer 4 identity"
+    },
+    {
+      "path": "src/index.mjs",
+      "content": "export function describeApplication() {\n  return {\n  \"id\": \"iris-founder-command-center\",\n  \"purpose\": \"Provide the Founder with one local-first governed interface for submitting objectives, reviewing proposals and approvals, inspecting missions, workers, evidence, audit history, blueprints, and IRIS health without granting the interface independent execution authority.\"\n};\n}\n",
+      "digest": "sha256:24cc540c11de5a373bee887b34c545b95297435fe9fc000a2e3d128a979b5f0b",
+      "purpose": "Governed integration entrypoint"
+    }
+  ],
+  "infrastructureBlueprint": {
+    "apiVersion": "iris.stoic/v1",
+    "id": "iris-founder-command-center",
+    "name": "IRIS Founder Command Center",
+    "profile": "development",
+    "approvalStatus": "pending",
+    "nodes": [
+      {
+        "id": "iris-founder-command-center-service",
+        "name": "IRIS Founder Command Center Service",
+        "kind": "service",
+        "image": {
+          "repository": "example.invalid/iris-founder-command-center",
+          "digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "command": ["node", "src/index.mjs"],
+        "environment": { "NODE_ENV": "development" },
+        "ports": [],
+        "networks": ["iris-founder-command-center-private"],
+        "secrets": [],
+        "resources": {
+          "cpuCores": 1,
+          "memoryMiB": 512,
+          "storageGiB": 0,
+          "gpuCount": 0,
+          "hourlyCostUsd": 0
+        },
+        "security": {
+          "runAsNonRoot": true,
+          "readOnlyRootFilesystem": true,
+          "dropAllCapabilities": true,
+          "noNewPrivileges": true
+        },
+        "provenance": {
+          "source": "IRIS original generation",
+          "license": "UNLICENSED",
+          "version": "0.0.0"
+        }
+      }
+    ],
+    "edges": [],
+    "networks": [{ "id": "iris-founder-command-center-private", "internal": true }],
+    "secrets": [],
+    "policy": {
+      "allowPublicExposure": false,
+      "requireDigestLocks": true,
+      "requireNonRoot": true,
+      "maxHourlyCostUsd": 0
+    },
+    "metadata": {
+      "createdBy": "IRIS Application Factory",
+      "createdAt": "2026-08-05T12:35:00-06:00",
+      "sourceRevision": "pending-private-repository-creation"
+    }
+  },
+  "verification": {
+    "checks": ["format", "lint", "typecheck", "test", "build", "blueprint-validate"],
+    "securityChecks": ["secret-scan", "dependency-audit", "non-root-runtime", "network-exposure"],
+    "licenseChecks": [
+      "objective-intake:UNLICENSED",
+      "approval-review:UNLICENSED",
+      "mission-planning:UNLICENSED",
+      "audit-evidence:UNLICENSED",
+      "blueprint-navigation:UNLICENSED",
+      "system-health:UNLICENSED"
+    ]
+  },
+  "deployment": {
+    "disposable": true,
+    "requiresApproval": true,
+    "commands": [["docker", "compose", "up", "--detach", "--wait"]],
+    "rollbackCommands": [["git", "revert", "<approved-application-revision>"]],
+    "cleanupCommands": [["docker", "compose", "down", "--volumes", "--remove-orphans"]],
+    "verifyZeroCommands": [["docker", "compose", "ps", "--all", "--quiet"]]
+  },
+  "maintenance": {
+    "dependencyReviewCadence": "monthly",
+    "securityReviewCadence": "each release and monthly",
+    "backupAndRestoreTestCadence": "quarterly when persistent data exists",
+    "monitoring": ["availability", "latency", "errors", "resource use", "cost", "security events"],
+    "deprecationPolicy": "Founder-approved replacement, migration, rollback, and removal evidence required."
+  }
+}
