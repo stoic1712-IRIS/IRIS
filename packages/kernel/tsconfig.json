@@ -7,6 +7,6 @@
     "outDir": "dist",
     "tsBuildInfoFile": "dist/kernel.tsbuildinfo"
   },
-  "references": [{ "path": "../contracts" }],
+  "references": [{ "path": "../contracts" }, { "path": "../model-gateway" }],
   "include": ["src/**/*.ts"]
 }

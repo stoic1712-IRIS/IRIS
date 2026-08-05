@@ -50,6 +50,9 @@ importers:
       '@stoic-iris/contracts':
         specifier: workspace:*
         version: link:../contracts
+      '@stoic-iris/model-gateway':
+        specifier: workspace:*
+        version: link:../model-gateway
       zod:
         specifier: 4.4.3
         version: 4.4.3
