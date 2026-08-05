@@ -11,6 +11,8 @@ import {
 const ids = {
   approval: "approval_01936f3a-8b5c-7def-8abc-0123456789ab",
   evidence: "evidence_01936f3a-8b5c-7def-8abc-0123456789ab",
+  identity: "identity_01936f3a-8b5c-7def-8abc-0123456789ab",
+  policy: "policy_01936f3a-8b5c-7def-8abc-0123456789ab",
   proposal: "proposal_01936f3a-8b5c-7def-8abc-0123456789ab",
   request: "request_01936f3a-8b5c-7def-8abc-0123456789ab",
   worker: "worker_01936f3a-8b5c-7def-8abc-0123456789ab",
@@ -21,6 +23,8 @@ const digest = `sha256:${"a".repeat(64)}`;
 describe("Wave 3 shared contracts", () => {
   it("accepts governed canonical identifiers and rejects unknown kinds", () => {
     expect(canonicalIdSchema.parse(ids.request)).toBe(ids.request);
+    expect(canonicalIdSchema.parse(ids.identity)).toBe(ids.identity);
+    expect(canonicalIdSchema.parse(ids.policy)).toBe(ids.policy);
     expect(
       canonicalIdSchema.safeParse("provider_01936f3a-8b5c-7def-8abc-0123456789ab").success,
     ).toBe(false);
