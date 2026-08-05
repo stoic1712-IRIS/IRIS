@@ -1,0 +1,230 @@
+﻿STOIC-IRIS Wave 0 Workstation Diagnostics
+Generated: 2026-08-04T16:42:42.4901522-06:00
+
+=== Git revision ===
+cca945f73ffb8eaf6b459dbde3d21914d02fbbaa
+iris/governance-repository-foundation
+A  evidence/wave-0/workstation-certification.md
+A  evidence/wave-0/workstation-diagnostics.txt
+AM scripts/diagnostics/workstation.ps1
+
+=== Windows host ===
+Manufacturer : ASUS
+Model        : System Product Name
+RAM_GB       : 31.16
+
+=== Windows storage ===
+DriveLetter FileSystem Size_GB Free_GB
+----------- ---------- ------- -------
+          C NTFS        930.47  722.92
+
+=== WSL status ===
+Default Distribution: Ubuntu
+
+Default Version: 2
+
+
+  NAME              STATE           VERSION
+
+* Ubuntu            Running         2
+
+  docker-desktop    Running         2
+
+=== Ubuntu release ===
+PRETTY_NAME="Ubuntu 26.04 LTS"
+NAME="Ubuntu"
+VERSION_ID="26.04"
+VERSION="26.04 LTS (Resolute Raccoon)"
+VERSION_CODENAME=resolute
+ID=ubuntu
+ID_LIKE=debian
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=resolute
+LOGO=ubuntu-logo
+
+=== Ubuntu resources ===
+total        used        free      shared  buff/cache   available
+Mem:            15Gi       1.2Gi        13Gi        51Mi       1.1Gi        13Gi
+Swap:          4.0Gi          0B       4.0Gi
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sde       1007G  1.8G  954G   1% /
+Architecture:                            x86_64
+CPU op-mode(s):                          32-bit, 64-bit
+Address sizes:                           48 bits physical, 48 bits virtual
+Byte Order:                              Little Endian
+CPU(s):                                  12
+On-line CPU(s) list:                     0-11
+Vendor ID:                               AuthenticAMD
+Model name:                              AMD Ryzen 5 9600X 6-Core Processor
+CPU family:                              26
+Model:                                   68
+Thread(s) per core:                      2
+Core(s) per socket:                      6
+Socket(s):                               1
+Stepping:                                0
+BogoMIPS:                                7785.19
+Flags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid tsc_known_freq pni pclmulqdq ssse3 fma cx16 sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext perfctr_core ssbd ibrs ibpb stibp vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx_vnni avx512_bf16 clzero xsaveerptr arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm avx512_vp2intersect
+Virtualization:                          AMD-V
+Hypervisor vendor:                       Microsoft
+Virtualization type:                     full
+L1d cache:                               288 KiB (6 instances)
+L1i cache:                               192 KiB (6 instances)
+L2 cache:                                6 MiB (6 instances)
+L3 cache:                                32 MiB (1 instance)
+NUMA node(s):                            1
+NUMA node0 CPU(s):                       0-11
+Vulnerability Gather data sampling:      Not affected
+Vulnerability Ghostwrite:                Not affected
+Vulnerability Indirect target selection: Not affected
+Vulnerability Itlb multihit:             Not affected
+Vulnerability L1tf:                      Not affected
+Vulnerability Mds:                       Not affected
+Vulnerability Meltdown:                  Not affected
+Vulnerability Mmio stale data:           Not affected
+Vulnerability Old microcode:             Not affected
+Vulnerability Reg file data sampling:    Not affected
+Vulnerability Retbleed:                  Not affected
+Vulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode
+Vulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl
+Vulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization
+Vulnerability Spectre v2:                Mitigation; Retpolines; IBPB conditional; IBRS_FW; STIBP always-on; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected
+Vulnerability Srbds:                     Not affected
+Vulnerability Tsa:                       Not affected
+Vulnerability Tsx async abort:           Not affected
+Vulnerability Vmscape:                   Not affected
+
+=== Ubuntu security status ===
+{"_schema_version": "0.1", "livepatch": {"fixed_cves": []}, "packages": [], "summary": {"num_esm_apps_packages": 0, "num_esm_apps_updates": 0, "num_esm_infra_packages": 0, "num_esm_infra_updates": 0, "num_installed_packages": 544, "num_main_packages": 544, "num_multiverse_packages": 0, "num_restricted_packages": 0, "num_standard_security_updates": 0, "num_third_party_packages": 0, "num_universe_packages": 0, "num_unknown_packages": 0, "reboot_required": "no", "ua": {"attached": false, "enabled_services": [], "entitled_services": []}}}
+
+=== Development tools ===
+v24.19.0
+11.17.0
+11.20.0
+Python 3.14.4
+git version 2.53.0
+1.131.0
+e4c7e7b1d6d060162f4aa7f8225271b67ce1df75
+x64
+
+=== Docker ===
+Client:
+ Version:           29.6.2
+ API version:       1.55
+ Go version:        go1.26.5
+ Git commit:        dfc4efb
+ Built:             Thu Jul 16 16:14:59 2026
+ OS/Arch:           windows/amd64
+ Context:           desktop-linux
+
+Server: Docker Desktop 4.85.0 (235549)
+ Engine:
+  Version:          29.6.2
+  API version:      1.55 (minimum version 1.40)
+  Go version:       go1.26.5
+  Git commit:       3d80467
+  Built:            Thu Jul 16 16:12:20 2026
+  OS/Arch:          linux/amd64
+  Experimental:     false
+ containerd:
+  Version:          v2.2.5
+  GitCommit:        e53c7c1516c3b2bff98eb76f1f4117477e6f4e66
+ runc:
+  Version:          1.3.6
+  GitCommit:        v1.3.6-0-g491b69ba
+ docker-init:
+  Version:          0.19.0
+  GitCommit:        de40ad0
+
+=== Windows GPU ===
+Tue Aug  4 16:42:45 2026
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 610.88                 KMD Version: 610.88        CUDA UMD Version: 13.3     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                  Driver-Model | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 3090      WDDM  |   00000000:01:00.0 Off |                  N/A |
+| 30%   30C    P8             15W /  350W |    9800MiB /  24576MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|    0   N/A  N/A            1760    C+G   ...2p2nqsd0c76g0\app\ChatGPT.exe      N/A      |
+|    0   N/A  N/A           16848      C   ...a\lib\ollama\llama-server.exe      N/A      |
++-----------------------------------------------------------------------------------------+
+
+=== WSL GPU ===
+Tue Aug  4 16:42:45 2026
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 610.57.01              KMD Version: 610.88        CUDA UMD Version: 13.3     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 3090        On  |   00000000:01:00.0 Off |                  N/A |
+| 30%   30C    P8             15W /  350W |    9800MiB /  24576MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+
+=== Container GPU ===
+Tue Aug  4 22:42:45 2026
++-----------------------------------------------------------------------------------------+
+| NVIDIA-SMI 610.57.01              KMD Version: 610.88        CUDA UMD Version: 13.3     |
++-----------------------------------------+------------------------+----------------------+
+| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |
+|                                         |                        |               MIG M. |
+|=========================================+========================+======================|
+|   0  NVIDIA GeForce RTX 3090        On  |   00000000:01:00.0 Off |                  N/A |
+| 30%   30C    P8             15W /  350W |    9800MiB /  24576MiB |      0%      Default |
+|                                         |                        |                  N/A |
++-----------------------------------------+------------------------+----------------------+
+
++-----------------------------------------------------------------------------------------+
+| Processes:                                                                              |
+|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |
+|        ID   ID                                                               Usage      |
+|=========================================================================================|
+|  No running processes found                                                             |
++-----------------------------------------------------------------------------------------+
+
+=== Local model runtimes ===
+ollama version is 0.32.5
+NAME        ID              SIZE      MODIFIED
+qwen3:8b    500a1f067a9f    5.2 GB    23 minutes ago
+CLI commit: 71bd99c
+The server is not running.
+
+=== Ollama structured-response test ===
+{
+  "status": "ready",
+  "gpu_vram_gb": 24,
+  "model": "qwen3:8b"
+}
+
+
+status      : ready
+gpu_vram_gb : 24
+model       : qwen3:8b
+
+
+
+NAME        ID              SIZE       PROCESSOR    CONTEXT    UNTIL
+qwen3:8b    500a1f067a9f    10.0 GB    100% GPU     32768      4 minutes from now
