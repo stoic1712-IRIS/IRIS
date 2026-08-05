@@ -7,3 +7,4 @@ export * from "./operational-control.js";
 export * from "./policy-registry.js";
 export * from "./read-model.js";
 export * from "./read-service.js";
+export * from "./repository-review.js";

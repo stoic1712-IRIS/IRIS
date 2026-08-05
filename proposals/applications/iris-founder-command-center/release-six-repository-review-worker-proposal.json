@@ -1,0 +1,101 @@
+{
+  "proposalId": "founder-command-center-release-six-repository-review-worker",
+  "state": "pending-founder-approval",
+  "executionAuthorized": false,
+  "objective": "Implement and locally verify an authenticated, digest-bound, disposable read-only repository-review worker for one exact committed Git comparison.",
+  "repositories": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "localPath": "C:\\Projects\\STOIC-IRIS-release-six",
+      "baseRevision": "d76bb60c5890a179ea7d81c6da0dcd5703345d1c",
+      "branch": "iris/release-six-repository-review-worker"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "localPath": "C:\\Projects\\iris-founder-command-center-release-six",
+      "baseRevision": "2c1522e5b2481e6a045fb7cdc9ac154a028f9afe",
+      "branch": "iris/release-six-repository-review-worker"
+    }
+  ],
+  "protectedAction": {
+    "type": "worker-activation",
+    "riskClass": "R3",
+    "executor": "IRIS Core",
+    "tool": "canonical Ollama adapter",
+    "target": "one disposable local read-only repository-review worker",
+    "oneTimeUse": true
+  },
+  "implementation": {
+    "model": "qwen3:8b",
+    "modelEndpoint": "http://127.0.0.1:11434",
+    "workerClass": "repository-review-read-only",
+    "reviewTargets": ["stoic1712-IRIS/IRIS", "stoic1712-IRIS/iris-founder-command-center"],
+    "committedComparisonsOnly": true,
+    "repositoryWriteAuthority": false,
+    "githubMutationAuthority": false,
+    "remediationAuthority": false,
+    "approvalAuthority": false,
+    "canonicalMemoryMutation": false,
+    "generalNetworkAuthority": false,
+    "persistentState": false,
+    "deployment": false,
+    "publicExposure": false,
+    "maximumChangedFiles": 100,
+    "maximumInputBytes": 1048576,
+    "maximumOutputBytes": 65536,
+    "maximumRuntimeSeconds": 120,
+    "maximumCostUsd": 0
+  },
+  "securityContract": {
+    "path": "proposals/applications/iris-founder-command-center/release-six-repository-review-worker-security-contract.md",
+    "digest": "sha256:cf5c7e21e0c0eeb16517fb64ba714926050b249e9a7df067eec811e448c5a8ac"
+  },
+  "reviewOutput": {
+    "verdicts": ["pass", "needs-review", "block"],
+    "requiredFindingFields": [
+      "severity",
+      "confidence",
+      "claim",
+      "file",
+      "line",
+      "evidence",
+      "remediation"
+    ],
+    "advisoryOnly": true
+  },
+  "verification": [
+    "format-check",
+    "zero-warning-lint",
+    "strict-typecheck",
+    "unit-and-integration-tests",
+    "production-build",
+    "dependency-audit",
+    "secret-scan",
+    "bundle-scan",
+    "prompt-injection-tests",
+    "immutable-revision-and-citation-tests",
+    "real-browser-loopback-proof",
+    "real-ollama-fictional-defect-review-proof",
+    "zero-repository-write-proof",
+    "cleanup-and-rollback-proof"
+  ],
+  "externalReviewers": {
+    "githubCopilotCodeReview": "separate-availability-and-authorization-required",
+    "codexSecurity": "separate-availability-and-authorization-required"
+  },
+  "excludedAuthority": [
+    "uncommitted or arbitrary filesystem review",
+    "coding, remediation, or repository writes",
+    "GitHub review submission, settings changes, or merge",
+    "persistent review, approval, worker, or memory state",
+    "general network access",
+    "external or paid providers",
+    "dependency installation",
+    "deployment or startup registration",
+    "public or LAN exposure",
+    "spending",
+    "staging, committing, pushing, pull-request creation, or merging"
+  ],
+  "reapproval": "Required for any material change to model, endpoint, repository, target mutability, permissions, paths, tools, network, limits, persistence, exposure, identity, remediation, GitHub effects, cost, or protected scope.",
+  "createdAt": "2026-08-05T15:35:00-06:00"
+}
