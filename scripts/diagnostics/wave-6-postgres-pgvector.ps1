@@ -64,9 +64,16 @@ RESET ROLE;
 INSERT INTO iris_knowledge_chunk VALUES ('chunk-a','canonical memory evidence','repository:docs/architecture/decisions/ADR-002-canonical-memory-and-vector-search.md'),('chunk-b','derived vector evidence','repository:docs/architecture/decisions/ADR-002-canonical-memory-and-vector-search.md');
 INSERT INTO iris_embedding VALUES ('embedding-a','chunk-a','fixture-v1','[1,0,0]'),('embedding-b','chunk-b','fixture-v1','[0,1,0]');
 DO $$ BEGIN IF (SELECT chunk_id FROM iris_embedding ORDER BY embedding <=> '[0,1,0]' LIMIT 1) <> 'chunk-b' THEN RAISE EXCEPTION 'exact vector search failed'; END IF; END $$;
+CREATE INDEX iris_embedding_hnsw ON iris_embedding USING hnsw (embedding vector_cosine_ops);
+SET enable_seqscan=off;
+DO $$ BEGIN IF (SELECT chunk_id FROM iris_embedding ORDER BY embedding <=> '[0,1,0]' LIMIT 1) <> 'chunk-b' THEN RAISE EXCEPTION 'approximate recall fixture failed'; END IF; END $$;
+RESET enable_seqscan;
+REINDEX INDEX iris_embedding_hnsw;
+UPDATE iris_embedding SET model='fixture-v2' WHERE model='fixture-v1';
+DO $$ BEGIN IF (SELECT count(*) FROM iris_embedding WHERE model='fixture-v2') <> 2 THEN RAISE EXCEPTION 'embedding model replacement failed'; END IF; END $$;
 DO $$ BEGIN IF (SELECT count(*) FROM iris_memory_audit) < 2 THEN RAISE EXCEPTION 'audit capture failed'; END IF; END $$;
 SELECT current_setting('server_version') AS postgres_version, extversion AS pgvector_version FROM pg_extension WHERE extname='vector';
-SELECT 'governance,transactions,row-access,audit,exact-vector,citations,vector-disabled-relational-read' AS verified_controls;
+SELECT 'governance,transactions,row-access,audit,exact-vector,hnsw-recall,index-rebuild,model-replacement,citations,vector-disabled-relational-read' AS verified_controls;
 '@
     $sql | & docker exec -i $containerName psql -U postgres -v ON_ERROR_STOP=1
     if ($LASTEXITCODE -ne 0) { throw "PostgreSQL verification SQL failed." }
