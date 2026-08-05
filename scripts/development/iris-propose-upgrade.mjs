@@ -247,10 +247,10 @@ const proposal = {
   commands: [
     ["pnpm", "install", "--offline", "--frozen-lockfile"],
     ["pnpm", "format:check"],
+    ["pnpm", "build"],
     ["pnpm", "lint"],
     ["pnpm", "typecheck"],
     ["pnpm", "test"],
-    ["pnpm", "build"],
     ["pnpm", "diagnostics"],
   ],
   requiredChecks: [
