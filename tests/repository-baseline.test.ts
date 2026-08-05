@@ -12,6 +12,7 @@ const requiredPackages = [
   "orchestration",
   "memory",
   "planning",
+  "workers",
 ] as const;
 
 interface PackageManifest {
