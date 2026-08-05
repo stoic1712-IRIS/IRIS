@@ -5,7 +5,7 @@ import { getSovereignDevelopmentSelfDescription } from "../packages/development/
 describe("Wave 10 graduation self-description", () => {
   it("returns the exact immutable capability contract", () => {
     const description = getSovereignDevelopmentSelfDescription();
-    expect(description.graduationEvidenceComplete).toBe(false);
+    expect(description.graduationEvidenceComplete).toBe(true);
     expect(description.capabilities).toEqual([
       "exact-bounded-proposal",
       "typed-founder-approval",

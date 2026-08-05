@@ -9,7 +9,7 @@ The development package exposes a deterministic description of the sovereign dev
 - The system name is `STOIC-IRIS`.
 - The runtime is `sovereign-development-runtime`.
 - Capabilities appear in the canonical order encoded by the implementation and tests.
-- `graduationEvidenceComplete` remains `false` until the full Founder-operated graduation workflow succeeds.
+- `graduationEvidenceComplete` is `true` because the full Founder-operated graduation workflow succeeded at checkpoint `468f81e4c2f91afe101796157d867926123c853d` with provider-authoritative zero-resource verification.
 
 ## Immutability and determinism
 
@@ -17,8 +17,8 @@ Each call returns a distinct object and capabilities array. Both are frozen. The
 
 ## Validation
 
-Tests verify the exact capability list, frozen object and array, incomplete graduation status, and distinct identities across calls. The standard format, lint, typecheck, test, build, diagnostics, and independent verification checks remain mandatory.
+Tests verify the exact capability list, frozen object and array, completed graduation status, and distinct identities across calls. The standard format, lint, typecheck, test, build, diagnostics, and independent verification checks remain mandatory.
 
 ## Graduation boundary
 
-Machinery readiness and this self-description are not Phase 0 graduation evidence. Graduation remains incomplete until IRIS completes the genuine Founder-operated governed workflow end to end, including private checkpointing, remote equality, rollback evidence, cleanup, paid-resource termination, and provider-authoritative zero-resource verification.
+The self-description does not create graduation authority. It reports the completed Phase 0 workflow whose independent evidence records the exact typed approval, private checkpoint, remote equality, rollback ancestry, cleanup, paid-resource termination, and provider-authoritative zero-resource verification. Any future status change requires new governed evidence.
