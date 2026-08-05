@@ -1,0 +1,8 @@
+node_modules/
+dist/
+coverage/
+pnpm-lock.yaml
+docs/
+evidence/
+README.md
+scripts/diagnostics/workstation.ps1
