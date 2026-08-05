@@ -1,6 +1,6 @@
 # Model Gateway and Ollama Adapter Specification
 
-**Status:** Draft implementation specification
+**Status:** Canonical and implemented; deterministic and live Ollama verification passed
 
 **Version:** 0.1.0
 

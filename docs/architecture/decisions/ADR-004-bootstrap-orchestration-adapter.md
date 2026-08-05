@@ -44,7 +44,7 @@ Stop and remove the adapter and provider containers, revoke evaluation tokens, r
 
 ## Approval
 
-Founder approval granted in the Founder conversation on 2026-08-04: "I approve ADR-001 through ADR-004 as the architectural direction for coordination, canonical memory, model runtime adapters, and bootstrap orchestration." Canonical effect remains pending repository commit. The approval does not authorize OpenClaw or another external orchestrator to operate against canonical resources.
+Founder approval granted in the Founder conversation on 2026-08-04: "I approve ADR-001 through ADR-004 as the architectural direction for coordination, canonical memory, model runtime adapters, and bootstrap orchestration." The decision and bounded Wave 5 adapter are canonical. The approval does not authorize OpenClaw or another external orchestrator to operate against canonical resources.
 
 ## Supersession
 

@@ -3,7 +3,7 @@
 **Date:** 2026-08-05
 **Branch:** `iris/wave-4-coordination-bus`
 **Baseline:** `15aeeab5b787b9bb6e3b14e4b62c48f0afecb0dc`
-**Status:** Local candidate; publication and canonical completion pending
+**Status:** Decision gate passed and evidence canonical
 
 ## Verified capability
 
@@ -51,4 +51,4 @@ Before dependent Wave 5 behavior exists, revert the future bounded Wave 4 merge 
 
 ## Completion boundary
 
-This evidence does not complete Phase 0. Wave 4 becomes canonical only after the exact local package is reviewed, committed, pushed with remote equality, merged through a conflict-free pull request with Founder authorization, and verified on canonical `main`.
+This evidence does not by itself complete Phase 0. Wave 4 was reviewed and merged through PR #11 at merge revision `d6dd53e`, which is an ancestor of canonical `main`.

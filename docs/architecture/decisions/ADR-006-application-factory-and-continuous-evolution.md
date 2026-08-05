@@ -1,6 +1,6 @@
 # ADR-006: Application Factory and Continuous Evolution Boundaries
 
-**Status:** Canonical implementation direction
+**Status:** Canonical; Wave 12 implementation and decision gate verified
 
 **Date:** 2026-08-05
 

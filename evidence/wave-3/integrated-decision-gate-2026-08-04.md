@@ -1,6 +1,6 @@
 # Wave 3 Integrated Decision Gate Evidence
 
-**Status:** Locally passed; canonical merge pending
+**Status:** Decision gate passed and evidence canonical
 
 **Date:** 2026-08-04
 
@@ -81,4 +81,4 @@ Revert the bounded future merge commit before Wave 4 behavior. The live model wa
 
 ## Completion Assessment
 
-The canonical Wave 3 decision-gate conditions are locally satisfied. Wave 3 becomes complete only after the exact package is reviewed, committed, pushed with remote equality, merged through a conflict-free pull request with Founder approval, and verified on canonical `main`.
+The canonical Wave 3 decision-gate conditions passed. The complete package was reviewed and merged through PRs #5-#10 and is an ancestor of canonical `main`.

@@ -8,7 +8,7 @@
 
 **Baseline revision:** `cca945f`
 
-**Status:** Technical checks passed; diagnostic automation executed; evidence commit pending
+**Status:** Decision gate passed and evidence canonical
 
 ## Host Platform
 

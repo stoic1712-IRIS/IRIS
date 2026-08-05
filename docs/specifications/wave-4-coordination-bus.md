@@ -1,6 +1,6 @@
 # Wave 4 Coordination Bus Specification
 
-**Status:** Local implementation candidate
+**Status:** Canonical and implemented; Wave 4 decision gate passed
 
 ## Purpose
 

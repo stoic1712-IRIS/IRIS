@@ -1,6 +1,6 @@
 # Wave 9 Capability Learning Engine and Worker Foundry
 
-**Status:** Implemented and verified on the Wave 9 branch
+**Status:** Canonical and implemented; Wave 9 decision gate passed
 **Decision gate:** An approved external pattern produces an original IRIS-native worker; the worker operates after the external system is removed; generated workers cannot approve or activate themselves.
 
 ## Purpose

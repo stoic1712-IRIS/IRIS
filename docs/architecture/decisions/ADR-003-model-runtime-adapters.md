@@ -1,6 +1,6 @@
 # ADR-003: Replaceable Model Runtime Adapters
 
-**Status:** Founder-approved; pending canonical commit
+**Status:** Canonical; Wave 3 model-gateway implementation and live Ollama proof verified
 
 **Date:** 2026-08-04
 
@@ -43,7 +43,7 @@ Disable the adapter, unload models, remove provider configuration and model file
 
 ## Approval
 
-Founder approval granted in the Founder conversation on 2026-08-04: "I approve ADR-001 through ADR-004 as the architectural direction for coordination, canonical memory, model runtime adapters, and bootstrap orchestration." Canonical effect remains pending repository commit. No new runtime installation was authorized.
+Founder approval granted in the Founder conversation on 2026-08-04: "I approve ADR-001 through ADR-004 as the architectural direction for coordination, canonical memory, model runtime adapters, and bootstrap orchestration." The decision and Wave 3 Ollama adapter proof are canonical. No new runtime installation was authorized by that approval.
 
 ## Supersession
 

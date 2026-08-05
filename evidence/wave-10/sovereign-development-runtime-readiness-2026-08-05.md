@@ -2,7 +2,7 @@
 
 ## Status
 
-The Wave 10 machinery is implemented and locally verified. The permanent graduation gate is deliberately not marked complete because IRIS has not yet executed the real-model, Founder-approved, private-checkpoint self-upgrade without Codex or Claude modifying the repository.
+Superseded readiness record. The machinery described below was subsequently exercised by IRIS and the permanent graduation gate passed. Canonical completion evidence is `evidence/wave-10/sovereign-development-graduation-2026-08-05.md`.
 
 ## Implemented Controls
 
@@ -24,8 +24,8 @@ The Wave 10 machinery is implemented and locally verified. The permanent graduat
 
 Seven focused Wave 10 tests cover schema binding, unsafe-path rejection, digest rejection, approval mismatch, successful multi-file lifecycle, repair/reapproval, command failure cleanup, and remote inequality. Full repository verification results are recorded in the merge pull request.
 
-## Mandatory Next Gate
+## Historical Mandatory Gate
 
-After this machinery is merged into canonical `main`, the repository must have a private `checkpoint` remote. IRIS must then inspect the clean canonical revision and create the proposal outside the repository. The Founder must type the exact digest-bound statement. From that point until IRIS finishes or safely fails, Codex and Claude must not modify the repository.
+This readiness record required a private `checkpoint` remote, clean canonical inspection by IRIS, an exact digest-bound typed Founder approval, and a protected execution interval in which Codex and Claude did not modify the repository. That gate was later satisfied by the graduation record and private checkpoint `468f81e4c2f91afe101796157d867926123c853d`.
 
-No fixture, machinery-only test, Codex-authored change, public checkpoint, or preapproval completes Development Independence.
+The permanent rule remains: no fixture, machinery-only test, Codex-authored change, public checkpoint, or preapproval can substitute for the completed Development Independence proof.

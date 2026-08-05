@@ -3,7 +3,7 @@
 **Date:** 2026-08-05
 **Branch:** `iris/wave-5-bootstrap-orchestration`
 **Baseline:** `d6dd53eba4b0d891482a25461384683d5539b3ad`
-**Status:** Local completion candidate; canonical publication pending
+**Status:** Decision gate passed and evidence canonical
 
 ## Decision-gate result
 

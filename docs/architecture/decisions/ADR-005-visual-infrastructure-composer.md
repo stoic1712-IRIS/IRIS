@@ -1,6 +1,6 @@
 # ADR-005: Portable Blueprint Engine and Visual Composer
 
-**Status:** Canonical implementation direction
+**Status:** Canonical; Wave 11 implementation and decision gate verified
 
 **Date:** 2026-08-05
 
