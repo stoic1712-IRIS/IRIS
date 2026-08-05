@@ -1,0 +1,78 @@
+{
+  "proposalId": "founder-command-center-release-five-founder-operational-control",
+  "state": "pending-founder-approval",
+  "executionAuthorized": false,
+  "objective": "Implement and locally verify the first authenticated, digest-bound Founder mission and disposable read-only worker activation path.",
+  "repositories": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "localPath": "C:\\Projects\\STOIC-IRIS-wave1-scaffold",
+      "baseRevision": "1fe4059b8d66618669ebd18db546390989ff64d4",
+      "branch": "iris/release-five-founder-operational-control"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "localPath": "C:\\Projects\\iris-founder-command-center",
+      "baseRevision": "f8c9778a91309e6e4b8cbbc120414e1b424a5588",
+      "branch": "iris/release-five-founder-operational-control"
+    }
+  ],
+  "protectedAction": {
+    "type": "worker-activation",
+    "riskClass": "R3",
+    "executor": "IRIS Core",
+    "tool": "canonical Ollama adapter",
+    "target": "one disposable local read-only qwen3:8b worker",
+    "oneTimeUse": true
+  },
+  "implementation": {
+    "model": "qwen3:8b",
+    "modelEndpoint": "http://127.0.0.1:11434",
+    "workerClass": "read-only",
+    "repositoryWriteAuthority": false,
+    "canonicalMemoryMutation": false,
+    "generalNetworkAuthority": false,
+    "persistentState": false,
+    "deployment": false,
+    "publicExposure": false,
+    "maximumCostUsd": 0,
+    "maximumRuntimeSeconds": 120,
+    "maximumOutputBytes": 65536
+  },
+  "approvedRepairsIncluded": [
+    "Make the canonical PowerShell launcher pass a single CRLF-safe WSL command.",
+    "Accept standards-compliant same-origin GET requests that omit Origin while enforcing exact Host, Fetch Metadata, session, and CSRF.",
+    "Allow at most five seconds of browser/WSL clock skew while retaining strict freshness rejection."
+  ],
+  "securityContract": {
+    "path": "proposals/applications/iris-founder-command-center/release-five-founder-operational-control-security-contract.md",
+    "digest": "sha256:e79a56ed22bf0497579096d1fd37578d8394820f70db6e881d4b9b039eef99f0"
+  },
+  "verification": [
+    "format-check",
+    "zero-warning-lint",
+    "strict-typecheck",
+    "unit-and-integration-tests",
+    "production-build",
+    "dependency-audit",
+    "secret-scan",
+    "bundle-scan",
+    "real-browser-loopback-proof",
+    "real-ollama-disposable-worker-proof",
+    "cleanup-and-rollback-proof"
+  ],
+  "excludedAuthority": [
+    "coding or mutating workers",
+    "repository writes by the running application",
+    "persistent mission, approval, worker, or memory state",
+    "general network access",
+    "external or paid providers",
+    "dependency installation",
+    "deployment or startup registration",
+    "public or LAN exposure",
+    "spending",
+    "staging, committing, pushing, pull-request creation, or merging"
+  ],
+  "reapproval": "Required for any material change to model, objective class, permissions, paths, tools, network, timeout, cost, persistence, exposure, identity, or protected scope.",
+  "createdAt": "2026-08-05T14:55:00-06:00"
+}
