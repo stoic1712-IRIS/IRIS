@@ -8,6 +8,7 @@
     { "path": "./packages/memory" },
     { "path": "./packages/planning" },
     { "path": "./packages/workers" },
+    { "path": "./packages/capabilities" },
     { "path": "./packages/model-gateway" }
   ]
 }

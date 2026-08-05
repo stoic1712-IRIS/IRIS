@@ -32,6 +32,7 @@ The repository is a public-authority target with governed branches, IRIS-owned c
 | `packages/memory/` | Governed canonical memory, knowledge retrieval, and repository intelligence |
 | `packages/planning/` | Mission decomposition, roadmap state, dependency-aware prioritization, and Core/Layer 4 classification |
 | `packages/workers/` | Governed temporary-worker specifications, bounded context, permission calculation, model assignment, lifecycle, revocation, and cleanup |
+| `packages/capabilities/` | Candidate intake, provenance/license/security review, capability mapping, pattern extraction, decisions, and original worker proposals |
 | `tests/` | Cross-package acceptance and architecture tests |
 
 The planned structure is not authorization to scaffold. It activates only after governing documents, the approved visibility decision, provider-enforced protections, and dependency decisions satisfy Wave 1 prerequisites.
