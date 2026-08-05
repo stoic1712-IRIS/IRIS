@@ -23,17 +23,18 @@ Any changed file, content, command, base revision, branch, remote, or cleanup co
 ## Execution Lifecycle
 
 1. Validate proposal and exact typed approval.
-2. Create a disposable Git worktree at the exact base revision.
-3. Verify every before digest and enforce allowed/forbidden paths.
-4. Apply all exact file mutations and verify every after digest.
-5. Run only the proposal's governed commands.
-6. Independently compare the changed-path set and run `git diff --check`.
-7. Stop for repair and reapproval if verification finds anything.
-8. Create and push the checkpoint to the proposal's private remote.
-9. Verify the local checkpoint SHA equals the remote branch SHA.
-10. Preserve a `git revert <checkpoint>` rollback command.
-11. Remove and prune the disposable worktree.
-12. Terminate paid resources and query the provider until it reports zero resources.
+2. Dispatch a uniquely scoped GitHub Actions provider-proof run and record its provider run identifier.
+3. Create a disposable Git worktree at the exact base revision.
+4. Verify every before digest and enforce allowed/forbidden paths.
+5. Apply all exact file mutations and verify every after digest.
+6. Run only the proposal's governed commands.
+7. Independently compare the changed-path set and run `git diff --check`.
+8. Stop for repair and reapproval if verification finds anything.
+9. Create and push the checkpoint to the proposal's private remote.
+10. Verify the local checkpoint SHA equals the remote branch SHA.
+11. Preserve a `git revert <checkpoint>` rollback command.
+12. Remove and prune the disposable worktree.
+13. Cancel every active provider-proof run in the exact scope and poll GitHub until it reports zero.
 
 All failures close authority, attempt workspace cleanup, terminate scoped paid resources, and preserve events.
 
@@ -42,6 +43,12 @@ All failures close authority, attempt workspace cleanup, terminate scoped paid r
 `scripts/development/iris-propose-upgrade.mjs` requires a clean canonical checkout, gives Qwen3 8B bounded repository context, and writes its exact proposal outside the repository. It cannot apply the proposal.
 
 `scripts/development/iris-execute-approved-upgrade.mjs` accepts the unchanged proposal plus a matching approval record and executes through the IRIS-owned runtime. The checkpoint remote named `checkpoint` must resolve to a private repository before approval.
+
+## Provider-Authoritative Resource Proof
+
+`GitHubActionsResourceProvider` uses GitHub's workflow-dispatch, workflow-run listing, and cancellation APIs. It requires an authenticated `IRIS_GITHUB_TOKEN` with Actions write permission, dispatches `.github/workflows/wave-10-resource-proof.yml` with a proposal-digest-derived scope, terminates all active runs in that scope, and fails closed unless GitHub reports zero. The workflow is bounded to fifteen minutes and receives read-only repository permission.
+
+An absent provider, missing token, failed dispatch, unscoped run, failed cancellation, or nonzero final query cannot satisfy graduation. The previous in-memory empty provider is not an acceptable graduation authority.
 
 ## Graduation Boundary
 

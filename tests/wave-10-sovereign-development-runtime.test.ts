@@ -83,6 +83,8 @@ class FixtureAdapter implements DevelopmentAdapter {
   resources: string[] = [];
   cleaned = 0;
   terminated = 0;
+  provisioned = 0;
+  provisionResult = ["paid_runner_1"];
   createWorkspace(input: DevelopmentProposal) {
     return Promise.resolve({
       id: "workspace_fixture",
@@ -127,6 +129,11 @@ class FixtureAdapter implements DevelopmentAdapter {
   cleanup() {
     this.cleaned += 1;
     return Promise.resolve(this.cleanupResult);
+  }
+  provisionPaidResources() {
+    this.provisioned += 1;
+    this.resources = [...this.provisionResult];
+    return Promise.resolve([...this.resources]);
   }
   terminatePaidResources() {
     this.terminated += 1;
@@ -190,6 +197,7 @@ describe("Wave 10 Sovereign Development Runtime", () => {
     expect(adapter.files.get("docs/evidence/iris-upgrade.md")).toBe(added);
     expect(result.events.map((event) => event.type)).toEqual([
       "DevelopmentApproved",
+      "PaidResourcesProvisioned",
       "WorkspaceCreated",
       "MultiFileEditApplied",
       "ChecksPassed",
@@ -223,6 +231,21 @@ describe("Wave 10 Sovereign Development Runtime", () => {
     expect(adapter.terminated).toBe(1);
   });
 
+  it("fails closed when the provider does not provision an authoritative resource proof", async () => {
+    const adapter = new FixtureAdapter();
+    adapter.provisionResult = [];
+    const result = await new SovereignDevelopmentRuntime(adapter).execute(proposal(), approval());
+    expect(result).toMatchObject({
+      status: "failed",
+      remoteEquality: false,
+      providerZeroVerified: true,
+    });
+    expect(result.events.map((event) => event.type)).toEqual([
+      "DevelopmentApproved",
+      "DevelopmentFailed",
+    ]);
+  });
+
   it("fails closed when checkpoint and remote are unequal", async () => {
     const adapter = new FixtureAdapter();
     adapter.remoteEqual = false;
@@ -247,7 +270,14 @@ describe("Wave 10 Sovereign Development Runtime", () => {
         ...proposal(),
         baseRevision: stdout.trim(),
       });
-      const adapter = new GitDevelopmentAdapter({ canonicalPath: repository });
+      const adapter = new GitDevelopmentAdapter({
+        canonicalPath: repository,
+        paidResourceProvider: {
+          provision: () => Promise.resolve(["fixture"]),
+          terminate: () => Promise.resolve(["fixture"]),
+          list: () => Promise.resolve([]),
+        },
+      });
       const workspace = await adapter.createWorkspace(current);
       const first = current.changes.at(0);
       const second = current.changes.at(1);
