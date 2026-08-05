@@ -4,7 +4,7 @@
 
 **Proposal result:** Passed locally; immutable non-executable proposal
 
-**Realization:** Release One implemented and verified separately at private commit `270e39ad68ec60b1b803f56133b92970cb1237b0`; pending final Founder visual acceptance
+**Realization:** Release One implemented, verified, privately published, and visually accepted by the Founder at exact commit `270e39ad68ec60b1b803f56133b92970cb1237b0`
 
 ## Deterministic Results
 
