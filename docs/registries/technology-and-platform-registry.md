@@ -9,7 +9,7 @@
 | Windows 11 | Founder workstation host | Operational | Replaceable environment |
 | Ubuntu 26.04 LTS on WSL2 | Primary Linux development environment | Certified | Replaceable environment |
 | GitHub `stoic1712-IRIS/IRIS` | Remote repository | Operational; Founder-approved public visibility; `Protect main` active | Repository provider, not governance owner; all history treated as public disclosure |
-| GitHub Actions REST API | Scoped graduation resource authority | Adapter implemented; live provider proof pending | Replaceable provider; cannot expand proposal authority or survive scoped cleanup |
+| GitHub Actions REST API | Scoped graduation resource authority | Live provider-authoritative graduation proof passed | Replaceable provider; cannot expand proposal authority or survive scoped cleanup |
 | Docker Desktop / Engine | Disposable container runtime | Certified | Replaceable execution provider |
 | Ollama | Local model runtime | Certified with Qwen3 8B | Replaceable model provider |
 | LM Studio | Model laboratory and fallback API | Installed; no LLM/server in certification | Replaceable model provider |
@@ -31,7 +31,9 @@ The Founder approved ADR-001 through ADR-004 as architectural direction on 2026-
 | Bootstrap orchestration | IRIS-owned adapter accepted; OpenClaw retained only as a removable, digest-pinned bootstrap provider | Hivemind and Gamut patterns only; Shoal blocked on identity | `ADR-004`; Wave 2 evaluation; Wave 5 bounded proof |
 | Temporary workers | IRIS-owned Worker Factory and Cognitive Process Manager; digest-pinned Node container only for the Wave 8 deterministic acceptance worker | Docker supplies replaceable isolation; worker identity, permissions, context, lifecycle, revocation, evidence, and cleanup remain IRIS-owned | Wave 8 specification and evidence |
 | Capability learning and worker generation | IRIS-owned Capability Learning Engine and Worker Foundry; OpenClaw contributes only an approved bounded-execution pattern | Generated workers are original proposals with zero external-runtime dependencies and cannot approve or activate themselves | Wave 9 specification and evidence |
-| Sovereign development | IRIS-owned proposal, approval, disposable-worktree, execution, verification, checkpoint, rollback, cleanup, and GitHub Actions provider-verification runtime | Multi-file workflow and private checkpoint succeeded; final provider-authoritative rerun pending | Wave 10 specification, private checkpoint, and provider-adapter verification |
+| Sovereign development | IRIS-owned proposal, approval, disposable-worktree, execution, verification, checkpoint, rollback, cleanup, and GitHub Actions provider-verification runtime | Phase 0 graduation passed at checkpoint `468f81e4`; provider-authoritative zero resources verified | Wave 10 graduation evidence and private checkpoint |
+| Infrastructure blueprints | IRIS-owned portable `iris.stoic/v1` schema, validator, profiles, Compose compiler, rollback and removal manifests | Wave 11 implemented and locally verified | ADR-005; Wave 11 specification and evidence |
+| Visual infrastructure editing | React Flow `12.11.2` with ELK.js `0.12.0` behind IRIS-owned conversion/layout boundaries | Wave 11 composer implemented; no deployment or self-approval authority | ADR-005; Wave 11 evidence |
 
 ## Registry Update Rule
 
