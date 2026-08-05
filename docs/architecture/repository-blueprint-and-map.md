@@ -29,6 +29,7 @@ The repository is a public-authority target with governed branches, IRIS-owned c
 | `packages/coordination/` | Event envelopes and in-process/durable coordination adapters |
 | `packages/model-gateway/` | Ollama, LM Studio, and compatible provider adapters |
 | `packages/orchestration/` | IRIS-owned execution contracts and removable bootstrap-runtime adapters |
+| `packages/memory/` | Governed canonical memory, knowledge retrieval, and repository intelligence |
 | `tests/` | Cross-package acceptance and architecture tests |
 
 The planned structure is not authorization to scaffold. It activates only after governing documents, the approved visibility decision, provider-enforced protections, and dependency decisions satisfy Wave 1 prerequisites.

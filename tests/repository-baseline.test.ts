@@ -10,6 +10,7 @@ const requiredPackages = [
   "coordination",
   "model-gateway",
   "orchestration",
+  "memory",
 ] as const;
 
 interface PackageManifest {

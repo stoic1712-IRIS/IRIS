@@ -1,6 +1,6 @@
 # ADR-002: Canonical Memory and Vector Search
 
-**Status:** Founder-approved; pending canonical commit
+**Status:** Canonical; Wave 6 implementation and disposable storage proof verified
 
 **Date:** 2026-08-04
 
@@ -26,7 +26,7 @@ Transactional integrity, local-first operation, mature backup and restore, acces
 
 ## Decision
 
-Select PostgreSQL 18.4 as the proposed canonical durable store and pgvector 0.8.6 as the proposed initial vector extension. Keep embeddings and vector indexes derived, rebuildable, model-versioned, and linked to canonical source records.
+Select PostgreSQL 18.4 as the canonical durable store and pgvector 0.8.6 as the initial vector extension. Keep embeddings and vector indexes derived, rebuildable, model-versioned, and linked to canonical source records. The IRIS-owned memory contract remains usable with vector retrieval disabled.
 
 Evaluate Qdrant only if measured scale, latency, filtering, or recall requirements exceed pgvector. LanceDB may be evaluated for disposable repository indexes. Defer Chroma and Deep Lake.
 
@@ -44,7 +44,7 @@ Export canonical tables in documented open formats, preserve schema and migratio
 
 ## Approval
 
-Founder approval granted in the Founder conversation on 2026-08-04: "I approve ADR-001 through ADR-004 as the architectural direction for coordination, canonical memory, model runtime adapters, and bootstrap orchestration." Canonical effect remains pending repository commit. Installation into the canonical stack was not authorized.
+Founder approval granted in the Founder conversation on 2026-08-04: "I approve ADR-001 through ADR-004 as the architectural direction for coordination, canonical memory, model runtime adapters, and bootstrap orchestration." Wave 6 implements the IRIS-owned contracts and schema and verifies the pinned database image disposably; it does not deploy a persistent service.
 
 ## Supersession
 

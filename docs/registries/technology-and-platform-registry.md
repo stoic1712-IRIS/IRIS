@@ -13,19 +13,19 @@
 | Ollama | Local model runtime | Certified with Qwen3 8B | Replaceable model provider |
 | LM Studio | Model laboratory and fallback API | Installed; no LLM/server in certification | Replaceable model provider |
 
-## Technology Decisions Pending Wave 2
+## Governed Technology Decisions
 
-Coordination, durable workflow, memory, vector search, orchestration, model adapters, and external candidate technologies remain evaluation subjects. No candidate is adopted by being named in a source document or registry.
+Technology becomes canonical only through an approved decision, bounded implementation, verification evidence, and repository history. Naming a candidate alone never adopts it.
 
-## Wave 2 Founder-Approved Direction
+## Founder-Approved Direction and Current State
 
-The Founder approved ADR-001 through ADR-004 as architectural direction on 2026-08-04. Canonical effect remains pending repository commit. The approval does not authorize canonical installation of an external provider.
+The Founder approved ADR-001 through ADR-004 as architectural direction on 2026-08-04. Later waves implement those decisions behind IRIS-owned boundaries. Approval does not give an external provider governance authority.
 
 | Domain | Proposed primary path | Alternatives or disposition | Evidence |
 | --- | --- | --- | --- |
 | Coordination | IRIS-native in-process contract, PostgreSQL outbox, then NATS JetStream only when cross-process delivery is required | Redis Streams deferred | `ADR-001`; Wave 2 disposable evaluation |
-| Canonical memory | PostgreSQL 18.4 | PostgreSQL remains behind IRIS-owned repositories and schemas | `ADR-002` |
-| Vector retrieval | pgvector 0.8.6 initially | Qdrant retained as specialist alternative; LanceDB for rebuildable indexes; Chroma and Deep Lake deferred | `ADR-002`; Wave 2 disposable evaluation |
+| Canonical memory | PostgreSQL 18.4 | Wave 6 IRIS-owned schema, governance contract, row access, audit, transactions, rollback, and backup/restore verified disposably; no persistent service deployed | `ADR-002`; Wave 6 evidence |
+| Vector retrieval | pgvector 0.8.6 initially | Wave 6 exact retrieval and model-versioned rebuildable embeddings verified; vector-disabled text retrieval remains available | `ADR-002`; Wave 6 evidence |
 | Model runtimes | Ollama primary; LM Studio laboratory/fallback | llama.cpp and vLLM deferred | `ADR-003` |
 | Bootstrap orchestration | IRIS-owned adapter accepted; OpenClaw retained only as a removable, digest-pinned bootstrap provider | Hivemind and Gamut patterns only; Shoal blocked on identity | `ADR-004`; Wave 2 evaluation; Wave 5 bounded proof |
 
