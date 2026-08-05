@@ -1,0 +1,157 @@
+{
+  "proposalId": "founder-command-center-release-four-authenticated-live-read",
+  "state": "pending-founder-approval",
+  "executionAuthorized": false,
+  "objective": "Implement and locally verify the first real, authenticated, read-only connection between the Founder Command Center and allowlisted canonical IRIS state under the exact Release Four security contract.",
+  "securityContract": {
+    "path": "proposals/applications/iris-founder-command-center/release-four-authenticated-live-read-security-contract.md",
+    "digest": "sha256:58f4f3eef14129e87926b17a9afeed640d67186e52a0a6a470ac00b332f1ffd9",
+    "version": "iris.stoic/founder-command-center-security/v1"
+  },
+  "repositories": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "visibility": "public",
+      "localPath": "C:\\Projects\\STOIC-IRIS-wave1-scaffold",
+      "baseRevision": "7dcd3c24244ffc4ebdc3d56b7aba1ece6915505a",
+      "branch": "iris/release-four-authenticated-live-read-core",
+      "role": "canonical IRIS Core read service and local launch orchestration"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "visibility": "private",
+      "localPath": "C:\\Projects\\iris-founder-command-center",
+      "baseRevision": "ecb30d9b988f3e58e71c1d2c5da1730873c98415",
+      "branch": "iris/release-four-authenticated-live-read-client",
+      "role": "same-origin Founder session gateway and authenticated read interface"
+    }
+  ],
+  "implementation": {
+    "actualIrisConnectivity": true,
+    "connectivityClass": "loopback-only read",
+    "founderSessionAuthentication": "single-use two-minute console pairing exchanged for an eight-hour in-memory local session",
+    "gatewayToCoreAuthentication": "per-launch in-memory HMAC-SHA-256 request and response authentication delivered over inherited standard input",
+    "browserOrigin": "http://127.0.0.1:4174",
+    "coreOrigin": "http://127.0.0.1:4181",
+    "readModelPath": "/v1/read-model",
+    "allowedCoreMethods": ["GET"],
+    "canonicalMutationRoutes": 0,
+    "newDependencyFamilies": [],
+    "credentials": "ephemeral cryptographic values generated and held only in process memory",
+    "credentialPersistence": false,
+    "persistentService": false,
+    "startupRegistration": false,
+    "publicExposure": false,
+    "lanExposure": false,
+    "providerResources": false,
+    "maximumHourlyCostUsd": 0
+  },
+  "plannedChanges": {
+    "stoic1712-IRIS/IRIS": [
+      "packages/kernel/src/read-model.ts",
+      "packages/kernel/src/read-service.ts",
+      "packages/kernel/src/index.ts",
+      "scripts/runtime/iris-core-read-service.mjs",
+      "scripts/runtime/start-founder-command-center.ps1",
+      "tests/release-four-core-read-service.test.ts",
+      "docs/specifications/release-four-authenticated-live-read.md"
+    ],
+    "stoic1712-IRIS/iris-founder-command-center": [
+      "package.json",
+      "index.html",
+      "src/App.tsx",
+      "src/live-read-adapter.ts",
+      "scripts/local-gateway.mjs",
+      "tests/live-read-adapter.test.ts",
+      "tests/local-gateway.test.ts",
+      "README.md"
+    ]
+  },
+  "requiredVerification": {
+    "eachRepository": [
+      "format-check",
+      "zero-warning-lint",
+      "strict-typecheck",
+      "tests",
+      "production-build",
+      "dependency-audit",
+      "secret-scan",
+      "bundle-destination-scan",
+      "git-diff-check"
+    ],
+    "authentication": [
+      "pairing-expiry",
+      "pairing-one-time-use",
+      "failed-attempt-invalidation",
+      "session-expiry",
+      "logout",
+      "process-exit-invalidation",
+      "zero-browser-readable-credentials",
+      "zero-credential-persistence"
+    ],
+    "transport": [
+      "exact-host-port-method-route-origin",
+      "exact-audience-and-scope",
+      "request-signature",
+      "response-attestation",
+      "replay-rejection",
+      "freshness-and-size-limits",
+      "zero-cors",
+      "zero-redirects",
+      "zero-canonical-mutation-routes"
+    ],
+    "data": [
+      "real-canonical-revision",
+      "tracked-remote-equality",
+      "phase-zero-graduation-status",
+      "strict-allowlisted-citations",
+      "missing-stale-altered-unsigned-oversized-undeclared-contradictory-unverified-secret-input-rejection"
+    ],
+    "cleanup": [
+      "gateway-and-core-graceful-shutdown",
+      "ports-4174-and-4181-closed",
+      "child-process-absent",
+      "temporary-state-removed",
+      "provider-authoritative-zero-scoped-resources"
+    ]
+  },
+  "governedCommands": {
+    "stoic1712-IRIS/IRIS": ["pnpm verify", "pnpm audit --audit-level high"],
+    "stoic1712-IRIS/iris-founder-command-center": [
+      "pnpm format:check",
+      "pnpm lint",
+      "pnpm typecheck",
+      "pnpm test",
+      "pnpm build",
+      "pnpm audit --audit-level high"
+    ]
+  },
+  "rollback": {
+    "stoic1712-IRIS/IRIS": "7dcd3c24244ffc4ebdc3d56b7aba1ece6915505a",
+    "stoic1712-IRIS/iris-founder-command-center": "ecb30d9b988f3e58e71c1d2c5da1730873c98415",
+    "method": "history-preserving revert in each repository; terminate both local processes; verify ports closed and ephemeral credentials absent"
+  },
+  "excludedAuthority": [
+    "R1-R4 action authority",
+    "worker creation or activation",
+    "mission mutation",
+    "memory mutation",
+    "approval submission or consumption",
+    "repository writes by the running application",
+    "provider calls or resources",
+    "Docker socket access",
+    "dependency installation or upgrades",
+    "persistent credential creation",
+    "hardware-backed identity enrollment",
+    "deployment",
+    "startup registration",
+    "public or LAN exposure",
+    "spending",
+    "staging",
+    "committing",
+    "pushing",
+    "pull-request creation",
+    "merging"
+  ],
+  "createdAt": "2026-08-05T14:20:51-06:00"
+}
