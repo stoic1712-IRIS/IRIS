@@ -24,4 +24,24 @@ Each entry must include identity, category, purpose, owner, source, exact versio
 | LM Studio | Model laboratory/API fallback | CLI installed; server stopped in evidence | CLI commit `71bd99c` | Proprietary product terms; API use only unless terms allow more | Existing evaluation tool | Review terms, network behavior, and data paths in Wave 2 |
 | Qwen3 8B via Ollama | Local model | Structured-response workstation test | Ollama ID `500a1f067a9f` | Registry reports Apache-2.0; formal model-card and attribution review pending | Evaluation only | Record upstream model identity, files, license, and limitations before adoption |
 
+## Wave 2 Evaluated Candidates
+
+These entries record research and disposable evaluation, not canonical adoption or redistribution approval. Exact digests and observed behavior are recorded in `evidence/wave-2/disposable-candidate-evaluation-2026-08-04.md`.
+
+| Identity | Category | Evaluation pin | License/terms | Observed security/install behavior | Proposed disposition |
+| --- | --- | --- | --- | --- | --- |
+| OpenClaw `openclaw/openclaw` | Agent execution runtime | `2026.7.1-2`; revision `0790d9f` | MIT; notices required | Official non-root image; unconfigured audit found missing gateway authentication, unauthenticated HTTP tools, elevated tools and browser enabled; broad state and tool surface | Later adapter-bounded proof only |
+| Hivemind `hivementality-ai/hivemind` | Multi-agent platform | `2026.07.01`; commit `49e0c74` | AGPL-3.0; network and distribution obligations require legal review | Eleven services; Docker-socket proxy; installer may install packages and Docker, modify group membership, generate secrets, build/pull, start services, and probe/install Ollama | Pattern study only; do not embed |
+| Gamut `gamut.so` | Containerized agent platform | No approved immutable core pin | Product/source terms unresolved | Per-agent containers and secret/OAuth proxy patterns; host mounts and evolving agent identity require strict boundaries | Inspiration only pending identity and terms |
+| Shoal | Candidate framework | Unresolved | Unknown | Exact project, repository, version, and behavior unresolved | Blocked |
+| NATS Server | Coordination and streaming | `2.14.4-alpine` | Apache-2.0 | File-backed JetStream publish/replay passed; production use requires authentication, authorization, retention, backup, and durability configuration | Proposed later Coordination Bus provider |
+| PostgreSQL + pgvector | Durable data and retrieval | PostgreSQL 18.4; pgvector 0.8.6 | PostgreSQL-style permissive licenses | Transactional vector probe passed under an internal network with fictional credentials | Proposed primary durable store and initial vector extension |
+| Qdrant | Specialist vector database | `1.18.3-unprivileged` | Apache-2.0 | Read-only-root startup required a writable snapshot volume; telemetry was enabled unless explicitly disabled; vector query then passed | Specialist alternative only |
+| Redis | Streams and data service | `8.10.0-alpine` | RSALv2, SSPLv1, or AGPLv3 choice; legal review required | Streams passed; default evaluation warned authentication absent; persistence requires explicit policy | Deferred |
+| Chroma | Vector database | `1.5.9` | Apache-2.0 | Persistent container and heartbeat passed; reported no telemetry configured | Deferred as overlapping |
+| LanceDB | Embedded retrieval | `python-v0.36.0` release family | Apache-2.0 | Documentation/source review only in this pass | Future rebuildable-index evaluation |
+| Deep Lake | Multimodal data platform | `4.5.2` | Apache-2.0 core; full product terms require review | Documentation/source review only; broader cloud and multimodal surface than current requirement | Deferred |
+| llama.cpp | Low-level model runtime | build `b10276` research pin | MIT | Documentation/source review; OpenAI-style compatibility is not guaranteed as exact | Deferred |
+| vLLM | High-throughput model runtime | `0.26.0` | Apache-2.0 | Documentation/source review; heavier Linux/CUDA operational surface | Deferred |
+
 No entry above authorizes redistribution, embedding, rebranding, or commercial distribution.
