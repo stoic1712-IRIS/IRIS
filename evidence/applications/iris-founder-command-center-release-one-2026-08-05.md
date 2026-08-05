@@ -4,7 +4,7 @@
 
 **Classification:** Layer 4 application
 
-**State:** Implemented, privately published, locally verified, and pending final Founder visual acceptance
+**State:** Implemented, privately published, locally verified, and visually accepted by the Founder
 
 ## Canonical Bindings
 
@@ -61,9 +61,13 @@ Protected approval controls are rendered disabled. Visual inspection confirmed b
 
 Release One owns no canonical application data. Repository rollback is history-preserving through `git revert 270e39ad68ec60b1b803f56133b92970cb1237b0` after the repository has a successor revision. Local cleanup stops the exact preview process, removes disposable build output when desired, and verifies ports 5174, 4174, and 8080 are closed. The verified proof stopped its process and confirmed port 4174 closed with zero matching containers.
 
-## Remaining Gate
+## Founder Visual Acceptance
 
-The Founder must visually accept the local Release One interface before IRIS treats the product experience as accepted. This gate does not grant live connectivity or action authority.
+The Founder visually reviewed the loopback Release One interface and supplied the exact acceptance statement:
+
+> I approve the IRIS Founder Command Center Release One visual experience at commit 270e39ad68ec60b1b803f56133b92970cb1237b0.
+
+The accepted commit matches the verified private Release One revision. After acceptance, the local review service was stopped and port 4174 was confirmed closed. This acceptance closes the Release One product-experience gate only. It does not grant Release Two implementation, live connectivity, approval submission, canonical writes, provider actions, deployment, public exposure, or spending.
 
 ## Repository Protection Constraint
 
