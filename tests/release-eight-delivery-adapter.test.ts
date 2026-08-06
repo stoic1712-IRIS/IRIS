@@ -74,7 +74,22 @@ describe("Release Eight fixed delivery adapter", () => {
     expect(calls).toMatchObject([
       { repository: "stoic1712-IRIS/IRIS-checkpoints", force: false },
       { repository: "stoic1712-IRIS/IRIS", force: false },
-      { base: "main", draft: true, maintainersCanModify: false },
+      {
+        base: "main",
+        draft: true,
+        maintainersCanModify: false,
+        headCommit: "c".repeat(40),
+      },
+    ]);
+    expect(calls).toMatchObject([
+      { authorization: { operation: "push-branch", approvalDigest: proposal.digest } },
+      { authorization: { operation: "push-branch", approvalDigest: proposal.digest } },
+      {
+        authorization: {
+          operation: "create-pull-request",
+          approvalDigest: proposal.digest,
+        },
+      },
     ]);
   });
 });

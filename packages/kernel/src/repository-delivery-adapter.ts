@@ -16,6 +16,12 @@ export interface DeliveryProviderController {
     ref: string;
     commit: string;
     force: false;
+    authorization: {
+      operation: "push-branch";
+      repository: string;
+      target: string;
+      approvalDigest: string;
+    };
   }): Promise<{ remoteCommit: string }>;
   createPullRequest(input: {
     repository: string;
@@ -25,6 +31,13 @@ export interface DeliveryProviderController {
     body: string;
     draft: true;
     maintainersCanModify: false;
+    headCommit: string;
+    authorization: {
+      operation: "create-pull-request";
+      repository: string;
+      target: string;
+      approvalDigest: string;
+    };
   }): Promise<{ number: number; url: string; draft: true; headCommit: string }>;
   clearCredential(): void;
 }
@@ -66,6 +79,12 @@ export class GovernedRepositoryDeliveryAdapter implements RepositoryDeliveryAdap
       ref: proposal.checkpointRef,
       commit,
       force: false,
+      authorization: {
+        operation: "push-branch",
+        repository: proposal.checkpointRepository,
+        target: proposal.checkpointRef,
+        approvalDigest: proposal.digest,
+      },
     });
     this.#checkpointVerified = result.remoteCommit === commit;
     return result.remoteCommit;
@@ -78,6 +97,12 @@ export class GovernedRepositoryDeliveryAdapter implements RepositoryDeliveryAdap
       ref: proposal.targetBranch,
       commit,
       force: false,
+      authorization: {
+        operation: "push-branch",
+        repository: proposal.repository,
+        target: proposal.targetBranch,
+        approvalDigest: proposal.digest,
+      },
     });
     this.#targetVerified = result.remoteCommit === commit;
     return result.remoteCommit;
@@ -97,6 +122,13 @@ export class GovernedRepositoryDeliveryAdapter implements RepositoryDeliveryAdap
       body: proposal.pullRequestBody,
       draft: true,
       maintainersCanModify: false,
+      headCommit: commit,
+      authorization: {
+        operation: "create-pull-request",
+        repository: proposal.repository,
+        target: proposal.targetBranch,
+        approvalDigest: proposal.digest,
+      },
     });
     if (result.headCommit !== commit) throw new Error("PULL_REQUEST_COMMIT_MISMATCH");
     return { number: result.number, url: result.url, draft: true };
