@@ -11,3 +11,4 @@ export * from "./repository-review.js";
 export * from "./repository-repair.js";
 export * from "./repository-delivery.js";
 export * from "./repository-delivery-adapter.js";
+export * from "./founder-voice-command.js";
