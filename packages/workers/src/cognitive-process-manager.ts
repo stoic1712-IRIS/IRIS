@@ -4,6 +4,10 @@ import {
   type WorkerContext,
   type WorkerSpecification,
 } from "./worker-contracts.js";
+import {
+  verifyCodingWorkerAuthorization,
+  type CodingWorkerAuthorization,
+} from "./coding-worker-authorization.js";
 
 export interface WorkerRuntimeResult {
   status: "succeeded" | "failed";
@@ -70,6 +74,11 @@ export class CognitiveProcessManager {
   async execute(
     specificationInput: WorkerSpecification,
     context: WorkerContext,
+    codingApproval?: {
+      authorization: CodingWorkerAuthorization;
+      typedStatement: string;
+      now?: Date;
+    },
   ): Promise<WorkerExecutionResult> {
     const specification = workerSpecificationSchema.parse(specificationInput);
     const approvedDigest = workerSpecificationDigest(specification);
@@ -84,10 +93,19 @@ export class CognitiveProcessManager {
         "Worker authorization was revoked before launch.",
         "revoked",
       );
-    if (specification.workerClass !== "read-only")
+    if (
+      specification.workerClass === "coding" &&
+      (codingApproval === undefined ||
+        !verifyCodingWorkerAuthorization({
+          specification,
+          authorization: codingApproval.authorization,
+          typedStatement: codingApproval.typedStatement,
+          ...(codingApproval.now === undefined ? {} : { now: codingApproval.now }),
+        }))
+    )
       return this.#denied(
         specification.workerId,
-        "Coding worker lifecycle is not enabled by the Wave 8 gate.",
+        "Coding worker approval did not exactly match the fixed specification.",
       );
     const workspace = await this.#adapter.prepare(structuredClone(specification));
     let cleanupVerified: boolean;
@@ -95,8 +113,12 @@ export class CognitiveProcessManager {
     const controller = new AbortController();
     let timer: ReturnType<typeof setTimeout> | undefined;
     try {
-      if (!workspace.readOnly || !workspace.disposable)
-        throw new Error("Worker workspace is not disposable and read-only.");
+      if (
+        !workspace.disposable ||
+        (specification.workerClass === "read-only" && !workspace.readOnly) ||
+        (specification.workerClass === "coding" && workspace.readOnly)
+      )
+        throw new Error("Worker workspace mode does not match the fixed specification.");
       await this.#emit(
         "WorkerStarted",
         specification.workerId,
@@ -131,7 +153,10 @@ export class CognitiveProcessManager {
         if (
           result.reportedPaths.some(
             (path) =>
-              !specification.permissions.readPaths.some(
+              ![
+                ...specification.permissions.readPaths,
+                ...specification.permissions.writePaths,
+              ].some(
                 (allowed) => path === allowed || path.startsWith(`${allowed.replace(/\/$/, "")}/`),
               ),
           )
