@@ -69,6 +69,8 @@ describe("Cycle Five Founder dialogue service", () => {
     expect(launcher).toContain("$worktreeSuffix");
     expect(launcher).toContain("export IRIS_ROOT=");
     expect(launcher).toContain("wslpath -a");
+    expect(launcher).toContain('$Path.Replace("\\", "/")');
+    expect(launcher).toContain("wslpath -a -- $normalizedPath");
   });
 
   it("preserves bounded multi-turn context without execution authority", async () => {

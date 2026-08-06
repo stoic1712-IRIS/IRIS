@@ -23,7 +23,11 @@ if (-not $commandCenter) {
 }
 
 function Convert-ToWslPath([string]$Path) {
-    $converted = wsl -d Ubuntu -- wslpath -a $Path
+    # Windows PowerShell 5 can remove backslashes while forwarding a native
+    # command argument through wsl.exe. Normalize to the Windows path form
+    # accepted by wslpath before crossing that process boundary.
+    $normalizedPath = $Path.Replace("\", "/")
+    $converted = wsl -d Ubuntu -- wslpath -a -- $normalizedPath
     if ($LASTEXITCODE -ne 0 -or -not $converted) {
         throw "Unable to resolve the WSL path for $Path."
     }
