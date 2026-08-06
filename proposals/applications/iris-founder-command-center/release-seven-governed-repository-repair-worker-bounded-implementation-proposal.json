@@ -1,0 +1,154 @@
+{
+  "proposalId": "founder-command-center-release-seven-governed-repository-repair-worker",
+  "state": "pending-founder-approval",
+  "executionAuthorized": false,
+  "riskClass": "R2",
+  "objective": "Implement and locally verify one authenticated, digest-bound, disposable governed repository-repair worker that may create and test a bounded candidate repair without changing canonical repositories or GitHub.",
+  "repositories": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "plannedLocalPath": "C:\\Projects\\STOIC-IRIS-release-seven",
+      "baseRevision": "15b7ef83c5df19451846e37ba8b8adc574c5e928",
+      "branch": "iris/release-seven-governed-repository-repair-worker"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "plannedLocalPath": "C:\\Projects\\iris-founder-command-center-release-seven",
+      "baseRevision": "593ef580549b9084c6fef478deb43c67c01a8377",
+      "branch": "iris/release-seven-governed-repository-repair-worker"
+    }
+  ],
+  "protectedAction": {
+    "type": "candidate-repair-generation",
+    "riskClass": "R2",
+    "executor": "IRIS Core",
+    "tool": "canonical local Ollama adapter plus compiled candidate validator",
+    "target": "one uniquely named disposable local worktree at one exact approved revision",
+    "oneTimeUse": true,
+    "approvalConsumedBeforeWrite": true
+  },
+  "planningArtifacts": [
+    {
+      "path": "proposals/applications/iris-founder-command-center/release-seven-governed-repository-repair-worker-specification.md",
+      "digest": "sha256:a547520e5ad8d0d3a1e6aa9e24354cfe1206dbf8588669180d8cfbd0a79a994f"
+    },
+    {
+      "path": "proposals/applications/iris-founder-command-center/release-seven-governed-repository-repair-worker-security-contract.md",
+      "digest": "sha256:bf377a085c24412c218e01015851627a2d51638baa6657f835ab897e631f133f"
+    },
+    {
+      "path": "proposals/applications/iris-founder-command-center/release-seven-governed-repository-repair-worker-architecture.md",
+      "digest": "sha256:9c8d30d8f85b2886e9724bdff4164b7299f7167607a5fd03512eb2a2666d362a"
+    },
+    {
+      "path": "proposals/applications/iris-founder-command-center/release-seven-governed-repository-repair-worker-interface-design.md",
+      "digest": "sha256:8bf434e4d7aea5ae2615cf1dd4450af6275d26dad9a10126f2eea96741ed0b6c"
+    }
+  ],
+  "plannedImplementationFiles": {
+    "stoic1712-IRIS/IRIS": [
+      "packages/kernel/src/index.ts",
+      "packages/kernel/src/repository-repair.ts",
+      "scripts/runtime/iris-repository-repair-worker.mjs",
+      "tests/release-seven-repository-repair.test.ts"
+    ],
+    "stoic1712-IRIS/iris-founder-command-center": [
+      "scripts/local-gateway.mjs",
+      "src/App.tsx",
+      "src/repository-repair.ts",
+      "src/views/Repair.tsx",
+      "tests/repository-repair.test.ts"
+    ]
+  },
+  "implementation": {
+    "model": "qwen3:8b",
+    "modelEndpoint": "http://127.0.0.1:11434",
+    "workerClass": "governed-repository-repair-disposable",
+    "supportedRepositories": ["stoic1712-IRIS/IRIS", "stoic1712-IRIS/iris-founder-command-center"],
+    "maximumEditableFiles": 20,
+    "maximumContextFiles": 40,
+    "maximumChangedLines": 2000,
+    "maximumInputBytes": 1048576,
+    "maximumCandidateBytes": 524288,
+    "maximumModelOutputBytes": 65536,
+    "maximumRuntimeSeconds": 600,
+    "maximumRetentionSeconds": 1800,
+    "maximumRepairIterationsPerApproval": 1,
+    "maximumCostUsd": 0,
+    "offlineFrozenDependencyMaterialization": true,
+    "dependencyLifecycleScripts": false,
+    "dependencyNetworkAccess": false,
+    "canonicalRepositoryWriteAuthority": false,
+    "candidateWorkspaceWriteAuthority": true,
+    "modelShellAuthority": false,
+    "modelToolAuthority": false,
+    "githubMutationAuthority": false,
+    "approvalAuthority": false,
+    "canonicalMemoryMutation": false,
+    "generalNetworkAuthority": false,
+    "persistentCredentials": false,
+    "deployment": false,
+    "publicExposure": false
+  },
+  "fixedVerificationCommandIdentifiers": [
+    "format-check",
+    "zero-warning-lint",
+    "strict-typecheck",
+    "unit-and-integration-tests",
+    "production-build",
+    "dependency-integrity-check",
+    "secret-scan",
+    "bundle-scan",
+    "repository-diagnostics"
+  ],
+  "implementationSequence": [
+    "add strict proposal, approval, candidate, verification, and result contracts",
+    "add immutable review-finding and Founder-defect intake",
+    "add disposable workspace controller with path and revision proofs",
+    "add offline frozen-lockfile dependency materialization with lifecycle scripts disabled",
+    "add bounded committed-context assembler",
+    "add structured local-model repair request without tools",
+    "add complete-file candidate validator and disposable writer",
+    "add compiled verification-command registry and runner",
+    "add candidate evidence, expiry, cancellation, rollback, and cleanup",
+    "add authenticated Command Center Repair view and gateway endpoints",
+    "add adversarial, integration, browser, and real-model fictional multi-file repair verification"
+  ],
+  "requiredVerification": [
+    "planning-artifact-digest-verification",
+    "format-check",
+    "zero-warning-lint",
+    "strict-typecheck",
+    "unit-and-integration-tests",
+    "production-build",
+    "dependency-audit",
+    "secret-scan",
+    "bundle-scan",
+    "approval-consumed-before-write-proof",
+    "immutable-revision-and-remote-equality-proof",
+    "workspace-containment-and-link-denial-proof",
+    "prompt-injection-and-malformed-output-tests",
+    "unexpected-diff-and-prohibited-file-denial-proof",
+    "verification-command-allowlist-proof",
+    "repair-reapproval-proof",
+    "zero-canonical-write-and-zero-github-mutation-proof",
+    "real-browser-loopback-proof",
+    "real-ollama-fictional-multi-file-repair-proof",
+    "process-model-worktree-cleanup-and-rollback-proof"
+  ],
+  "evidenceDestination": "evidence/applications/iris-founder-command-center-release-seven-YYYY-MM-DD.md",
+  "excludedAuthority": [
+    "editing canonical repositories or canonical working trees",
+    "staging, committing, pushing, pull-request creation, review submission, merging, releasing, or deployment",
+    "dependency version, manifest, lockfile, or toolchain changes; online installation; lifecycle scripts; or missing-cache downloads",
+    "model shell, Git, tool, browser, credential, provider, or general-network access",
+    "deletes, renames, mode changes, binary changes, generated bundles, workflows, or dependency manifests",
+    "silent retries, scope expansion, self-approval, or automatic candidate acceptance",
+    "persistent credentials, workers, approval state, candidate state beyond expiry, or canonical memory mutation",
+    "public or LAN exposure, startup registration, paid resources, or spending",
+    "claiming Phase 0 graduation from an offline fixture, single-file repair, or machinery-only demonstration"
+  ],
+  "rollback": "Terminate model and child processes, remove the disposable worktree and temporary branch, clear ephemeral approval and proposal material, close local ports, verify Ollama unload, and prove canonical refs, index, working trees, remotes, and GitHub state equal their pre-execution values.",
+  "reapproval": "Required for implementation; every candidate-repair activation; every repair iteration; and any material change to repository, revision, finding, file manifest, model, endpoint, command, limit, dependency action, workspace root, persistence, network, credential, provider, exposure, cost, canonical write, Git action, deployment, or protected scope.",
+  "createdAt": "2026-08-05T16:39:03-06:00"
+}
