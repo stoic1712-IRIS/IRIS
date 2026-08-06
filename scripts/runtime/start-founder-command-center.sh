@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Keep this WSL supervisor encoded with LF line endings.
 set -euo pipefail
 
 if [[ $# -ne 2 ]]; then
