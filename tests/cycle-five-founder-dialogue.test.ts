@@ -66,11 +66,18 @@ function request() {
 describe("Cycle Five Founder dialogue service", () => {
   it("launches the matching Command Center worktree with an explicit IRIS root", () => {
     const launcher = readFileSync("scripts/runtime/start-founder-command-center.ps1", "utf8");
+    const supervisor = readFileSync("scripts/runtime/start-founder-command-center.sh", "utf8");
     expect(launcher).toContain("$worktreeSuffix");
-    expect(launcher).toContain("export IRIS_ROOT=");
     expect(launcher).toContain("wslpath -a");
     expect(launcher).toContain('$Path.Replace("\\", "/")');
     expect(launcher).toContain("wslpath -a -- $normalizedPath");
+    expect(launcher).toContain("start-founder-command-center.sh");
+    expect(supervisor).toContain('export IRIS_ROOT="$iris_root"');
+    expect(supervisor).toContain("iris-voice-service.py");
+    expect(supervisor).toContain("127.0.0.1:8765/health");
+    expect(supervisor).toContain("trap cleanup_runtime EXIT INT TERM");
+    expect(supervisor).toContain('kill "$gateway_pid"');
+    expect(supervisor).toContain("node scripts/local-gateway.mjs &");
   });
 
   it("preserves bounded multi-turn context without execution authority", async () => {

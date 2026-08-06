@@ -34,18 +34,8 @@ function Convert-ToWslPath([string]$Path) {
     return $converted.Trim()
 }
 
-function Quote-Bash([string]$Value) {
-    if ($Value.Contains("'")) {
-        throw "A workspace path contains an unsupported single quote."
-    }
-    return "'$Value'"
-}
-
 $irisWslPath = Convert-ToWslPath $irisRepository
 $commandCenterWslPath = Convert-ToWslPath $commandCenter
-$wslCommand = 'source "$HOME/.nvm/nvm.sh"; export IRIS_ROOT=' +
-    (Quote-Bash $irisWslPath) + '; cd ' +
-    (Quote-Bash $commandCenterWslPath) +
-    '; node scripts/local-gateway.mjs'
+$supervisorWslPath = "$irisWslPath/scripts/runtime/start-founder-command-center.sh"
 
-wsl -d Ubuntu -- bash -lc $wslCommand
+wsl -d Ubuntu -- bash $supervisorWslPath $irisWslPath $commandCenterWslPath
