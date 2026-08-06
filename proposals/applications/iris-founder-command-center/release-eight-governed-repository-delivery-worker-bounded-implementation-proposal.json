@@ -1,0 +1,167 @@
+{
+  "proposalId": "founder-command-center-release-eight-governed-repository-delivery-worker",
+  "state": "pending-founder-approval",
+  "executionAuthorized": false,
+  "riskClass": "R3",
+  "objective": "Implement and locally verify one authenticated, digest-bound repository-delivery worker that converts an immutable verified Release Seven candidate into an exact private checkpoint, feature-branch commit, push, and draft pull request without merge or deployment authority.",
+  "repositories": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "plannedLocalPath": "C:\\Projects\\STOIC-IRIS-release-eight",
+      "baseRevision": "8b5d8d47d7d9f8de61081eaab13d9ec76f4ea502",
+      "branch": "iris/release-eight-governed-repository-delivery-worker"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "plannedLocalPath": "C:\\Projects\\iris-founder-command-center-release-eight",
+      "baseRevision": "81eb387569a87831bc54c8024ef949f5be5330b4",
+      "branch": "iris/release-eight-governed-repository-delivery-worker"
+    }
+  ],
+  "protectedAction": {
+    "type": "verified-candidate-checkpoint-branch-push-and-draft-pull-request",
+    "riskClass": "R3",
+    "executor": "IRIS Core",
+    "target": "one exact verified Release Seven candidate, one unique private checkpoint ref, one unique target feature branch, and one draft pull request",
+    "oneTimeUse": true,
+    "approvalConsumedBeforeMutation": true,
+    "mergeAuthority": false
+  },
+  "planningArtifacts": [
+    {
+      "path": "proposals/applications/iris-founder-command-center/release-eight-governed-repository-delivery-worker-specification.md",
+      "digest": "sha256:be75052c6fa76efdcd9b98015a76f3ae4fb4d2d55bc5f68952e8dfb2e38e1052"
+    },
+    {
+      "path": "proposals/applications/iris-founder-command-center/release-eight-governed-repository-delivery-worker-security-contract.md",
+      "digest": "sha256:fbbb7271c64e28a7a31fbb484020e548518562d79b4b5acf2ff1893d9ed2622a"
+    },
+    {
+      "path": "proposals/applications/iris-founder-command-center/release-eight-governed-repository-delivery-worker-architecture.md",
+      "digest": "sha256:2dcbcfe4fe68ed17641e459993cdea204b5eac9ac5028c4e98166048b04755f1"
+    },
+    {
+      "path": "proposals/applications/iris-founder-command-center/release-eight-governed-repository-delivery-worker-interface-design.md",
+      "digest": "sha256:91a8e0fb23a5777507c042069432f03b1ed251023178d74d955383060991a342"
+    }
+  ],
+  "plannedImplementationFiles": {
+    "stoic1712-IRIS/IRIS": [
+      "packages/kernel/src/index.ts",
+      "packages/kernel/src/repository-delivery.ts",
+      "scripts/runtime/iris-repository-delivery-worker.mjs",
+      "tests/release-eight-repository-delivery.test.ts"
+    ],
+    "stoic1712-IRIS/iris-founder-command-center": [
+      "scripts/local-gateway.mjs",
+      "src/App.tsx",
+      "src/repository-delivery.ts",
+      "src/views/Deliver.tsx",
+      "tests/repository-delivery.test.ts"
+    ]
+  },
+  "implementation": {
+    "workerClass": "governed-repository-delivery-one-shot",
+    "supportedRepositories": ["stoic1712-IRIS/IRIS", "stoic1712-IRIS/iris-founder-command-center"],
+    "checkpointRepository": "stoic1712-IRIS/IRIS-checkpoints",
+    "maximumChangedFiles": 20,
+    "maximumChangedLines": 2000,
+    "maximumDiffBytes": 524288,
+    "maximumRuntimeSeconds": 900,
+    "maximumRetentionSeconds": 1800,
+    "maximumDeliveryAttemptsPerApproval": 1,
+    "maximumCheckpointRefs": 1,
+    "maximumTargetBranches": 1,
+    "maximumDraftPullRequests": 1,
+    "maximumCostUsd": 0,
+    "offlineFrozenDependencyMaterialization": true,
+    "workspaceBootstrapBuild": true,
+    "dependencyLifecycleScripts": false,
+    "dependencyNetworkAccess": false,
+    "canonicalWorkingTreeWriteAuthority": false,
+    "localDisposableWorkspaceWriteAuthority": true,
+    "localUniqueBranchAndCommitAuthority": true,
+    "privateCheckpointPushAuthority": true,
+    "targetFeatureBranchPushAuthority": true,
+    "draftPullRequestCreationAuthority": true,
+    "forcePushAuthority": false,
+    "mergeAuthority": false,
+    "reviewSubmissionAuthority": false,
+    "readyForReviewAuthority": false,
+    "deploymentAuthority": false,
+    "providerDeletionAuthority": false,
+    "modelAuthority": false,
+    "canonicalMemoryMutation": false,
+    "generalNetworkAuthority": false,
+    "persistentCredentials": false,
+    "publicOrLanExposure": false
+  },
+  "fixedVerificationCommandIdentifiers": [
+    "format-check",
+    "zero-warning-lint",
+    "strict-typecheck",
+    "unit-and-integration-tests",
+    "production-build",
+    "dependency-integrity-check",
+    "secret-scan",
+    "bundle-scan",
+    "repository-diagnostics"
+  ],
+  "implementationSequence": [
+    "add strict delivery proposal, approval, candidate-evidence, commit, provider-step, partial-failure, and result contracts",
+    "add deterministic checkpoint-ref, feature-branch, commit-message, and draft-pull-request derivation",
+    "add Release Seven evidence and candidate-diff revalidation",
+    "add disposable reconstruction workspace with offline dependency and bootstrap controls",
+    "add fixed full verification before commit or provider mutation",
+    "add deterministic single-parent commit and exact tree verification",
+    "add checkpoint-first private publication and provider-authoritative equality proof",
+    "add target feature-branch push and provider-authoritative equality proof",
+    "add exact draft-pull-request creation and verification",
+    "add partial-failure, rollback, credential-clearance, canonical-nonmutation, and cleanup evidence",
+    "add authenticated Command Center Deliver view and gateway endpoints",
+    "add adversarial, integration, browser, and fictional real-provider delivery verification"
+  ],
+  "requiredVerification": [
+    "planning-artifact-digest-verification",
+    "format-check",
+    "zero-warning-lint",
+    "strict-typecheck",
+    "unit-and-integration-tests",
+    "production-build",
+    "dependency-audit",
+    "secret-scan",
+    "bundle-scan",
+    "immutable-release-seven-evidence-proof",
+    "approval-consumed-before-mutation-proof",
+    "base-and-remote-equality-proof",
+    "unique-ref-nonexistence-proof",
+    "workspace-containment-and-link-denial-proof",
+    "candidate-reconstruction-and-diff-equality-proof",
+    "commit-parent-tree-and-manifest-equality-proof",
+    "checkpoint-first-ordering-and-private-remote-equality-proof",
+    "target-ref-remote-equality-proof",
+    "draft-pull-request-field-and-manifest-proof",
+    "credential-redaction-and-clearance-proof",
+    "partial-provider-failure-and-no-hidden-retry-proof",
+    "zero-force-push-zero-merge-zero-deployment-proof",
+    "canonical-working-tree-and-main-nonmutation-proof",
+    "real-browser-loopback-proof",
+    "fictional-real-provider-delivery-proof",
+    "process-worktree-session-and-port-cleanup-proof"
+  ],
+  "evidenceDestination": "evidence/applications/iris-founder-command-center-release-eight-YYYY-MM-DD.md",
+  "excludedAuthority": [
+    "editing canonical working trees, indexes, configurations, hooks, or main refs",
+    "delivery of any candidate not exactly bound to an immutable verified Release Seven result",
+    "force-push, ref update, tag creation, merge, rebase, squash, review submission, ready-for-review, release, or deployment",
+    "branch-protection, workflow, environment, secret, collaborator, permission, issue, label, comment, or provider-resource mutation outside the exact draft pull request",
+    "remote branch, checkpoint, or pull-request deletion or closure without separate approval",
+    "dependency version, manifest, lockfile, workflow, generated bundle, binary, mode, rename, or deletion changes",
+    "model shell, Git, credential, provider, browser, tool, or network authority",
+    "silent retries, branch reuse, scope expansion, self-approval, or automatic canonical adoption",
+    "persistent credentials, background execution, startup registration, public or LAN exposure, paid resources, or spending"
+  ],
+  "rollback": "Stop before the next provider boundary on failure; preserve any already-created immutable private checkpoint or target ref as explicit evidence; remove only the contained local disposable workspace and temporary local branch; clear credentials and approval state; prove canonical worktrees and main refs unchanged; and require a new Founder-approved proposal for any remote closure, deletion, retry, repair, or merge.",
+  "reapproval": "Required for implementation; every delivery activation; every retry or repair; any different repository, base, Release Seven result, candidate digest, file manifest, commit metadata, checkpoint ref, target branch, pull-request field, provider operation, credential mechanism, command, limit, workspace root, network destination, cleanup action, cost, merge, deployment, or protected scope.",
+  "createdAt": "2026-08-05T18:52:08.7965920-06:00"
+}
