@@ -28,11 +28,11 @@ function git(...args) {
 }
 
 function realState(now) {
-  const canonicalRevision = git("rev-parse", "HEAD");
+  const canonicalRevision = git("rev-parse", "main");
   const trackedRemoteRevision = git("rev-parse", "origin/main");
   return {
     canonicalRevision,
-    branch: git("branch", "--show-current"),
+    branch: "main",
     remoteIdentity: git("remote", "get-url", "origin").replace(/https:\/\/[^@/]+@/u, "https://"),
     trackedRemoteRevision,
     remoteEqual: canonicalRevision === trackedRemoteRevision,

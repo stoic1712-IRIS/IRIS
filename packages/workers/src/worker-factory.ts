@@ -15,6 +15,7 @@ const sensitivityRank = {
 export function calculateMinimumPermissions(input: {
   readOnly: boolean;
   requestedPaths: string[];
+  requestedWritePaths?: string[];
   requestedTools: string[];
 }): WorkerSpecification["permissions"] {
   const readTools = new Set(["read-file", "list-files", "inspect-metadata"]);
@@ -23,7 +24,7 @@ export function calculateMinimumPermissions(input: {
   return {
     tools: [...new Set(input.requestedTools)].sort(),
     readPaths: [...new Set(input.requestedPaths)].sort(),
-    writePaths: [],
+    writePaths: input.readOnly ? [] : [...new Set(input.requestedWritePaths ?? [])].sort(),
     mayExpand: false,
   };
 }
@@ -31,19 +32,27 @@ export function calculateMinimumPermissions(input: {
 export function generateWorkerSpecification(
   input: Omit<WorkerSpecification, "permissions"> & {
     requestedPaths: string[];
+    requestedWritePaths?: string[];
     requestedTools: string[];
     codingWorkerGatePassed: boolean;
   },
 ): WorkerSpecification {
   if (input.workerClass === "coding" && !input.codingWorkerGatePassed)
     throw new Error("Coding workers remain disabled until the read-only lifecycle gate passes.");
-  const { requestedPaths, requestedTools, codingWorkerGatePassed: _gate, ...rest } = input;
+  const {
+    requestedPaths,
+    requestedWritePaths,
+    requestedTools,
+    codingWorkerGatePassed: _gate,
+    ...rest
+  } = input;
   void _gate;
   return workerSpecificationSchema.parse({
     ...rest,
     permissions: calculateMinimumPermissions({
       readOnly: input.workerClass === "read-only",
       requestedPaths,
+      ...(requestedWritePaths === undefined ? {} : { requestedWritePaths }),
       requestedTools,
     }),
   });
