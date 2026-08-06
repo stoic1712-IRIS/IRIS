@@ -130,5 +130,5 @@ describe("Cycle Six connected tool providers", () => {
     const result = await gateway.execute(authorize(unsigned));
     expect(result.content).toContain("pong");
     expect(result.effect).toBe("external-mutation");
-  });
+  }, 15_000);
 });

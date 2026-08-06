@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "python": "3.12.13",
+  "runtimeRoot": "~/.local/share/stoic-iris/voice-runtime",
+  "packages": {
+    "espeakng-loader": "0.2.4",
+    "fastapi": "0.141.1",
+    "faster-whisper": "1.2.1",
+    "kokoro": "0.9.4",
+    "numpy": "2.3.5",
+    "pillow": "12.1.1",
+    "silero-vad": "6.2.1",
+    "soundfile": "0.14.0",
+    "torch": "2.9.1+cpu",
+    "torchaudio": "2.9.1+cpu",
+    "transformers": "4.57.6",
+    "uvicorn": "0.52.1"
+  },
+  "models": {
+    "tts": {
+      "repository": "hexgrad/Kokoro-82M",
+      "release": "v1.0",
+      "modelSha256": "496dba118d1a58f5f3db2efc88dbdc216e0483fc89fe6e47ee1f2c53f18ad1e4",
+      "voice": "af_heart"
+    },
+    "stt": "base.en",
+    "vad": "silero-vad-onnx"
+  },
+  "network": {
+    "host": "127.0.0.1",
+    "port": 8765,
+    "publicExposure": false
+  },
+  "retention": "none"
+}
