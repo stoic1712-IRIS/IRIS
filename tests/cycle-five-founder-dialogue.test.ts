@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
 
 import type {
   ModelGatewayRequest,
@@ -63,6 +64,13 @@ function request() {
 }
 
 describe("Cycle Five Founder dialogue service", () => {
+  it("launches the matching Command Center worktree with an explicit IRIS root", () => {
+    const launcher = readFileSync("scripts/runtime/start-founder-command-center.ps1", "utf8");
+    expect(launcher).toContain("$worktreeSuffix");
+    expect(launcher).toContain("export IRIS_ROOT=");
+    expect(launcher).toContain("wslpath -a");
+  });
+
   it("preserves bounded multi-turn context without execution authority", async () => {
     const runtime = new DialogueRuntime();
     const result = await new FounderDialogueService(runtime).reply(request());
