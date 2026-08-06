@@ -1,5 +1,7 @@
 $ErrorActionPreference = "Stop"
 
+& (Join-Path $PSScriptRoot "start-iris-search.ps1")
+
 $irisRepository = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $projectsDirectory = Split-Path $irisRepository -Parent
 $irisDirectoryName = Split-Path $irisRepository -Leaf
