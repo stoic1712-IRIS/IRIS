@@ -10,6 +10,7 @@
     { "path": "./packages/workers" },
     { "path": "./packages/capabilities" },
     { "path": "./packages/development" },
+    { "path": "./packages/tool-gateway" },
     { "path": "./packages/model-gateway" },
     { "path": "./packages/blueprints" },
     { "path": "./packages/applications" },

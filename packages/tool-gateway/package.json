@@ -1,0 +1,21 @@
+{
+  "name": "@stoic-iris/tool-gateway",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "@stoic-iris/contracts": "workspace:*",
+    "playwright": "1.62.0",
+    "zod": "4.4.3"
+  }
+}
