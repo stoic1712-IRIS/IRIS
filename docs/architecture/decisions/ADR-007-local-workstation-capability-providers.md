@@ -8,7 +8,7 @@
 
 **Owners:** IRIS Core (permanent contract owner); Founder Cristofer Stoic Arellano (approver)
 
-**Related wave/capability:** Cycle Ten (Research, Browser, Computer, and Connector Parity); Cycle Ten C local-workstation provider governance
+**Related wave/capability:** Cycle Ten (Research, Browser, Computer, and Connector Parity); Cycle Ten C provider governance and Cycle Ten D disabled-by-default live adapters
 
 ## Context
 
@@ -49,7 +49,7 @@ The permanent owner is IRIS Core. Providers are replaceable adapters. The gatewa
 ## Consequences
 
 - Positive: the existing providers are accurately registered; the new capabilities have bounded, testable, fail-closed contracts before any live use.
-- Negative: screenshot, credential-resolution, and notification *activation* remain out of scope; a later tranche must add adapters and Founder-facing controls.
+- Negative: Cycle Ten D supplies disabled-by-default adapters, but Founder-facing controls and every protected live invocation remain a later tranche. Credential resolution remains unavailable.
 - Security/privacy: no secret, screenshot bytes, or notification content can flow to logs, evidence, canonical memory, or model context; enumeration and resolution are denied; desktop control is refused.
 - License/cost: no new dependency, no spending, no provider-resource creation. OS components are used under their existing terms; Playwright, SearXNG, and MCP SDK retain their recorded licenses.
 - Layer 4: the Command Center gains no new authority; this ADR governs Core contracts only.
@@ -58,9 +58,19 @@ The permanent owner is IRIS Core. Providers are replaceable adapters. The gatewa
 
 `tests/cycle-ten-local-workstation-provider.test.ts` proves, hermetically and without any live effect: redaction-gated screenshot release; byte/dimension bounds; ephemeral, no-persistence, no-bytes handles; unsafe-target rejection; opaque credential references with no value field; enumeration denial; resolution-authorization requirement with no value ever produced; local-only, redacted, non-actionable notifications; link, secret, and authority-laundering rejection; expiry and cancellation fail-closed; and a hash-chained decision audit. The Cycle Six governed-tool-gateway and connected-provider suites remain passing with no grant widening. Independent Codex review of the exact producer commit is required before merge.
 
+### Cycle Ten D adapter activation decision
+
+Cycle Ten D implements three replaceable adapters without starting or invoking them during verification:
+
+- `PlaywrightEphemeralScreenshotAdapter` accepts only an already-authorized `browser-page` resolver, masks password, token-autocomplete, and explicitly sensitive DOM regions with a solid fill, keeps PNG bytes inside the adapter, and returns only the exact metadata needed by the Core attestation contract.
+- `WindowsCredentialReferenceRegistry` stores only strict `wcm://` reference objects and exposes exact lookup and removal by derived identifier. It deliberately has no list or resolve operation.
+- `WindowsNativeNotificationAdapter` accepts an injected runner. The supplied Windows runner is inert until called and transfers bounded text through child stdin to a static encoded PowerShell program, not through command arguments.
+
+Importing or constructing these adapters has no provider effect. Every live call still enters through the Cycle Ten C contract with expiry, cancellation, replay, content, audit, and schema enforcement. Founder-facing activation remains Cycle Ten E.
+
 ## Rollback and Removal
 
-Revert the Cycle Ten C merge with a history-preserving `git revert -m 1 <merge-commit>`. The contracts are additive and export-only; removing the `local-workstation-provider` export and file restores the prior surface with no data migration. No provider resource, credential, or persisted artifact exists to clean up.
+Revert the relevant Cycle Ten C or D merge with a history-preserving `git revert -m 1 <merge-commit>`. The contracts and adapters are additive and export-only; removing their exports and files restores the prior surface with no data migration. No provider resource, credential, or persisted artifact exists to clean up.
 
 ## Approval
 
