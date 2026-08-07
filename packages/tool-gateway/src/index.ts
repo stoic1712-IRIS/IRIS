@@ -1,5 +1,6 @@
 export * from "./browser-provider.js";
 export * from "./contracts.js";
+export * from "./desktop-control-provider.js";
 export * from "./gateway.js";
 export * from "./live-local-workstation-provider.js";
 export * from "./local-workstation-provider.js";
