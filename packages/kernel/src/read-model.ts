@@ -11,8 +11,8 @@ export interface CoreReadState {
   trackedRemoteRevision: string;
   remoteEqual: boolean;
   observedAt: string;
-  phaseZeroGraduated: true;
-  graduationCheckpoint: string;
+  phaseZeroGraduated: boolean;
+  graduationCheckpoint: string | null;
 }
 
 export interface CoreReadRequest {
@@ -81,10 +81,18 @@ export function createCoreReadEnvelope(state: CoreReadState, generatedAt: Date) 
     evidence: [
       {
         id: "evidence_phase-zero-graduation",
-        title: "Phase 0 Development Independence",
-        citation: "evidence/wave-10/sovereign-development-graduation-2026-08-05.md",
+        title: state.phaseZeroGraduated
+          ? "Phase 0 Development Independence"
+          : "Phase 0 graduation readiness",
+        citation: state.phaseZeroGraduated
+          ? "evidence/wave-10/sovereign-development-graduation-2026-08-05.md"
+          : "docs/specifications/cycle-nine-phase-zero-graduation-readiness.md",
         redacted: true as const,
-        source: source("evidence/wave-10/sovereign-development-graduation-2026-08-05.md"),
+        source: source(
+          state.phaseZeroGraduated
+            ? "evidence/wave-10/sovereign-development-graduation-2026-08-05.md"
+            : "docs/specifications/cycle-nine-phase-zero-graduation-readiness.md",
+        ),
       },
     ],
     blueprints: [
@@ -109,10 +117,17 @@ export function createCoreReadEnvelope(state: CoreReadState, generatedAt: Date) 
       },
       {
         component: "Phase 0 graduation",
-        state: "healthy" as const,
+        state: state.phaseZeroGraduated ? ("healthy" as const) : ("offline" as const),
         latencyMs: 0,
-        detail: `Completed at checkpoint ${state.graduationCheckpoint}.`,
-        source: source("evidence/wave-10/sovereign-development-graduation-2026-08-05.md"),
+        detail:
+          state.phaseZeroGraduated && state.graduationCheckpoint !== null
+            ? `Completed at checkpoint ${state.graduationCheckpoint}.`
+            : "Readiness machinery is being completed; the deployed Founder-operated graduation has not run.",
+        source: source(
+          state.phaseZeroGraduated
+            ? "evidence/wave-10/sovereign-development-graduation-2026-08-05.md"
+            : "docs/specifications/cycle-nine-phase-zero-graduation-readiness.md",
+        ),
       },
       {
         component: "Provider resources",

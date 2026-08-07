@@ -45,13 +45,19 @@ describe("Release Four Core read boundary", () => {
         trackedRemoteRevision: "7dcd3c24244ffc4ebdc3d56b7aba1ece6915505a",
         remoteEqual: true,
         observedAt: now.toISOString(),
-        phaseZeroGraduated: true,
-        graduationCheckpoint: "468f81e4c2f91afe101796157d867926123c853d",
+        phaseZeroGraduated: false,
+        graduationCheckpoint: null,
       },
       now,
     );
     expect(envelope.canonicalRevision).toBe(envelope.payload.connectedRevision);
     expect(envelope.repository.remoteEqual).toBe(true);
+    expect(envelope.payload.health).toContainEqual(
+      expect.objectContaining({
+        component: "Phase 0 graduation",
+        state: "offline",
+      }),
+    );
     expect(Date.parse(envelope.expiresAt) - Date.parse(envelope.generatedAt)).toBe(30_000);
   });
 

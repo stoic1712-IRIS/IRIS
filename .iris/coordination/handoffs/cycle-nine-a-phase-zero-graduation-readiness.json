@@ -1,0 +1,100 @@
+{
+  "schema_version": "1.0.0",
+  "handoff_id": "cycle-nine-a-phase-zero-graduation-readiness",
+  "task_id": "cycle-nine-a-phase-zero-graduation-readiness",
+  "producer": "Codex",
+  "recipient": "Claude independent reviewer",
+  "created_at": "2026-08-07T02:49:41.771Z",
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "806cdc60668df1f1ed53ff33ac80bb2e4123afb2"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "main",
+      "commit": "f0a12b26a7271ed8cb2d2f1b08719b90c397628a"
+    }
+  ],
+  "result_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "iris/cycle-nine-a-phase-0-graduation-readiness",
+      "commit": null,
+      "patch_digest": "sha256:fc243446147afb6d074343d00d30dd37fa48679c7a73b0cb4d5501584e769f4a"
+    }
+  ],
+  "changed_paths": [
+    ".iris/coordination/tasks/cycle-nine-a-phase-zero-graduation-readiness.json",
+    ".iris/coordination/handoffs/cycle-nine-a-phase-zero-graduation-readiness.json",
+    "docs/specifications/cycle-nine-phase-zero-graduation-readiness.md",
+    "docs/specifications/wave-10-graduation-self-description.md",
+    "evidence/cycle-nine/phase-zero-graduation-readiness-2026-08-06.md",
+    "packages/development/src/index.ts",
+    "packages/development/src/phase-zero-graduation-readiness.ts",
+    "packages/development/src/self-description.ts",
+    "packages/kernel/src/read-model.ts",
+    "scripts/runtime/iris-core-read-service.mjs",
+    "tests/cycle-nine-phase-zero-graduation-readiness.test.ts",
+    "tests/release-four-core-read-service.test.ts",
+    "tests/wave-10-graduation-self-description.test.ts"
+  ],
+  "commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "focused vitest: Cycle Nine, Release Four read service, and Wave Ten self-description",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "direct Prettier check using pinned local dependencies",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "direct ESLint check using pinned local dependencies",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "direct root and Visual Composer TypeScript checks using pinned local dependencies",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "full vitest suite: 36 files and 201 tests",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "TypeScript composite build and Visual Composer production build",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "repository diagnostics and task-schema validation",
+      "exit_code": 0
+    }
+  ],
+  "evidence": [
+    "evidence/cycle-nine/phase-zero-graduation-readiness-2026-08-06.md",
+    "docs/specifications/cycle-nine-phase-zero-graduation-readiness.md",
+    "tests/cycle-nine-phase-zero-graduation-readiness.test.ts"
+  ],
+  "limitations": [
+    "This is local graduation-readiness machinery and not the final deployed Founder-operated Phase 0 graduation.",
+    "The exact pnpm verify wrapper was not invoked because dependency installation was prohibited; every component passed directly with the lockfile-identical existing dependency tree.",
+    "Cycle Nine B must bind to the eventual reviewed and canonical Cycle Nine A Core commit, not this mutable uncommitted patch.",
+    "No independent review, staging, commit, push, pull request, merge, synchronization, deployment, provider mutation, credential use, spending, or final graduation occurred."
+  ],
+  "rollback": "Before publication, restore the seven modified tracked files from base revision 806cdc60668df1f1ed53ff33ac80bb2e4123afb2 and remove the six exact new task, handoff, evidence, specification, controller, and test paths listed in changed_paths. Do not reset or clean unrelated work.",
+  "protected_actions_remaining": [
+    "Independent Claude review of the exact Cycle Nine A patch",
+    "Founder-authorized staging and commit",
+    "Non-force push, pull-request creation, provider review, merge, and local-main synchronization",
+    "Creation of a Cycle Nine B task bound to the canonical Cycle Nine A merge commit",
+    "Final deployed Phase 0 graduation performed by IRIS with Claude and Codex audit-only"
+  ],
+  "ready_for_review": true
+}

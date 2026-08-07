@@ -1,0 +1,98 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "cycle-nine-a-phase-zero-graduation-readiness",
+  "objective": "Implement the IRIS Core Phase 0 graduation-readiness controller that fail-closed binds the existing executable-worker candidate stage to independent IRIS review, checkpoint-first delivery, governed merge, canonical-main equality, rollback evidence, cleanup, and provider-authoritative zero-resource verification; correct stale completed-graduation self-description and read-model claims without performing the final graduation.",
+  "issuer": "Founder Cristofer Stoic Arellano",
+  "executor": "Codex",
+  "assigned_role": "producer",
+  "created_at": "2026-08-07T02:34:06.178Z",
+  "status": "ready_for_review",
+  "risk_class": "R2",
+  "authorization_mode": "single_action",
+  "completion_mandate_text": null,
+  "completion_actions": [],
+  "completion_exclusions": [
+    "Final Phase 0 graduation execution",
+    "Staging, committing, pushing, pull-request creation, merging, synchronization, or branch cleanup",
+    "Dependency installation or modification",
+    "Credentials, provider mutation, deployment, public or LAN exposure, spending, or paid resources",
+    "Repository administration, visibility, ruleset, branch-protection, secret, variable, or access changes"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "806cdc60668df1f1ed53ff33ac80bb2e4123afb2"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "main",
+      "commit": "f0a12b26a7271ed8cb2d2f1b08719b90c397628a"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/tasks/cycle-nine-a-phase-zero-graduation-readiness.json",
+    ".iris/coordination/handoffs/cycle-nine-a-phase-zero-graduation-readiness.json",
+    "packages/development/src/phase-zero-graduation-readiness.ts",
+    "packages/development/src/self-description.ts",
+    "packages/development/src/index.ts",
+    "packages/kernel/src/read-model.ts",
+    "scripts/runtime/iris-core-read-service.mjs",
+    "tests/cycle-nine-phase-zero-graduation-readiness.test.ts",
+    "tests/release-four-core-read-service.test.ts",
+    "tests/wave-10-graduation-self-description.test.ts",
+    "docs/specifications/cycle-nine-phase-zero-graduation-readiness.md",
+    "docs/specifications/wave-10-graduation-self-description.md",
+    "evidence/cycle-nine/phase-zero-graduation-readiness-2026-08-06.md"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    ".claude/**",
+    "docs/governance/**",
+    "docs/registries/**",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "evidence/wave-10/**",
+    "C:/Projects/STOIC-IRIS-source-library/**"
+  ],
+  "permitted_actions": [
+    "Read canonical sources and verified provider state",
+    "Create the exact coordination task",
+    "Edit only the allowed IRIS Core paths",
+    "Run focused and full local verification",
+    "Repair failures within the same bounded design",
+    "Prepare an exact uncommitted handoff for independent Claude review"
+  ],
+  "prohibited_actions": [
+    "Perform or simulate completion of the final Phase 0 graduation",
+    "Mutate the Founder Command Center worktree",
+    "Stage, commit, push, create or merge a pull request",
+    "Install or update dependencies",
+    "Use or disclose credentials",
+    "Create or mutate provider resources",
+    "Deploy or expose a service",
+    "Spend money",
+    "Force-push, rewrite history, or delete canonical evidence"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run tests/cycle-nine-phase-zero-graduation-readiness.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "Exact base revision and clean worktree verification",
+    "Hash-bound foundation source verification",
+    "Fail-closed approval, actor, model, checkpoint, review, merge, equality, rollback, cleanup, and provider-zero tests",
+    "Full repository verification output",
+    "Exact changed-path list and rollback instructions",
+    "Independent Claude review of the exact producer result before any publication"
+  ],
+  "publisher": null,
+  "phase0_graduation": false
+}

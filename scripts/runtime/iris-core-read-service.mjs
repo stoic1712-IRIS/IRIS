@@ -9,7 +9,6 @@ import { parseCoreReadRequest } from "../../packages/kernel/dist/read-service.js
 
 const host = "127.0.0.1";
 const port = readLoopbackPort("IRIS_CORE_READ_PORT", 4181);
-const checkpoint = "468f81e4c2f91afe101796157d867926123c853d";
 const maximumBytes = 256 * 1024;
 
 function readLoopbackPort(name, fallback) {
@@ -48,8 +47,8 @@ function realState(now) {
     trackedRemoteRevision,
     remoteEqual: canonicalRevision === trackedRemoteRevision,
     observedAt: now.toISOString(),
-    phaseZeroGraduated: true,
-    graduationCheckpoint: checkpoint,
+    phaseZeroGraduated: false,
+    graduationCheckpoint: null,
   };
 }
 
