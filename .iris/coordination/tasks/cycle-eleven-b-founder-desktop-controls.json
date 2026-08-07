@@ -34,12 +34,12 @@
     {
       "repository": "stoic1712-IRIS/IRIS",
       "branch": "main",
-      "commit": "e3a21db158df831224978de5e9fb3c9e9efc11aa"
+      "commit": "e00cbb8435c8fcf0cec5e8eee32512db3463edd3"
     },
     {
       "repository": "stoic1712-IRIS/iris-founder-command-center",
       "branch": "main",
-      "commit": "97f3bdb79ce7d7d503eba3d3570b04c8309a1785"
+      "commit": "2368bf25efdeaef24717fc2b73609acda69ec9f3"
     }
   ],
   "allowed_paths": [
