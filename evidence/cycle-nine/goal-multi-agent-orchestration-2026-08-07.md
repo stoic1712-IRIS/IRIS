@@ -32,14 +32,29 @@ Pinned dependencies were materialized only inside the isolated worktree with `pn
 - File-backed snapshots use validated atomic replacement and restore interrupted tasks safely.
 - Event verification detects chain tampering.
 
+## Independent-review repair
+
+The first independent review correctly blocked publication and identified six material gaps. The repaired exact branch now:
+
+- serializes every per-goal snapshot mutation while retaining bounded parallel worker execution;
+- uses unique file-store temporary paths before atomic rename;
+- rechecks current terminal and abort state before applying worker, reviewer, or completion results;
+- bounds non-cooperative worker, reviewer, and completion-evaluator calls with a hard timeout;
+- rejects reviewer-required goals during preflight when no reviewer exists;
+- supplies verified dependency summaries, evidence, and output digests to downstream tasks;
+- requires a separate evaluator to bind completed task evidence to measurable goal-level criteria; and
+- verifies event sequence, shared goal identity, unique event identity, previous digest, and event digest.
+
+Six regression tests were added for these findings. The canonical task's execution-base record is being corrected in a separate one-path governance pull request; no implementation scope or authority changes with that correction.
+
 ## Verification results
 
 - `pnpm install --offline --frozen-lockfile --ignore-scripts`: exit 0; pinned tree materialized with no lockfile change.
-- Focused Cycle Nine D suite: 9 tests passed.
-- Task acceptance suite with Cycle Eight worker and Cycle Nine Phase 0 readiness: 52 tests passed.
+- Focused Cycle Nine D suite after independent-review repair: 15 tests passed.
+- Task acceptance suite before the review repair: 52 tests passed; the repaired focused suite and full suite supersede that earlier count.
 - `pnpm lint`: exit 0.
 - `pnpm typecheck`: exit 0.
-- `pnpm verify`: exit 0; formatting, lint, typecheck, 42 files and 330 tests, production build, and diagnostics passed.
+- `pnpm verify`: exit 0; formatting, lint, typecheck, 42 files and 336 tests, production build, and diagnostics passed.
 - Vite emitted only the existing non-failing large-chunk advisory.
 - `git diff --check`: exit 0.
 

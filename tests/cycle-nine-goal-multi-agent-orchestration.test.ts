@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -12,6 +13,8 @@ import {
   validateGoalDefinition,
   verifyGoalEventChain,
   type GoalDefinition,
+  type GoalEvent,
+  type GoalCompletionEvaluator,
   type GoalReviewerRunner,
   type GoalTask,
   type GoalWorkerRequest,
@@ -120,11 +123,24 @@ function passingReviewer(): GoalReviewerRunner {
   };
 }
 
+function passingCompletionEvaluator(): GoalCompletionEvaluator {
+  return {
+    evaluate: () =>
+      Promise.resolve({
+        satisfied: true,
+        evaluatorActorId: "evaluator_goal-completion",
+        evidence: ["goal:completion-criteria:passed"],
+        unmetCriteria: [],
+      }),
+  };
+}
+
 function orchestrator(worker: GoalWorkerRunner, reviewer = passingReviewer()) {
   return new GoalOrchestrator({
     store: new MemoryGoalStore(),
     worker,
     reviewer,
+    completionEvaluator: passingCompletionEvaluator(),
     availableCapabilities: ["research.search", "repository.edit"],
     maximumParallelWorkers: 4,
     now: () => new Date(createdAt),
@@ -136,12 +152,43 @@ async function settle(): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
+function stable(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stable).join(",")}]`;
+  if (value !== null && typeof value === "object") {
+    return `{${Object.entries(value as Record<string, unknown>)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, item]) => `${JSON.stringify(key)}:${stable(item)}`)
+      .join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+function rehashEvents(events: GoalEvent[]): GoalEvent[] {
+  let previousDigest: `sha256:${string}` | undefined;
+  return events.map((entry) => {
+    const rest = {
+      sequence: entry.sequence,
+      eventId: entry.eventId,
+      type: entry.type,
+      goalId: entry.goalId,
+      ...(entry.taskId === undefined ? {} : { taskId: entry.taskId }),
+      occurredAt: entry.occurredAt,
+      summary: entry.summary,
+    };
+    const unsigned = { ...rest, ...(previousDigest === undefined ? {} : { previousDigest }) };
+    const digest = `sha256:${createHash("sha256").update(stable(unsigned)).digest("hex")}` as const;
+    previousDigest = digest;
+    return { ...unsigned, digest };
+  });
+}
+
 describe("Cycle Nine additive goal and multi-agent orchestration", () => {
   it("preflights capabilities before accepting a persistent goal", async () => {
     const runtime = new GoalOrchestrator({
       store: new MemoryGoalStore(),
       worker: { execute: (request) => Promise.resolve(result(request)) },
       reviewer: passingReviewer(),
+      completionEvaluator: passingCompletionEvaluator(),
       availableCapabilities: ["repository.edit"],
       maximumParallelWorkers: 2,
       now: () => new Date(createdAt),
@@ -149,6 +196,25 @@ describe("Cycle Nine additive goal and multi-agent orchestration", () => {
     await expect(runtime.create(definition())).rejects.toThrow(
       "GOAL_CAPABILITY_PREFLIGHT_FAILED:research.search",
     );
+  });
+
+  it("rejects reviewed goals before execution when no independent reviewer exists", async () => {
+    let workerCalls = 0;
+    const runtime = new GoalOrchestrator({
+      store: new MemoryGoalStore(),
+      worker: {
+        execute: (request) => {
+          workerCalls += 1;
+          return Promise.resolve(result(request));
+        },
+      },
+      completionEvaluator: passingCompletionEvaluator(),
+      availableCapabilities: ["research.search", "repository.edit"],
+      maximumParallelWorkers: 2,
+      now: () => new Date(createdAt),
+    });
+    await expect(runtime.create(definition())).rejects.toThrow("GOAL_REVIEWER_PREFLIGHT_FAILED");
+    expect(workerCalls).toBe(0);
   });
 
   it("rejects missing dependencies, cycles, and unordered overlapping writes", () => {
@@ -189,7 +255,78 @@ describe("Cycle Nine additive goal and multi-agent orchestration", () => {
     expect(order.indexOf("start:task_integrate")).toBeGreaterThan(
       order.indexOf("end:task_implement"),
     );
+    expect(
+      completed.tasks.map((task) => [task.definition.taskId, task.status, task.attempts]),
+    ).toEqual([
+      ["task_research", "completed", 1],
+      ["task_implement", "completed", 1],
+      ["task_integrate", "completed", 1],
+    ]);
+    expect(completed.events.filter((event) => event.type === "TaskCompleted")).toHaveLength(3);
     expect(verifyGoalEventChain(completed.events)).toBe(true);
+  });
+
+  it("passes completed dependency evidence into downstream execution and completion evaluation", async () => {
+    let downstreamEvidence: string[] = [];
+    let evaluatedTasks: string[] = [];
+    const runtime = new GoalOrchestrator({
+      store: new MemoryGoalStore(),
+      worker: {
+        execute: (request) => {
+          if (request.task.taskId === "task_integrate") {
+            downstreamEvidence = request.dependencyEvidence.map((item) => item.taskId).sort();
+            expect(request.context.summary).toContain("task_research");
+            expect(request.context.summary).toContain("task_implement");
+          }
+          return Promise.resolve(result(request));
+        },
+      },
+      reviewer: passingReviewer(),
+      completionEvaluator: {
+        evaluate: (request) => {
+          evaluatedTasks = request.taskEvidence.map((item) => item.taskId).sort();
+          return Promise.resolve({
+            satisfied: true,
+            evaluatorActorId: "evaluator_goal-completion",
+            evidence: ["goal:completion-criteria:passed"],
+            unmetCriteria: [],
+          });
+        },
+      },
+      availableCapabilities: ["research.search", "repository.edit"],
+      maximumParallelWorkers: 4,
+      now: () => new Date(createdAt),
+    });
+    await runtime.create(definition());
+    expect((await runtime.run("goal_cycle-nine-orchestration")).status).toBe("completed");
+    expect(downstreamEvidence).toEqual(["task_implement", "task_research"]);
+    expect(evaluatedTasks).toEqual(["task_implement", "task_integrate", "task_research"]);
+  });
+
+  it("blocks rather than claiming completion when measurable goal criteria remain unmet", async () => {
+    const runtime = new GoalOrchestrator({
+      store: new MemoryGoalStore(),
+      worker: { execute: (request) => Promise.resolve(result(request)) },
+      reviewer: passingReviewer(),
+      completionEvaluator: {
+        evaluate: (request) =>
+          Promise.resolve({
+            satisfied: false,
+            evaluatorActorId: "evaluator_goal-completion",
+            evidence: ["goal:completion-criteria:unmet"],
+            unmetCriteria: [
+              request.completionCriteria[0] ?? "Every task is independently verified.",
+            ],
+          }),
+      },
+      availableCapabilities: ["research.search", "repository.edit"],
+      maximumParallelWorkers: 4,
+      now: () => new Date(createdAt),
+    });
+    await runtime.create(definition());
+    const blocked = await runtime.run("goal_cycle-nine-orchestration");
+    expect(blocked.status).toBe("blocked");
+    expect(blocked.unmetCompletionCriteria).toEqual(["Every task is independently verified."]);
   });
 
   it("gives each worker separate compacted context", async () => {
@@ -287,6 +424,53 @@ describe("Cycle Nine additive goal and multi-agent orchestration", () => {
     expect((await runtime.cancel(cancellable.goalId)).status).toBe("cancelled");
   });
 
+  it("keeps cancellation terminal when a non-cooperative reviewer ignores abort", async () => {
+    const runtime = new GoalOrchestrator({
+      store: new MemoryGoalStore(),
+      worker: { execute: (request) => Promise.resolve(result(request)) },
+      reviewer: { review: () => new Promise(() => undefined) },
+      completionEvaluator: passingCompletionEvaluator(),
+      availableCapabilities: ["research.search", "repository.edit"],
+      maximumParallelWorkers: 2,
+      operationTimeoutMs: 1_000,
+      now: () => new Date(createdAt),
+    });
+    const single = definition({ tasks: [firstTask()] });
+    await runtime.create(single);
+    const running = runtime.run(single.goalId);
+    for (let attempt = 0; attempt < 20; attempt += 1) {
+      if ((await runtime.state(single.goalId)).tasks[0]?.status === "reviewing") break;
+      await settle();
+    }
+    expect((await runtime.cancel(single.goalId)).status).toBe("cancelled");
+    const final = await running;
+    expect(final.status).toBe("cancelled");
+    expect(final.tasks[0]?.status).toBe("cancelled");
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect((await runtime.state(single.goalId)).status).toBe("cancelled");
+  });
+
+  it("fails a bounded non-cooperative worker rather than hanging forever", async () => {
+    const runtime = new GoalOrchestrator({
+      store: new MemoryGoalStore(),
+      worker: { execute: () => new Promise(() => undefined) },
+      reviewer: passingReviewer(),
+      completionEvaluator: passingCompletionEvaluator(),
+      availableCapabilities: ["research.search", "repository.edit"],
+      maximumParallelWorkers: 2,
+      operationTimeoutMs: 10,
+      now: () => new Date(createdAt),
+    });
+    const single = definition({
+      goalId: "goal_worker-timeout",
+      tasks: [{ ...firstTask(), maxAttempts: 1 }],
+    });
+    await runtime.create(single);
+    const failed = await runtime.run(single.goalId);
+    expect(failed.status).toBe("failed");
+    expect(failed.tasks[0]?.lastError).toBe("GOAL_OPERATION_TIMEOUT");
+  });
+
   it("fails closed when a worker reports a write outside its declared scope", async () => {
     const runtime = orchestrator({
       execute: (request) =>
@@ -309,6 +493,7 @@ describe("Cycle Nine additive goal and multi-agent orchestration", () => {
       store,
       worker: { execute: (request) => Promise.resolve(result(request)) },
       reviewer: passingReviewer(),
+      completionEvaluator: passingCompletionEvaluator(),
       availableCapabilities: ["research.search", "repository.edit"],
       maximumParallelWorkers: 4,
       now: () => new Date(createdAt),
@@ -342,5 +527,32 @@ describe("Cycle Nine additive goal and multi-agent orchestration", () => {
     await expect(runtime.steer(definition().goalId, "password=do-not-send")).rejects.toThrow(
       "GOAL_STEERING_SECRET_LIKE_TEXT_DENIED",
     );
+  });
+
+  it("rejects rehashed event chains with altered sequence, goal identity, or event identity", async () => {
+    const runtime = orchestrator({ execute: (request) => Promise.resolve(result(request)) });
+    const single = definition({ tasks: [firstTask()] });
+    await runtime.create(single);
+    const completed = await runtime.run(single.goalId);
+
+    const resequenced = structuredClone(completed.events);
+    const secondSequence = resequenced[1];
+    if (secondSequence === undefined) throw new Error("Expected a second goal event.");
+    secondSequence.sequence = 99;
+    expect(verifyGoalEventChain(rehashEvents(resequenced))).toBe(false);
+
+    const mixedGoal = structuredClone(completed.events);
+    const secondGoal = mixedGoal[1];
+    if (secondGoal === undefined) throw new Error("Expected a second goal event.");
+    secondGoal.goalId = "goal_other-identity";
+    expect(verifyGoalEventChain(rehashEvents(mixedGoal))).toBe(false);
+
+    const duplicateIdentity = structuredClone(completed.events);
+    const firstEvent = duplicateIdentity[0];
+    const secondEvent = duplicateIdentity[1];
+    if (firstEvent === undefined || secondEvent === undefined)
+      throw new Error("Expected two goal events.");
+    secondEvent.eventId = firstEvent.eventId;
+    expect(verifyGoalEventChain(rehashEvents(duplicateIdentity))).toBe(false);
   });
 });
