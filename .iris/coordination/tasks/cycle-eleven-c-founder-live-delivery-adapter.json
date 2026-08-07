@@ -1,0 +1,103 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "cycle-eleven-c-founder-live-delivery-adapter",
+  "objective": "Activate the canonical CompleteSoftwareDeliveryRuntime through a real replaceable local provider adapter and an authenticated Founder Command Center control surface that completes ordinary delivery through verified pull-request preparation, remote equality, cleanup, and exact merge-statement presentation without executing the merge or any other protected effect.",
+  "issuer": "Founder Cristofer Stoic Arellano through Codex",
+  "executor": "Codex",
+  "assigned_role": "producer",
+  "created_at": "2026-08-07T16:10:00Z",
+  "status": "approved",
+  "risk_class": "R3",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "Founder mandate: do it after identifying the inactive complete-delivery provider adapter as the remaining Cycle Eleven and Twelve gap. Preserve every existing Phase 0, wave, release, and cycle capability; implement and verify the real bounded adapter; then publish this adapter implementation through exact staging, commit, non-force push, implementation pull request, independent review, merge of that implementation pull request, synchronization, remote equality, and cleanup. Existing operating-system keyring-backed GitHub CLI authentication may be referenced for the named repositories without reading or exposing its raw credential. The running adapter itself stops at ready-for-merge-approval and never executes a merge. This does not authorize deployment, spending, public or LAN exposure, repository or account administration, destructive operations, force-push, history rewrite, credential disclosure, or final Phase 0 graduation execution.",
+  "completion_actions": [
+    "research",
+    "edit",
+    "verify",
+    "repair",
+    "stage",
+    "commit",
+    "push_branch",
+    "create_pull_request",
+    "independent_review",
+    "merge",
+    "synchronize",
+    "cleanup"
+  ],
+  "completion_exclusions": [
+    "Merge execution by the running adapter; completion_actions.merge applies only to publication of this adapter implementation pull request",
+    "Deployment, spending, paid providers, or public or LAN exposure",
+    "Repository or account administration",
+    "Destructive operations, force-push, or history rewrite",
+    "Raw credential access, disclosure, persistence, or model exposure",
+    "Final Phase 0 graduation execution"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "f6475d19fa9c9fe1053b6bf1a1c0745417e53994"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "main",
+      "commit": "e325eb1b3f3538196986f3f432c2bae216905fa9"
+    }
+  ],
+  "allowed_paths": [
+    "README.md",
+    "scripts/complete-delivery-adapter.mjs",
+    "scripts/local-gateway.mjs",
+    "src/operator-client.ts",
+    "src/views/OperatorSession.tsx",
+    "tests/complete-delivery-adapter.test.ts",
+    "tests/local-gateway.test.ts",
+    "tests/operator-client.test.ts",
+    "tests/operator-session.test.tsx"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    ".claude/**",
+    ".iris/**",
+    "package.json",
+    "pnpm-lock.yaml",
+    "C:/Projects/STOIC-IRIS-source-library/**"
+  ],
+  "permitted_actions": [
+    "Consume the exact Core CompleteSoftwareDeliveryRuntime and active Founder access registry",
+    "Create and remove unique disposable Git worktrees within an adapter-owned workspace root",
+    "Use local qwen3-coder:30b for bounded implementation and repair and local gpt-oss:20b for independent review",
+    "Run exact objective-bound verification command arrays",
+    "Create exact local commits, non-force feature-branch pushes, and pull requests in the two named repositories through existing Git and keyring-backed GitHub CLI authentication",
+    "Observe CI and review state, verify provider-authoritative remote equality, clean the disposable workspace, and present the Core-authored merge statement"
+  ],
+  "prohibited_actions": [
+    "Execute or submit the merge from the running adapter",
+    "Modify canonical main directly or weaken Core ownership, access checks, or event evidence",
+    "Use force push, history rewrite, repository administration, deployment, destructive work, paid providers, spending, or public or LAN listeners",
+    "Read, return, log, persist, or send raw credentials or private model reasoning",
+    "Submit or execute final Phase 0 graduation"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm exec vitest run tests/complete-delivery-adapter.test.ts tests/local-gateway.test.ts tests/operator-client.test.ts tests/operator-session.test.tsx"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "Exact Core and Command Center revision binding",
+    "Adapter preflight and active-status evidence",
+    "Path, command, model identity, worktree, no-force, idempotency, pull-request head, CI, review, remote equality, and cleanup tests",
+    "Restricted access expiry, revocation, cancellation, recovery, and protected-stop tests",
+    "Held-out disposable repository proof using real local models without protected effects",
+    "No merge endpoint or graduation execution",
+    "Exact changed paths, command exit codes, rollback, remote equality, and cleanup"
+  ],
+  "publisher": "Codex under the Founder completion mandate after independent exact-patch review",
+  "approval_reference": "founder-do-live-complete-delivery-adapter-2026-08-07",
+  "phase0_graduation": false
+}
