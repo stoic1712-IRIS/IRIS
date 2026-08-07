@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://stoic-iris.local/schemas/coordination/task.schema.json",
+  "title": "IRIS Multi-Agent Task",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "task_id",
+    "objective",
+    "issuer",
+    "executor",
+    "assigned_role",
+    "created_at",
+    "status",
+    "risk_class",
+    "authorization_mode",
+    "completion_mandate_text",
+    "completion_actions",
+    "completion_exclusions",
+    "base_revisions",
+    "allowed_paths",
+    "excluded_paths",
+    "permitted_actions",
+    "prohibited_actions",
+    "acceptance_commands",
+    "required_evidence",
+    "publisher",
+    "phase0_graduation"
+  ],
+  "properties": {
+    "schema_version": { "const": "1.0.0" },
+    "task_id": { "type": "string", "pattern": "^[a-z0-9][a-z0-9._-]{2,127}$" },
+    "objective": { "type": "string", "minLength": 1, "maxLength": 2000 },
+    "issuer": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "executor": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "assigned_role": {
+      "enum": ["producer", "independent_reviewer", "publisher", "audit_observer"]
+    },
+    "created_at": { "type": "string", "format": "date-time" },
+    "status": {
+      "enum": [
+        "draft",
+        "ready_for_review",
+        "approved",
+        "in_progress",
+        "completed",
+        "blocked",
+        "cancelled"
+      ]
+    },
+    "risk_class": { "enum": ["R0", "R1", "R2", "R3", "R4"] },
+    "authorization_mode": { "enum": ["single_action", "completion_mandate"] },
+    "completion_mandate_text": { "type": ["string", "null"], "maxLength": 4000 },
+    "completion_actions": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "research",
+          "edit",
+          "verify",
+          "repair",
+          "stage",
+          "commit",
+          "push_branch",
+          "create_pull_request",
+          "independent_review",
+          "merge",
+          "synchronize",
+          "cleanup"
+        ]
+      }
+    },
+    "completion_exclusions": { "$ref": "#/$defs/string_list" },
+    "base_revisions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "$ref": "#/$defs/revision" }
+    },
+    "allowed_paths": { "$ref": "#/$defs/path_list" },
+    "excluded_paths": { "$ref": "#/$defs/path_list" },
+    "permitted_actions": { "$ref": "#/$defs/string_list" },
+    "prohibited_actions": { "$ref": "#/$defs/string_list" },
+    "acceptance_commands": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/command" }
+    },
+    "required_evidence": { "$ref": "#/$defs/string_list" },
+    "publisher": { "type": ["string", "null"], "maxLength": 120 },
+    "approval_reference": {
+      "type": ["string", "null"],
+      "pattern": "^(sha256:[0-9a-f]{64}|[A-Za-z0-9._:/-]+)$"
+    },
+    "phase0_graduation": { "type": "boolean" }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "authorization_mode": { "const": "completion_mandate" } },
+        "required": ["authorization_mode"]
+      },
+      "then": {
+        "properties": {
+          "completion_mandate_text": { "type": "string", "minLength": 1 },
+          "completion_actions": { "type": "array", "minItems": 1 }
+        }
+      },
+      "else": {
+        "properties": {
+          "completion_mandate_text": { "type": "null" },
+          "completion_actions": { "type": "array", "maxItems": 0 }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "revision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "branch", "commit"],
+      "properties": {
+        "repository": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$" },
+        "branch": { "type": "string", "minLength": 1, "maxLength": 255 },
+        "commit": { "type": "string", "pattern": "^[0-9a-f]{40}$" }
+      }
+    },
+    "path_list": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 500 }
+    },
+    "string_list": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": { "type": "string", "minLength": 1, "maxLength": 1000 }
+    },
+    "command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "command"],
+      "properties": {
+        "repository": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$" },
+        "command": { "type": "string", "minLength": 1, "maxLength": 2000 }
+      }
+    }
+  }
+}

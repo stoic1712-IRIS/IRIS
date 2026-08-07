@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "cycle-eight-claude-independent-review",
+  "objective": "Independently review the exact locally committed Cycle Eight executable worker runtime changes in IRIS Core and the Founder Command Center without modifying either repository.",
+  "issuer": "Founder",
+  "executor": "Claude Code",
+  "assigned_role": "independent_reviewer",
+  "created_at": "2026-08-06T00:00:00-06:00",
+  "status": "completed",
+  "risk_class": "R0",
+  "authorization_mode": "single_action",
+  "completion_mandate_text": null,
+  "completion_actions": [],
+  "completion_exclusions": [
+    "All repository mutation",
+    "All GitHub mutation",
+    "Credentials, spending, deployment, and provider resources"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "iris/cycle-eight-executable-worker-runtime",
+      "commit": "46ba27b1f34aeba39f65a7f8548672aa1c670829"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "iris/cycle-eight-executable-worker-runtime",
+      "commit": "04f3f9af2c6b829384e6e037dfe3e6162e45972e"
+    }
+  ],
+  "allowed_paths": ["**"],
+  "excluded_paths": [
+    ".env",
+    ".env.*",
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/*.tsbuildinfo",
+    "credentials/**",
+    "secrets/**"
+  ],
+  "permitted_actions": [
+    "Read canonical governance and architecture",
+    "Inspect the exact Git commits and their diffs",
+    "Run repository-pinned formatting, lint, typecheck, test, build, audit, and diagnostic commands that require no installation",
+    "Write the review response outside the reviewed repositories"
+  ],
+  "prohibited_actions": [
+    "Edit either repository",
+    "Change Git state",
+    "Install or update dependencies",
+    "Start persistent services",
+    "Read or use credentials",
+    "Stage, commit, push, create or merge pull requests",
+    "Deploy, publish, spend, or create provider resources"
+  ],
+  "acceptance_commands": [
+    { "repository": "stoic1712-IRIS/IRIS", "command": "pnpm verify" },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+    }
+  ],
+  "required_evidence": [
+    "Exact reviewed commit IDs",
+    "Commands and exit codes",
+    "Line-supported findings or an explicit no-findings statement",
+    "Remaining risks and limitations",
+    "Confirmation that no repository or Git state changed"
+  ],
+  "publisher": null,
+  "approval_reference": null,
+  "phase0_graduation": false
+}

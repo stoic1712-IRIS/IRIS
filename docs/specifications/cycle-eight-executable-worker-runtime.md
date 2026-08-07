@@ -1,6 +1,6 @@
 # Cycle Eight Executable Worker Runtime
 
-**Status:** Locally complete; publication pending
+**Status:** Canonical and implemented; Cycle Eight pull requests merged
 
 ## Objective
 
@@ -11,6 +11,8 @@ Cycle Eight converts the Cycle Seven planning-only coding worker into a real, bo
 Every execution proposal binds the repository, base revision, unique candidate branch, objective, readable paths, writable paths, forbidden paths, materialization commands, verification commands, file and byte limits, iteration limit, timeout, expiry, USD 0 budget, and the absence of canonical-write, external-mutation, and authority-expansion rights. The authenticated Founder must type the exact digest-bound approval statement before a workspace can be created.
 
 Cycle Eight does not authorize direct changes to the canonical checkout or `main`, pushing, pull requests, merging, deployment, public or LAN exposure, credentials, paid services, provider resources, spending, messaging, or arbitrary network access. A successful run produces a local candidate checkpoint for later human or governed review; it does not publish that checkpoint.
+
+The implementation entered canonical `main` through IRIS Core PR #46 at merge commit `86a6b8f9492b5ff4acd7dc71d930a96bca6a40db` and Founder Command Center PR #14 at merge commit `b254f94bf86c5ed910a7b42830b4d48b7fcd4a0e` after independent review and full verification.
 
 ## Lifecycle
 
