@@ -2,7 +2,7 @@ export interface SovereignDevelopmentSelfDescription {
   readonly name: "STOIC-IRIS";
   readonly runtime: "sovereign-development-runtime";
   readonly capabilities: readonly string[];
-  readonly graduationEvidenceComplete: true;
+  readonly graduationEvidenceComplete: false;
 }
 
 export function getSovereignDevelopmentSelfDescription(): SovereignDevelopmentSelfDescription {
@@ -27,6 +27,6 @@ export function getSovereignDevelopmentSelfDescription(): SovereignDevelopmentSe
     name: "STOIC-IRIS",
     runtime: "sovereign-development-runtime",
     capabilities,
-    graduationEvidenceComplete: true,
+    graduationEvidenceComplete: false,
   });
 }

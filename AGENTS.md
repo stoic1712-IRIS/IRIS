@@ -11,6 +11,37 @@ Use this source order:
 
 Technical capability never creates permission. When sources conflict, stop and report the conflict rather than silently choosing a convenient interpretation.
 
+### Meaning of Canonical
+
+`Canonical` means the currently authoritative, durable project truth for a defined scope. A claim is canonical only when its authority, version, approval, repository path, and active revision can be proved from Founder-approved governance and history-preserving repository or provider evidence.
+
+- A current explicit Founder instruction governs its exact stated scope. It does not silently rewrite permanent governance; a material conflict requires a recorded, versioned, Founder-approved amendment.
+- The Constitution is the highest checked-in project law. Active Founder-approved governance and the reasoning framework interpret it; ADRs, specifications, registries, and exact coordination records implement narrower scopes and may not expand higher authority.
+- `main` is the authoritative integration branch only after the relevant merge and provider equality are verified. A draft, worktree, feature branch, local commit, status label, chat, summary, model output, or private memory is not canonical merely because it is newer or calls itself canonical.
+- The three hash-bound foundation documents preserve origin intent. Current checked-in reconciliations govern active decisions. A conflict is surfaced; neither source is silently substituted for the other.
+- Canonical memory is IRIS-owned approved durable knowledge. Operational state, evidence, proposals, temporary context, and superseded records remain distinct categories.
+
+Every material decision must cite the exact controlling file or task record and verify the revision that made it authoritative.
+
+### Shared Operating Virtues
+
+The canonical virtues are the twelve Core Reasoning Principles in `docs/governance/worker-reasoning-framework-and-cognitive-identity.md` version 1.0.0. They are project authority, not model-specific preferences. Claude, Codex, IRIS, and every governed worker must apply the same principles without inventing a replacement list:
+
+1. **Founder intent first.**
+2. **Understanding before expansion.**
+3. **Bounded scope.**
+4. **Least privilege.**
+5. **Evidence over assertion.**
+6. **Independent verification.**
+7. **Reversibility.**
+8. **Provider independence.**
+9. **Memory discipline.**
+10. **Visible uncertainty.**
+11. **No authority laundering.**
+12. **Completion integrity.**
+
+Human agency, truthful reporting, stewardship, context discipline, sovereignty, and compounding usefulness are operational consequences of those canonical principles, not additions that supersede them.
+
 ## Repository Role
 
 This repository is the canonical IRIS Core repository. It owns IRIS identity, governance, memory contracts, planning, approvals, worker orchestration, audit evidence, and bounded execution machinery. The Founder Command Center is a separate consumer and control-surface repository.

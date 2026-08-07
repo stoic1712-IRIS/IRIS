@@ -1,0 +1,121 @@
+{
+  "schema_version": "1.0.0",
+  "handoff_id": "cycle-nine-a-phase-zero-graduation-readiness",
+  "task_id": "cycle-nine-a-phase-zero-graduation-readiness",
+  "producer": "Codex",
+  "recipient": "independent material reviewer",
+  "created_at": "2026-08-07T02:49:41.771Z",
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "806cdc60668df1f1ed53ff33ac80bb2e4123afb2"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "main",
+      "commit": "f0a12b26a7271ed8cb2d2f1b08719b90c397628a"
+    }
+  ],
+  "result_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "iris/cycle-nine-a-phase-0-graduation-readiness",
+      "commit": null,
+      "patch_digest": "sha256:9dbceb99483c5516e91a803733d51cd4bb185bdc830a03526b085403a96b11cc"
+    }
+  ],
+  "changed_paths": [
+    ".iris/coordination/handoffs/cycle-nine-a-phase-zero-graduation-readiness.json",
+    ".iris/coordination/tasks/cycle-nine-a-phase-zero-graduation-readiness.json",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "docs/operations/stoic-iris-project-context.md",
+    "docs/specifications/cycle-nine-phase-zero-graduation-readiness.md",
+    "docs/specifications/wave-10-graduation-self-description.md",
+    "evidence/cycle-nine/phase-zero-graduation-readiness-2026-08-06.md",
+    "packages/development/src/index.ts",
+    "packages/development/src/phase-zero-graduation-readiness.ts",
+    "packages/development/src/self-description.ts",
+    "packages/kernel/src/read-model.ts",
+    "scripts/runtime/iris-core-read-service.mjs",
+    "tests/cycle-nine-phase-zero-graduation-readiness.test.ts",
+    "tests/release-four-core-read-service.test.ts",
+    "tests/wave-10-graduation-self-description.test.ts"
+  ],
+  "commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "verify all six foundation-source hashes against C:/Projects/STOIC-IRIS-source-library/SOURCE-MANIFEST.md",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "direct vitest run tests/cycle-nine-phase-zero-graduation-readiness.test.ts: 31 tests",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "direct tsc -p tsconfig.check.json --pretty false",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm install --offline --frozen-lockfile --ignore-scripts in disposable verification copy: 244 reused, 0 downloaded",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "cold-start pnpm verify before generated workspace declarations",
+      "exit_code": 1
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm build bootstrap in disposable verification copy",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "exact pnpm verify after bootstrap: format, lint, typecheck, 36 files and 222 tests, build, diagnostics",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "git diff --check and task JSON parse",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "independent frozen executable-contract safety review at material digest sha256:9dbceb99483c5516e91a803733d51cd4bb185bdc830a03526b085403a96b11cc: PASS",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "independent frozen governance and evidence review at material digest sha256:9dbceb99483c5516e91a803733d51cd4bb185bdc830a03526b085403a96b11cc: PASS",
+      "exit_code": 0
+    }
+  ],
+  "evidence": [
+    "evidence/cycle-nine/phase-zero-graduation-readiness-2026-08-06.md",
+    "docs/specifications/cycle-nine-phase-zero-graduation-readiness.md",
+    "tests/cycle-nine-phase-zero-graduation-readiness.test.ts",
+    "AGENTS.md",
+    "docs/operations/stoic-iris-project-context.md"
+  ],
+  "limitations": [
+    "This is local graduation-readiness machinery and not the final deployed Founder-operated Phase 0 graduation.",
+    "A clean checkout currently needs a workspace build before pnpm verify because lint runs before generated internal-package declarations exist; the failure and successful post-bootstrap verification are both preserved.",
+    "Cycle Nine B must bind to the eventual independently reviewed and canonical Cycle Nine A Core merge commit, not this mutable patch or a feature-branch commit.",
+    "The Command Center producer must consume the Core definition of canonical authority and shared virtues through the exact Cycle Nine B task; Codex did not mutate Claude's active worktree.",
+    "The patch digest covers every non-self-referential material path: operator instructions, project context, specifications, implementation, runtime surface, and tests. The task, handoff, and evidence records are excluded from that digest because they contain or describe it and will instead be bound by the eventual review and Git commit.",
+    "No repaired file is staged or committed, and no push, pull request, merge, deployment, credential use, spending, or final graduation occurred."
+  ],
+  "rollback": "Before publication, restore only the 16 changed_paths from base revision 806cdc60668df1f1ed53ff33ac80bb2e4123afb2, removing paths that did not exist at the base. Do not reset, clean, or overwrite unrelated work. After a future pull-request merge, use the verified first-parent command git revert -m 1 <merge-commit> and deliver that rollback through the ordinary governed pull-request path.",
+  "protected_actions_remaining": [
+    "Exact-path staging and commit of the independently reviewed result",
+    "Non-force push, pull-request creation, provider checks, merge, provider equality, and local-main synchronization under the standing Founder completion mandate",
+    "Creation of a Cycle Nine B task bound to the canonical Cycle Nine A merge commit",
+    "Final deployed Phase 0 graduation performed by IRIS with Claude and Codex audit-only"
+  ],
+  "ready_for_review": false
+}
