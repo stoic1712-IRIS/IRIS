@@ -1,0 +1,102 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "cycle-ten-through-twelve-founder-handoff",
+  "objective": "Complete the additive Founder Command Center handoff for Cycles Ten through Twelve by rendering restricted Founder Full access, governed operator launch and status, pause, resume, cancellation, evidence, complete-delivery progress, protected-action stops, and presentation-only Phase 0 graduation approval without removing or reclassifying earlier work.",
+  "issuer": "Founder Cristofer Stoic Arellano through Codex",
+  "executor": "Codex",
+  "assigned_role": "producer",
+  "created_at": "2026-08-07T15:12:00Z",
+  "status": "approved",
+  "risk_class": "R3",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "Founder mandate: preserve every existing Phase 0, wave, release, and additive-cycle capability and finish all remaining additive cycles so IRIS can be handed off for Founder testing. This task bundles bounded implementation, verification, repair, exact-path staging, commit, non-force branch push, pull-request creation, independent review, merge, synchronization, remote equality, and cleanup. It does not authorize credentials, secret disclosure, spending, deployment, public or LAN exposure, repository or account administration, destructive operations, force-push, history rewrite, or execution of the final Phase 0 graduation self-upgrade.",
+  "completion_actions": [
+    "research",
+    "edit",
+    "verify",
+    "repair",
+    "stage",
+    "commit",
+    "push_branch",
+    "create_pull_request",
+    "independent_review",
+    "merge",
+    "synchronize",
+    "cleanup"
+  ],
+  "completion_exclusions": [
+    "Credentials or secret disclosure",
+    "Spending or paid provider resources",
+    "Deployment or public or LAN exposure",
+    "Repository or account administration",
+    "Destructive operations, force-push, or history rewrite",
+    "Final Phase 0 graduation execution"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "53c51bf7466b45fd6511c11236c441731b0140bc"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "main",
+      "commit": "8314f596250562d47a11cdde4aadaaaeb7bc9d23"
+    }
+  ],
+  "allowed_paths": [
+    "README.md",
+    "scripts/local-gateway.mjs",
+    "src/App.tsx",
+    "src/operator-client.ts",
+    "src/styles.css",
+    "src/views/OperatorSession.tsx",
+    "tests/local-gateway.test.ts",
+    "tests/operator-client.test.ts",
+    "tests/operator-session.test.tsx"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    ".claude/**",
+    ".iris/**",
+    "package.json",
+    "pnpm-lock.yaml",
+    "C:/Projects/STOIC-IRIS/**",
+    "C:/Projects/STOIC-IRIS-source-library/**"
+  ],
+  "permitted_actions": [
+    "Consume the exact Core merge revision 53c51bf7466b45fd6511c11236c441731b0140bc through the existing loopback gateway boundary",
+    "Render an authenticated, expiring, revocable restricted Full access session over registered ordinary capabilities",
+    "Add authenticated loopback-only operator objective, state, evidence, pause, resume, cancellation, delivery-progress, and proposal-read routes",
+    "Present but never submit or execute protected approvals or final graduation",
+    "Complete ordinary repository delivery for this task"
+  ],
+  "prohibited_actions": [
+    "Own or replace Core identity, memory, execution, approval, or repository authority in the UI process",
+    "Represent restricted Full access as unrestricted autonomy",
+    "Persist raw credentials, microphone content, or model private context",
+    "Submit or execute merge, deployment, spending, administration, destructive action, or final graduation",
+    "Deploy, expose, force-push, or rewrite history"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm exec vitest run tests/operator-client.test.ts tests/operator-session.test.tsx tests/local-gateway.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "Exact Core and Command Center revision binding",
+    "Restricted Full access issuance, expiry, revocation, and protected-boundary tests",
+    "Operator launch, evidence, pause, resume, cancellation, and fail-closed tests",
+    "Complete-delivery progress and Core-authored exact merge statement presentation",
+    "No hidden approval or graduation submission",
+    "Remote equality, rollback, and cleanup"
+  ],
+  "publisher": "Codex under Founder completion mandate after independent exact-patch review",
+  "approval_reference": "founder-finish-all-additive-cycles-2026-08-07",
+  "phase0_graduation": false
+}
