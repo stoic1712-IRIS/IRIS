@@ -22,7 +22,7 @@
       "repository": "stoic1712-IRIS/IRIS",
       "branch": "iris/cycle-ten-through-twelve-core-completion",
       "commit": null,
-      "patch_digest": "sha256:c38129d329d89672d19ad630f724d2f9ed95adcb4ba20f2feb200b9b13ae1ef8"
+      "patch_digest": "sha256:bfcaa107a8bde838a4358905d927b5c75ec8bcc4733770b24e513aa31eebfc06"
     }
   ],
   "changed_paths": [
@@ -72,10 +72,14 @@
     "The restricted Founder Full access contract authorizes only registered ordinary capabilities and fails closed for protected, duplicate, unregistered, expired, overlong, revoked, and out-of-grant requests.",
     "The complete-delivery runtime covers the ordinary engineering path through independent review, bounded repair, CI monitoring, remote equality, cleanup, and a protected merge stop.",
     "The operator runtime verifies registered tools, approved model coverage, distinct worker and reviewer identity, bounded repair, resume, cancellation, protected stops, and presentation-only graduation binding.",
-    "Focused acceptance passed 22 tests including the existing Cycle Eight runtime suite.",
-    "Full pnpm verify passed formatting, lint, type checking, 45 test files and 347 tests, production build, and diagnostics.",
+    "Independent exact-patch review rounds identified material concurrency, cancellation, resume, authorization, timeout, repair-scope, verification-proof, idempotency, and approval-binding defects; every reported finding was repaired with direct regressions.",
+    "Final focused Cycle Ten through Twelve acceptance passed 20 tests; full verification separately reran all earlier Cycle Eight coverage.",
+    "Full pnpm verify passed formatting, lint, type checking, 45 test files and 357 tests, production build, and diagnostics.",
     "All 244 dependencies were reused offline from the pinned lockfile store with zero downloads and lifecycle scripts disabled; package.json and pnpm-lock.yaml are unchanged.",
-    "The patch digest binds the twelve implementation, test, specification, and evidence paths staged before this handoff record was added."
+    "The patch digest binds the twelve implementation, test, specification, and evidence paths staged before this handoff record was added.",
+    "Session generations and abort controllers make cancellation terminal; durable delivery milestones prevent repeated commit, push, and pull-request effects on resume.",
+    "Every adapter effect reauthorizes current access, operator effects have real raced deadlines, event chains bind identity and sequence, and Core constructs the exact merge statement.",
+    "Cancellation is terminal before bounded cleanup or provider stop; repair output is scope-revalidated; verification proves the exact command arrays; commit, push, and pull-request effects use persisted idempotency keys."
   ],
   "limitations": [
     "Provider behavior is exercised through injected hermetic adapters; no live repository, browser, desktop, connector, notification, or credential effect occurred.",

@@ -80,6 +80,7 @@ export type OperatorState = z.infer<typeof operatorStateSchema>;
 
 export const operatorEventSchema = z
   .object({
+    operatorId: z.string().regex(/^operator_[a-z0-9-]{8,100}$/u),
     sequence: z.number().int().positive(),
     state: operatorStateSchema,
     summary: z.string().min(1).max(2_000),
@@ -176,6 +177,18 @@ function graduationStatement(objective: OperatorObjective, plan: OperatorPlan): 
   return `I approve proposal_phase-0-graduation at ${proposalDigest} for IRIS execution exactly as proposed.`;
 }
 
+class OperatorRunSuperseded extends Error {
+  constructor() {
+    super("OPERATOR_RUN_SUPERSEDED");
+  }
+}
+
+class OperatorEffectAborted extends Error {
+  constructor() {
+    super("OPERATOR_EFFECT_ABORTED");
+  }
+}
+
 export class OperatorParityRuntime {
   readonly #access: OperatorCapabilityAuthorizer;
   readonly #adapter: OperatorExecutionAdapter;
@@ -183,6 +196,10 @@ export class OperatorParityRuntime {
   readonly #models: readonly OperatorModel[];
   readonly #tools: ReadonlySet<string>;
   readonly #now: () => Date;
+  readonly #maximumEffectTimeoutMs: number;
+  readonly #controllers = new Map<string, AbortController>();
+  readonly #versions = new Map<string, number>();
+  readonly #terminalSessions = new Map<string, OperatorSession>();
 
   constructor(options: {
     access: OperatorCapabilityAuthorizer;
@@ -191,6 +208,7 @@ export class OperatorParityRuntime {
     models: readonly OperatorModel[];
     tools: readonly string[];
     now?: () => Date;
+    maximumEffectTimeoutMs?: number;
   }) {
     this.#access = options.access;
     this.#adapter = options.adapter;
@@ -198,6 +216,12 @@ export class OperatorParityRuntime {
     this.#models = z.array(operatorModelSchema).min(1).parse(options.models);
     this.#tools = new Set(z.array(z.string().min(1).max(200)).parse(options.tools));
     this.#now = options.now ?? (() => new Date());
+    this.#maximumEffectTimeoutMs = z
+      .number()
+      .int()
+      .positive()
+      .max(24 * 60 * 60 * 1_000)
+      .parse(options.maximumEffectTimeoutMs ?? 24 * 60 * 60 * 1_000);
   }
 
   async start(
@@ -218,7 +242,7 @@ export class OperatorParityRuntime {
       updatedAt: this.#now().toISOString(),
     };
     await this.#transition(session, "received", session.summary);
-    return this.#run(session, signal);
+    return this.#begin(session, signal);
   }
 
   async resume(
@@ -227,19 +251,48 @@ export class OperatorParityRuntime {
   ): Promise<OperatorSession> {
     const session = await this.#store.load(operatorId);
     if (session === null) throw new Error("OPERATOR_NOT_FOUND");
-    if (!this.#eventsVerified(session.events)) throw new Error("OPERATOR_EVENT_CHAIN_INVALID");
+    if (!this.#eventsVerified(session.events, operatorId))
+      throw new Error("OPERATOR_EVENT_CHAIN_INVALID");
     if (session.state !== "paused" && session.state !== "recovery-ready")
       throw new Error("OPERATOR_NOT_RESUMABLE");
     if (Date.parse(session.objective.expiresAt) <= this.#now().getTime())
       throw new Error("OPERATOR_OBJECTIVE_EXPIRED");
-    return this.#run(session, signal);
+    return this.#begin(session, signal);
   }
 
   async cancel(operatorId: string): Promise<OperatorSession> {
     const session = await this.#store.load(operatorId);
     if (session === null) throw new Error("OPERATOR_NOT_FOUND");
-    await this.#adapter.cancel(operatorId);
-    await this.#transition(session, "cancelled", "Founder cancelled the operator session.");
+    if (
+      new Set<OperatorState>(["completed", "protected-stop", "cancelled", "denied"]).has(
+        session.state,
+      )
+    )
+      throw new Error("OPERATOR_TERMINAL");
+    this.#controllers.get(operatorId)?.abort();
+    this.#versions.set(operatorId, (this.#versions.get(operatorId) ?? 0) + 1);
+    const cancelled = this.#transition(
+      session,
+      "cancelled",
+      "Founder cancelled the operator session; bounded provider stop is pending.",
+    );
+    this.#terminalSessions.set(operatorId, structuredClone(session));
+    await cancelled;
+    try {
+      await this.#boundedCancellation(session);
+      await this.#transition(
+        session,
+        "cancelled",
+        "Founder cancelled the operator session; bounded provider stop completed.",
+      );
+    } catch (error) {
+      await this.#transition(
+        session,
+        "cancelled",
+        `Founder cancelled the operator session; provider stop remains unverified: ${error instanceof Error ? error.message : "OPERATOR_CANCELLATION_FAILED"}`,
+      );
+    }
+    this.#terminalSessions.set(operatorId, structuredClone(session));
     return structuredClone(session);
   }
 
@@ -247,9 +300,32 @@ export class OperatorParityRuntime {
     return this.#store.load(operatorId);
   }
 
-  async #run(session: OperatorSession, signal: AbortSignal): Promise<OperatorSession> {
+  async #begin(session: OperatorSession, externalSignal: AbortSignal): Promise<OperatorSession> {
+    const operatorId = session.objective.operatorId;
+    if (this.#controllers.has(operatorId)) throw new Error("OPERATOR_RUN_ALREADY_ACTIVE");
+    const controller = new AbortController();
+    const version = (this.#versions.get(operatorId) ?? 0) + 1;
+    this.#versions.set(operatorId, version);
+    this.#controllers.set(operatorId, controller);
     try {
-      if (isAborted(signal)) return await this.#pause(session);
+      return await this.#run(
+        session,
+        AbortSignal.any([externalSignal, controller.signal]),
+        version,
+      );
+    } finally {
+      if (this.#versions.get(operatorId) === version) this.#controllers.delete(operatorId);
+    }
+  }
+
+  async #run(
+    session: OperatorSession,
+    signal: AbortSignal,
+    version: number,
+  ): Promise<OperatorSession> {
+    try {
+      this.#assertCurrent(session, version);
+      if (isAborted(signal)) return await this.#pause(session, version);
       if (session.objective.protectedEffects.length > 0) {
         const statement = `I approve ${session.objective.operatorId} for the separately governed protected effects: ${session.objective.protectedEffects.join(", ")}.`;
         session.protectedApprovalStatement = statement;
@@ -272,35 +348,41 @@ export class OperatorParityRuntime {
         this.#access.authorize(session.objective.accessRequestId, capability);
       }
 
-      const model = this.#models.find(
-        (candidate) =>
-          candidate.approved &&
-          session.objective.requiredCapabilities.every((capability) =>
-            candidate.capabilities.includes(capability),
-          ),
-      );
-      if (model === undefined) throw new Error("OPERATOR_MODEL_UNAVAILABLE");
-      const unsignedPlan = {
-        route: session.objective.category,
-        model: model.model,
-        tools: [...session.objective.requiredCapabilities].sort(),
-        workerId: `worker_${createHash("sha256").update(`${session.objective.operatorId}:worker`).digest("hex").slice(0, 16)}`,
-        reviewerId: `reviewer_${createHash("sha256").update(`${session.objective.operatorId}:reviewer`).digest("hex").slice(0, 16)}`,
-        steps: [
-          "Confirm exact authority and capability availability.",
-          "Execute the bounded objective with the selected specialist.",
-          "Independently verify the exact result.",
-          "Repair within limits or preserve resumable evidence.",
-          "Stop before any protected effect.",
-        ],
-      };
-      session.plan = operatorPlanSchema.parse({ ...unsignedPlan, digest: digest(unsignedPlan) });
+      if (session.plan === undefined) {
+        const model = this.#models.find(
+          (candidate) =>
+            candidate.approved &&
+            session.objective.requiredCapabilities.every((capability) =>
+              candidate.capabilities.includes(capability),
+            ),
+        );
+        if (model === undefined) throw new Error("OPERATOR_MODEL_UNAVAILABLE");
+        const unsignedPlan = {
+          route: session.objective.category,
+          model: model.model,
+          tools: [...session.objective.requiredCapabilities].sort(),
+          workerId: `worker_${createHash("sha256").update(`${session.objective.operatorId}:worker`).digest("hex").slice(0, 16)}`,
+          reviewerId: `reviewer_${createHash("sha256").update(`${session.objective.operatorId}:reviewer`).digest("hex").slice(0, 16)}`,
+          steps: [
+            "Confirm exact authority and capability availability.",
+            "Execute the bounded objective with the selected specialist.",
+            "Independently verify the exact result.",
+            "Repair within limits or preserve resumable evidence.",
+            "Stop before any protected effect.",
+          ],
+        };
+        session.plan = operatorPlanSchema.parse({ ...unsignedPlan, digest: digest(unsignedPlan) });
+      } else {
+        session.plan = operatorPlanSchema.parse(session.plan);
+      }
       if (session.plan.workerId === session.plan.reviewerId)
         throw new Error("OPERATOR_SELF_REVIEW_DENIED");
+      const plan = session.plan;
       await this.#transition(session, "planned", "Bounded model and tool plan created.");
 
-      while (session.attempt < session.objective.maximumAttempts) {
-        if (isAborted(signal)) return await this.#pause(session);
+      for (; session.attempt < session.objective.maximumAttempts;) {
+        this.#assertCurrent(session, version);
+        if (isAborted(signal)) return await this.#pause(session, version);
         session.attempt += 1;
         await this.#transition(
           session,
@@ -310,11 +392,8 @@ export class OperatorParityRuntime {
             : `Specialist worker is executing repair attempt ${String(session.attempt)}.`,
         );
         const outcome = operatorOutcomeSchema.parse(
-          await this.#adapter.run(
-            session.objective,
-            session.plan,
-            session.attempt,
-            AbortSignal.any([signal, AbortSignal.timeout(session.objective.timeoutMs)]),
+          await this.#boundedEffect(session, version, signal, (effectSignal) =>
+            this.#adapter.run(session.objective, plan, session.attempt, effectSignal),
           ),
         );
         if (outcome.requiresProtectedAction) {
@@ -332,16 +411,15 @@ export class OperatorParityRuntime {
           "verifying",
           "Independent reviewer is checking the exact outcome.",
         );
-        const review = await this.#adapter.verify(session.objective, session.plan, outcome, signal);
-        if (review.reviewerId !== session.plan.reviewerId)
+        const review = await this.#boundedEffect(session, version, signal, (effectSignal) =>
+          this.#adapter.verify(session.objective, plan, outcome, effectSignal),
+        );
+        if (review.reviewerId !== plan.reviewerId)
           throw new Error("OPERATOR_REVIEWER_IDENTITY_MISMATCH");
         if (review.passed) {
           session.outcome = outcome;
           if (session.objective.presentGraduationProposal)
-            session.graduationApprovalStatement = graduationStatement(
-              session.objective,
-              session.plan,
-            );
+            session.graduationApprovalStatement = graduationStatement(session.objective, plan);
           await this.#transition(
             session,
             "completed",
@@ -351,17 +429,24 @@ export class OperatorParityRuntime {
         }
         if (session.attempt >= session.objective.maximumAttempts)
           throw new Error("OPERATOR_REPAIR_LIMIT_REACHED");
-        await this.#adapter.repair(
-          session.objective,
-          session.plan,
-          outcome,
-          review.findings,
-          signal,
+        await this.#boundedEffect(session, version, signal, (effectSignal) =>
+          this.#adapter.repair(session.objective, plan, outcome, review.findings, effectSignal),
         );
       }
       throw new Error("OPERATOR_REPAIR_LIMIT_REACHED");
     } catch (error) {
-      if (isAborted(signal)) return await this.#pause(session);
+      if (
+        error instanceof OperatorRunSuperseded ||
+        this.#versions.get(session.objective.operatorId) !== version
+      ) {
+        const terminal = this.#terminalSessions.get(session.objective.operatorId);
+        if (terminal !== undefined) return structuredClone(terminal);
+        const latest = await this.#store.load(session.objective.operatorId);
+        if (latest === null) throw new Error("OPERATOR_NOT_FOUND", { cause: error });
+        return latest;
+      }
+      if (isAborted(signal) || error instanceof OperatorEffectAborted)
+        return await this.#pause(session, version);
       await this.#transition(
         session,
         session.plan === undefined ? "denied" : "recovery-ready",
@@ -371,9 +456,70 @@ export class OperatorParityRuntime {
     }
   }
 
-  async #pause(session: OperatorSession): Promise<OperatorSession> {
+  async #pause(session: OperatorSession, version: number): Promise<OperatorSession> {
+    this.#assertCurrent(session, version);
     await this.#transition(session, "paused", "Operator session paused with resumable evidence.");
     return structuredClone(session);
+  }
+
+  async #boundedEffect<T>(
+    session: OperatorSession,
+    version: number,
+    signal: AbortSignal,
+    operation: (signal: AbortSignal) => Promise<T>,
+  ): Promise<T> {
+    this.#assertCurrent(session, version);
+    for (const capability of session.objective.requiredCapabilities)
+      this.#access.authorize(session.objective.accessRequestId, capability);
+
+    const effectController = new AbortController();
+    const effectSignal = AbortSignal.any([signal, effectController.signal]);
+    const timeoutMs = Math.min(session.objective.timeoutMs, this.#maximumEffectTimeoutMs);
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+    let abortHandler: (() => void) | undefined;
+    const timeout = new Promise<never>((_resolve, reject) => {
+      timeoutHandle = setTimeout(() => {
+        effectController.abort();
+        reject(new Error("OPERATOR_EFFECT_TIMEOUT"));
+      }, timeoutMs);
+    });
+    const aborted = new Promise<never>((_resolve, reject) => {
+      abortHandler = () => {
+        reject(new OperatorEffectAborted());
+      };
+      if (isAborted(signal)) abortHandler();
+      else signal.addEventListener("abort", abortHandler, { once: true });
+    });
+    try {
+      const result = await Promise.race([operation(effectSignal), timeout, aborted]);
+      this.#assertCurrent(session, version);
+      return result;
+    } finally {
+      if (timeoutHandle !== undefined) clearTimeout(timeoutHandle);
+      if (abortHandler !== undefined) signal.removeEventListener("abort", abortHandler);
+    }
+  }
+
+  async #boundedCancellation(session: OperatorSession): Promise<void> {
+    for (const capability of session.objective.requiredCapabilities)
+      this.#access.authorize(session.objective.accessRequestId, capability);
+    const timeoutMs = Math.min(session.objective.timeoutMs, this.#maximumEffectTimeoutMs);
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<never>((_resolve, reject) => {
+      timeoutHandle = setTimeout(() => {
+        reject(new Error("OPERATOR_CANCELLATION_TIMEOUT"));
+      }, timeoutMs);
+    });
+    try {
+      await Promise.race([this.#adapter.cancel(session.objective.operatorId), timeout]);
+    } finally {
+      if (timeoutHandle !== undefined) clearTimeout(timeoutHandle);
+    }
+  }
+
+  #assertCurrent(session: OperatorSession, version: number): void {
+    if (this.#versions.get(session.objective.operatorId) !== version)
+      throw new OperatorRunSuperseded();
   }
 
   async #transition(
@@ -385,6 +531,7 @@ export class OperatorParityRuntime {
     session.summary = summary;
     session.updatedAt = this.#now().toISOString();
     const unsigned = {
+      operatorId: session.objective.operatorId,
       sequence: session.events.length + 1,
       state,
       summary,
@@ -397,10 +544,15 @@ export class OperatorParityRuntime {
     await this.#store.save(session);
   }
 
-  #eventsVerified(events: readonly OperatorEvent[]): boolean {
+  #eventsVerified(events: readonly OperatorEvent[], operatorId: string): boolean {
     return events.every((event, index) => {
       const { digest: actual, ...unsigned } = event;
-      return unsigned.previousDigest === events[index - 1]?.digest && digest(unsigned) === actual;
+      return (
+        event.operatorId === operatorId &&
+        event.sequence === index + 1 &&
+        unsigned.previousDigest === events[index - 1]?.digest &&
+        digest(unsigned) === actual
+      );
     });
   }
 }

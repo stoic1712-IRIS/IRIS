@@ -20,8 +20,21 @@
 - Restricted Founder Full access grants accept registered ordinary capabilities only, expire, revoke immediately, and produce a verified decision chain.
 - The complete-delivery runtime covers inspect through merge preparation, including independent review, bounded repair, CI, remote equality, cleanup, pause, resume, cancellation, and protected merge stop.
 - The operator runtime performs capability preflight, approved-model routing, distinct worker/reviewer identity, repair, cancellation, resume, protected-action stop, and presentation-only graduation binding.
-- Focused acceptance passed 22 tests, including all 12 existing Cycle Eight executable-worker tests.
-- Full `pnpm verify` passed formatting, lint, type checking, 45 test files with 347 tests, production build, and repository diagnostics.
+- Independent exact-patch review rounds identified material concurrency, cancellation, resume, authorization, timeout, repair-scope, verification-proof, idempotency, and approval-binding defects. Every reported finding was repaired and covered by direct regression tests before publication.
+- Final focused Cycle Ten through Twelve acceptance passed 20 tests; the full suite separately reran every earlier Cycle Eight test.
+- Full `pnpm verify` passed formatting, lint, type checking, 45 test files with 357 tests, production build, and repository diagnostics.
+
+## Review repairs
+
+- Active delivery and operator runs now use per-session generations and abort controllers so cancellation remains terminal and late adapter results cannot overwrite it.
+- Delivery persists plan, workspace, commit, push, and pull-request milestones; resume does not repeat completed provider mutations.
+- Access is reauthorized immediately before every adapter effect, closing mid-run expiry and revocation gaps.
+- Operator effects use an actual raced deadline in addition to abort signaling, bounding even non-cooperative adapters.
+- Core, not a provider adapter, constructs the exact repository, pull-request, and head-commit-bound merge approval statement.
+- Audit events are bound to the session identity and exact sequence as well as the previous digest.
+- Cancellation persists terminal state before bounded, reauthorized cleanup or provider stop, so a stalled termination adapter cannot hang or regress state.
+- Repair output is revalidated against allowed paths, file count, and byte limits; verification must report the exact objective command arrays.
+- Deterministic idempotency keys are durably stored before commit, push, and pull-request creation so resume reconciles the post-effect crash window.
 
 ## Dependency materialization
 

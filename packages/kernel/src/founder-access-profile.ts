@@ -178,7 +178,9 @@ export class FounderAccessRegistry {
     return this.#events.every((event, index) => {
       const { digest: actual, ...unsigned } = event;
       return (
-        unsigned.previousDigest === this.#events[index - 1]?.digest && digest(unsigned) === actual
+        event.sequence === index + 1 &&
+        unsigned.previousDigest === this.#events[index - 1]?.digest &&
+        digest(unsigned) === actual
       );
     });
   }

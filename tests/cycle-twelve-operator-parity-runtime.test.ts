@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   MemoryOperatorSessionStore,
@@ -58,9 +58,15 @@ class FixtureOperatorAdapter implements OperatorExecutionAdapter {
   }
 }
 
-function runtime(adapter = new FixtureOperatorAdapter()) {
+function runtime(
+  adapter = new FixtureOperatorAdapter(),
+  access: { authorize(requestId: string, capability: string): unknown } = {
+    authorize: () => ({}),
+  },
+  maximumEffectTimeoutMs?: number,
+) {
   return new OperatorParityRuntime({
-    access: { authorize: () => ({}) },
+    access,
     adapter,
     store: new MemoryOperatorSessionStore(),
     models: [
@@ -73,6 +79,7 @@ function runtime(adapter = new FixtureOperatorAdapter()) {
     ],
     tools: ["repository.inspect", "repository.edit-bounded"],
     now: () => now,
+    ...(maximumEffectTimeoutMs === undefined ? {} : { maximumEffectTimeoutMs }),
   });
 }
 
@@ -117,7 +124,7 @@ describe("Cycle Twelve operator parity runtime", () => {
     expect(adapter.calls).toEqual(["run", "verify"]);
   });
 
-  it("pauses, resumes, cancels, and fails closed for missing capabilities", async () => {
+  it("pauses, resumes, rejects terminal cancellation, and fails closed for missing capabilities", async () => {
     const adapter = new FixtureOperatorAdapter();
     adapter.verifyCount = 1;
     const sessionRuntime = runtime(adapter);
@@ -129,7 +136,9 @@ describe("Cycle Twelve operator parity runtime", () => {
     );
     expect(paused.state).toBe("paused");
     expect((await sessionRuntime.resume(paused.objective.operatorId)).state).toBe("completed");
-    expect((await sessionRuntime.cancel(paused.objective.operatorId)).state).toBe("cancelled");
+    await expect(sessionRuntime.cancel(paused.objective.operatorId)).rejects.toThrow(
+      "OPERATOR_TERMINAL",
+    );
 
     const denied = await runtime().start(
       objective({
@@ -139,5 +148,91 @@ describe("Cycle Twelve operator parity runtime", () => {
     );
     expect(denied.state).toBe("denied");
     expect(denied.summary).toContain("OPERATOR_CAPABILITY_UNAVAILABLE");
+  });
+
+  it("enforces a real timeout even when an adapter ignores its abort signal", async () => {
+    class HangingAdapter extends FixtureOperatorAdapter {
+      override run() {
+        this.calls.push("run");
+        return new Promise<never>(() => undefined);
+      }
+    }
+    const adapter = new HangingAdapter();
+    const result = await runtime(adapter, undefined, 10).start(
+      objective({ operatorId: "operator_cycle-twelve-0006" }),
+    );
+    expect(result.state).toBe("recovery-ready");
+    expect(result.summary).toBe("OPERATOR_EFFECT_TIMEOUT");
+  });
+
+  it("keeps cancellation terminal when an in-flight provider returns late", async () => {
+    let finishRun: (() => void) | undefined;
+    class DeferredAdapter extends FixtureOperatorAdapter {
+      override run() {
+        this.calls.push("run");
+        return new Promise<{
+          summary: string;
+          evidence: string[];
+          requiresProtectedAction: boolean;
+        }>((resolve) => {
+          finishRun = () => {
+            resolve({
+              summary: "Late result.",
+              evidence: ["late"],
+              requiresProtectedAction: false,
+            });
+          };
+        });
+      }
+    }
+    const adapter = new DeferredAdapter();
+    const sessionRuntime = runtime(adapter);
+    const running = sessionRuntime.start(objective({ operatorId: "operator_cycle-twelve-0007" }));
+    await vi.waitFor(() => {
+      expect(adapter.calls).toContain("run");
+    });
+    const cancelled = await sessionRuntime.cancel("operator_cycle-twelve-0007");
+    finishRun?.();
+    expect(cancelled.state).toBe("cancelled");
+    expect((await running).state).toBe("cancelled");
+    expect((await sessionRuntime.session("operator_cycle-twelve-0007"))?.state).toBe("cancelled");
+  });
+
+  it("reauthorizes every capability immediately before each provider effect", async () => {
+    const adapter = new FixtureOperatorAdapter();
+    let authorizations = 0;
+    const result = await runtime(adapter, {
+      authorize: () => {
+        authorizations += 1;
+        if (authorizations > 2) throw new Error("FOUNDER_ACCESS_REVOKED");
+        return {};
+      },
+    }).start(objective({ operatorId: "operator_cycle-twelve-0008" }));
+    expect(result.state).toBe("recovery-ready");
+    expect(result.summary).toBe("FOUNDER_ACCESS_REVOKED");
+    expect(adapter.calls).toEqual([]);
+  });
+
+  it("persists cancellation before a bounded non-cooperative provider stop", async () => {
+    class NonCooperativeAdapter extends FixtureOperatorAdapter {
+      override run() {
+        this.calls.push("run");
+        return new Promise<never>(() => undefined);
+      }
+      override cancel() {
+        this.calls.push("cancel");
+        return new Promise<never>(() => undefined);
+      }
+    }
+    const adapter = new NonCooperativeAdapter();
+    const sessionRuntime = runtime(adapter, undefined, 500);
+    const running = sessionRuntime.start(objective({ operatorId: "operator_cycle-twelve-0009" }));
+    await vi.waitFor(() => {
+      expect(adapter.calls).toContain("run");
+    });
+    const cancelled = await sessionRuntime.cancel("operator_cycle-twelve-0009");
+    expect(cancelled.state).toBe("cancelled");
+    expect(cancelled.summary).toContain("OPERATOR_CANCELLATION_TIMEOUT");
+    expect((await running).state).toBe("cancelled");
   });
 });
