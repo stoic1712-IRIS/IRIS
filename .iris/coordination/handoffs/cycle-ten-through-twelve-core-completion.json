@@ -1,0 +1,102 @@
+{
+  "schema_version": "1.0.0",
+  "handoff_id": "cycle-ten-through-twelve-core-completion",
+  "task_id": "cycle-ten-through-twelve-core-completion",
+  "producer": "Codex under Founder completion mandate",
+  "recipient": "Independent Codex review and canonical main publication",
+  "created_at": "2026-08-07T14:29:00.000Z",
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "1a0c7f8e5338c576b5e477d93472f234f7c3802b"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "main",
+      "commit": "8314f596250562d47a11cdde4aadaaaeb7bc9d23"
+    }
+  ],
+  "result_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "iris/cycle-ten-through-twelve-core-completion",
+      "commit": null,
+      "patch_digest": "sha256:bfcaa107a8bde838a4358905d927b5c75ec8bcc4733770b24e513aa31eebfc06"
+    }
+  ],
+  "changed_paths": [
+    ".iris/coordination/handoffs/cycle-ten-through-twelve-core-completion.json",
+    "docs/specifications/cycle-eleven-complete-software-delivery.md",
+    "docs/specifications/cycle-ten-founder-full-access-profile.md",
+    "docs/specifications/cycle-twelve-operator-parity-runtime.md",
+    "evidence/cycle-twelve/core-completion-2026-08-07.md",
+    "packages/development/src/complete-software-delivery.ts",
+    "packages/development/src/index.ts",
+    "packages/development/src/operator-parity-runtime.ts",
+    "packages/kernel/src/founder-access-profile.ts",
+    "packages/kernel/src/index.ts",
+    "tests/cycle-eleven-complete-software-delivery.test.ts",
+    "tests/cycle-ten-founder-full-access-profile.test.ts",
+    "tests/cycle-twelve-operator-parity-runtime.test.ts"
+  ],
+  "commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm install --offline --frozen-lockfile --ignore-scripts",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run tests/cycle-ten-founder-full-access-profile.test.ts tests/cycle-eleven-complete-software-delivery.test.ts tests/cycle-twelve-operator-parity-runtime.test.ts tests/cycle-eight-executable-worker-runtime.test.ts",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm build",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm lint && pnpm typecheck",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify",
+      "exit_code": 0
+    }
+  ],
+  "evidence": [
+    "All six foundation-source hashes matched SOURCE-MANIFEST.md and the source library remained read-only.",
+    "The restricted Founder Full access contract authorizes only registered ordinary capabilities and fails closed for protected, duplicate, unregistered, expired, overlong, revoked, and out-of-grant requests.",
+    "The complete-delivery runtime covers the ordinary engineering path through independent review, bounded repair, CI monitoring, remote equality, cleanup, and a protected merge stop.",
+    "The operator runtime verifies registered tools, approved model coverage, distinct worker and reviewer identity, bounded repair, resume, cancellation, protected stops, and presentation-only graduation binding.",
+    "Independent exact-patch review rounds identified material concurrency, cancellation, resume, authorization, timeout, repair-scope, verification-proof, idempotency, and approval-binding defects; every reported finding was repaired with direct regressions.",
+    "Final focused Cycle Ten through Twelve acceptance passed 20 tests; full verification separately reran all earlier Cycle Eight coverage.",
+    "Full pnpm verify passed formatting, lint, type checking, 45 test files and 357 tests, production build, and diagnostics.",
+    "All 244 dependencies were reused offline from the pinned lockfile store with zero downloads and lifecycle scripts disabled; package.json and pnpm-lock.yaml are unchanged.",
+    "The patch digest binds the twelve implementation, test, specification, and evidence paths staged before this handoff record was added.",
+    "Session generations and abort controllers make cancellation terminal; durable delivery milestones prevent repeated commit, push, and pull-request effects on resume.",
+    "Every adapter effect reauthorizes current access, operator effects have real raced deadlines, event chains bind identity and sequence, and Core constructs the exact merge statement.",
+    "Cancellation is terminal before bounded cleanup or provider stop; repair output is scope-revalidated; verification proves the exact command arrays; commit, push, and pull-request effects use persisted idempotency keys."
+  ],
+  "limitations": [
+    "Provider behavior is exercised through injected hermetic adapters; no live repository, browser, desktop, connector, notification, or credential effect occurred.",
+    "The ordinary delivery runtime prepares but does not execute merge, deployment, infrastructure, secret, spending, administration, force-push, history rewrite, destructive, or public or LAN effects.",
+    "Final operator parity requires the separately governed held-out Founder certification program and several genuine supervised increments.",
+    "Permanent Phase 0 graduation still requires the genuine deployed canonical self-upgrade while Codex and Claude are audit-only."
+  ],
+  "rollback": "Before merge, close the pull request, delete the non-canonical feature branch without force, and remove the isolated worktree. After merge, history-preservingly revert the exact merge commit. The modules and exports are additive; no data migration, provider resource, credential, or live runtime requires destructive cleanup.",
+  "protected_actions_remaining": [
+    "Independent exact-patch review",
+    "Non-force feature-branch push",
+    "Pull-request creation and provider-state verification",
+    "Normal merge after review pass",
+    "Local main synchronization, remote equality, and isolated-worktree cleanup",
+    "Founder Command Center operator surface implementation under a new exact Core merge binding",
+    "Held-out genuine certification increments",
+    "Separate exact typed approval for final Phase 0 graduation execution"
+  ],
+  "ready_for_review": true
+}
