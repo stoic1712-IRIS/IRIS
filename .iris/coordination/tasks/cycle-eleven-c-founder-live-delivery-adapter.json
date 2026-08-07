@@ -9,7 +9,7 @@
   "status": "approved",
   "risk_class": "R3",
   "authorization_mode": "completion_mandate",
-  "completion_mandate_text": "Founder mandate: do it after identifying the inactive complete-delivery provider adapter as the remaining Cycle Eleven and Twelve gap. Preserve every existing Phase 0, wave, release, and cycle capability and finish the real bounded adapter through implementation, verification, repair, exact staging, commit, non-force push, pull request, independent review, merge, synchronization, remote equality, and cleanup. Existing operating-system keyring-backed GitHub CLI authentication may be referenced for the named repositories without reading or exposing its raw credential. This does not authorize merge execution by the running adapter, deployment, spending, public or LAN exposure, repository or account administration, destructive operations, force-push, history rewrite, credential disclosure, or final Phase 0 graduation execution.",
+  "completion_mandate_text": "Founder mandate: do it after identifying the inactive complete-delivery provider adapter as the remaining Cycle Eleven and Twelve gap. Preserve every existing Phase 0, wave, release, and cycle capability; implement and verify the real bounded adapter; then publish this adapter implementation through exact staging, commit, non-force push, implementation pull request, independent review, merge of that implementation pull request, synchronization, remote equality, and cleanup. Existing operating-system keyring-backed GitHub CLI authentication may be referenced for the named repositories without reading or exposing its raw credential. The running adapter itself stops at ready-for-merge-approval and never executes a merge. This does not authorize deployment, spending, public or LAN exposure, repository or account administration, destructive operations, force-push, history rewrite, credential disclosure, or final Phase 0 graduation execution.",
   "completion_actions": [
     "research",
     "edit",
@@ -25,7 +25,7 @@
     "cleanup"
   ],
   "completion_exclusions": [
-    "Merge execution by the running adapter",
+    "Merge execution by the running adapter; completion_actions.merge applies only to publication of this adapter implementation pull request",
     "Deployment, spending, paid providers, or public or LAN exposure",
     "Repository or account administration",
     "Destructive operations, force-push, or history rewrite",

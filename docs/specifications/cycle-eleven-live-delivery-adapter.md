@@ -17,8 +17,10 @@ reclassifying any earlier Phase 0, wave, release, or cycle capability:
 `inspect -> plan -> workspace -> implement -> verify -> independent review -> repair -> commit -> non-force push -> pull request -> CI observation -> review-state check -> merge preparation -> remote equality -> cleanup -> exact merge statement`
 
 It never executes the merge. The separately bound merge statement remains a
-protected Founder decision. Final Phase 0 graduation remains a different
-workflow in which Codex and Claude are audit-only.
+protected Founder decision. The task's ordinary `merge` completion action
+applies only to publishing this adapter implementation, never to a repository
+delivery performed by the running adapter. Final Phase 0 graduation remains a
+different workflow in which Codex and Claude are audit-only.
 
 ## Considered approaches
 
@@ -100,4 +102,3 @@ merge statement. It has no merge-submission method.
    its preflight succeeds.
 6. A later real Founder objective may create a normal pull request, but merging
    it still requires the separate exact statement presented by Core.
-
