@@ -4,6 +4,8 @@
 
 **Prepared:** 2026-08-06
 
+**Activation commit:** `ed7f58b1cab2f9b7d41e693ac0216a422494d8d5`
+
 ## Purpose
 
 This document gives Claude, Codex, IRIS, and governed workers a durable shared map of what STOIC-IRIS is, what the Founder is building, how the repositories connect, what sovereignty means, and how external technology may be used.

@@ -130,6 +130,6 @@ During the final Development Independence graduation, Claude and Codex are audit
 
 **Decision date:** 2026-08-06
 
-**Approved version or commit:** Version 1.0.0; activation commit pending governed publication
+**Approved version or commit:** Version 1.0.0; activation commit `ed7f58b1cab2f9b7d41e693ac0216a422494d8d5`
 
 **Notes:** Approved by exact typed Founder instruction for publication in both repositories.
