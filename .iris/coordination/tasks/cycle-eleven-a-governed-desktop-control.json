@@ -10,18 +10,79 @@
   "risk_class": "R3",
   "authorization_mode": "completion_mandate",
   "completion_mandate_text": "Founder mandate: complete the remaining cycles directly with Codex. This task authorizes the bounded governance, implementation, hermetic verification, and ordinary repository delivery of desktop-control machinery. It does not authorize exercising control over a real application or window, handling secrets, weakening interruption, deploying, exposing ports, spending, creating provider resources, administering GitHub, force-pushing, rewriting history, or final Phase 0 graduation.",
-  "completion_actions": ["research", "edit", "verify", "repair", "stage", "commit", "push_branch", "create_pull_request", "independent_review", "merge", "synchronize", "cleanup"],
-  "completion_exclusions": ["Any live desktop action", "Secrets or unbounded text entry", "Deployment", "Final Phase 0 graduation"],
-  "base_revisions": [{"repository": "stoic1712-IRIS/IRIS", "branch": "main", "commit": "e3a21db158df831224978de5e9fb3c9e9efc11aa"}],
-  "allowed_paths": [".iris/coordination/handoffs/cycle-eleven-a-governed-desktop-control.json", "docs/architecture/decisions/ADR-008-governed-desktop-control.md", "docs/governance/security-and-secrets-policy.md", "docs/registries/dependency-attribution-registry.md", "docs/registries/technology-and-platform-registry.md", "docs/specifications/cycle-eleven-governed-desktop-control.md", "evidence/cycle-eleven/governed-desktop-control-2026-08-07.md", "packages/tool-gateway/src/desktop-control-provider.ts", "packages/tool-gateway/src/index.ts", "tests/cycle-eleven-governed-desktop-control.test.ts"],
-  "excluded_paths": [".github/**", ".claude/**", ".iris/coordination/tasks/**", "package.json", "pnpm-lock.yaml", "C:/Projects/STOIC-IRIS-source-library/**"],
-  "permitted_actions": ["Adopt a Windows UI Automation adapter behind an IRIS-owned contract", "Use injected hermetic adapters only", "Require exact preview and one-shot approval binding", "Complete the governed Git lifecycle"],
-  "prohibited_actions": ["Control the live desktop", "Inject secrets", "Use coordinates without an exact target", "Disable interruption or audit", "Add a dependency, deploy, spend, or perform final graduation"],
-  "acceptance_commands": [
-    {"repository": "stoic1712-IRIS/IRIS", "command": "pnpm exec vitest run tests/cycle-eleven-governed-desktop-control.test.ts tests/cycle-ten-local-workstation-provider.test.ts"},
-    {"repository": "stoic1712-IRIS/IRIS", "command": "pnpm verify"}
+  "completion_actions": [
+    "research",
+    "edit",
+    "verify",
+    "repair",
+    "stage",
+    "commit",
+    "push_branch",
+    "create_pull_request",
+    "independent_review",
+    "merge",
+    "synchronize",
+    "cleanup"
   ],
-  "required_evidence": ["Exact preview and approval binding", "Immediate cancellation and non-cooperative adapter tests", "No live desktop effect", "Exact paths, checks, remote equality, rollback, and cleanup"],
+  "completion_exclusions": [
+    "Any live desktop action",
+    "Secrets or unbounded text entry",
+    "Deployment",
+    "Final Phase 0 graduation"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "e3a21db158df831224978de5e9fb3c9e9efc11aa"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/handoffs/cycle-eleven-a-governed-desktop-control.json",
+    "docs/architecture/decisions/ADR-008-governed-desktop-control.md",
+    "docs/governance/security-and-secrets-policy.md",
+    "docs/registries/dependency-attribution-registry.md",
+    "docs/registries/technology-and-platform-registry.md",
+    "docs/specifications/cycle-eleven-governed-desktop-control.md",
+    "evidence/cycle-eleven/governed-desktop-control-2026-08-07.md",
+    "packages/tool-gateway/src/desktop-control-provider.ts",
+    "packages/tool-gateway/src/index.ts",
+    "tests/cycle-eleven-governed-desktop-control.test.ts"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    ".claude/**",
+    ".iris/coordination/tasks/**",
+    "package.json",
+    "pnpm-lock.yaml",
+    "C:/Projects/STOIC-IRIS-source-library/**"
+  ],
+  "permitted_actions": [
+    "Adopt a Windows UI Automation adapter behind an IRIS-owned contract",
+    "Use injected hermetic adapters only",
+    "Require exact preview and one-shot approval binding",
+    "Complete the governed Git lifecycle"
+  ],
+  "prohibited_actions": [
+    "Control the live desktop",
+    "Inject secrets",
+    "Use coordinates without an exact target",
+    "Disable interruption or audit",
+    "Add a dependency, deploy, spend, or perform final graduation"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run tests/cycle-eleven-governed-desktop-control.test.ts tests/cycle-ten-local-workstation-provider.test.ts"
+    },
+    { "repository": "stoic1712-IRIS/IRIS", "command": "pnpm verify" }
+  ],
+  "required_evidence": [
+    "Exact preview and approval binding",
+    "Immediate cancellation and non-cooperative adapter tests",
+    "No live desktop effect",
+    "Exact paths, checks, remote equality, rollback, and cleanup"
+  ],
   "publisher": "Codex under Founder completion mandate after exact-patch verification",
   "approval_reference": "founder-cycles-ten-through-twelve-completion-2026-08-07",
   "phase0_graduation": false

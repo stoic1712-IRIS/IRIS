@@ -10,11 +10,37 @@
   "risk_class": "R2",
   "authorization_mode": "completion_mandate",
   "completion_mandate_text": "Founder mandate: go back to Codex doing everything, then do it for all remaining Cycles Ten through Twelve. This task bundles bounded implementation, verification, repair, exact-path staging, accurate commit, non-force push, pull-request creation, review against the exact patch and automated checks, merge after a pass, synchronization, remote equality, and safe cleanup. It does not authorize a live screenshot, credential resolution, notification delivery, secret access, deployment, public or LAN exposure, spending, provider-resource creation, administration, force-push, history rewrite, or final Phase 0 graduation execution.",
-  "completion_actions": ["research", "edit", "verify", "repair", "stage", "commit", "push_branch", "create_pull_request", "independent_review", "merge", "synchronize", "cleanup"],
-  "completion_exclusions": ["Live protected provider effects", "Secret or screenshot-byte disclosure", "Desktop control", "Deployment or final Phase 0 graduation"],
+  "completion_actions": [
+    "research",
+    "edit",
+    "verify",
+    "repair",
+    "stage",
+    "commit",
+    "push_branch",
+    "create_pull_request",
+    "independent_review",
+    "merge",
+    "synchronize",
+    "cleanup"
+  ],
+  "completion_exclusions": [
+    "Live protected provider effects",
+    "Secret or screenshot-byte disclosure",
+    "Desktop control",
+    "Deployment or final Phase 0 graduation"
+  ],
   "base_revisions": [
-    {"repository": "stoic1712-IRIS/IRIS", "branch": "main", "commit": "e3a21db158df831224978de5e9fb3c9e9efc11aa"},
-    {"repository": "stoic1712-IRIS/iris-founder-command-center", "branch": "main", "commit": "97f3bdb79ce7d7d503eba3d3570b04c8309a1785"}
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "e3a21db158df831224978de5e9fb3c9e9efc11aa"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "main",
+      "commit": "97f3bdb79ce7d7d503eba3d3570b04c8309a1785"
+    }
   ],
   "allowed_paths": [
     ".iris/coordination/handoffs/cycle-ten-d-live-workstation-providers.json",
@@ -27,14 +53,40 @@
     "packages/tool-gateway/src/live-local-workstation-provider.ts",
     "tests/cycle-ten-live-workstation-provider.test.ts"
   ],
-  "excluded_paths": [".github/**", ".claude/**", ".iris/coordination/tasks/**", "package.json", "pnpm-lock.yaml", "C:/Projects/STOIC-IRIS-source-library/**"],
-  "permitted_actions": ["Implement injected provider adapters using only existing pinned packages and operating-system facilities", "Use hermetic fakes for protected effects", "Verify all six foundation hashes", "Complete the ordinary governed repository lifecycle"],
-  "prohibited_actions": ["Emit or persist image bytes or secrets", "Enumerate credentials", "Deliver a real notification or capture a real page during tests", "Widen a tool grant", "Use broad staging, force-push, history rewrite, administration, deployment, spending, or final graduation"],
-  "acceptance_commands": [
-    {"repository": "stoic1712-IRIS/IRIS", "command": "pnpm exec vitest run tests/cycle-ten-live-workstation-provider.test.ts tests/cycle-ten-local-workstation-provider.test.ts"},
-    {"repository": "stoic1712-IRIS/IRIS", "command": "pnpm verify"}
+  "excluded_paths": [
+    ".github/**",
+    ".claude/**",
+    ".iris/coordination/tasks/**",
+    "package.json",
+    "pnpm-lock.yaml",
+    "C:/Projects/STOIC-IRIS-source-library/**"
   ],
-  "required_evidence": ["Source hashes and exact bases", "No live provider effect", "Adapter cancellation, expiry, replay, redaction, and audit tests", "Exact changed paths, exit codes, remote equality, rollback, and cleanup"],
+  "permitted_actions": [
+    "Implement injected provider adapters using only existing pinned packages and operating-system facilities",
+    "Use hermetic fakes for protected effects",
+    "Verify all six foundation hashes",
+    "Complete the ordinary governed repository lifecycle"
+  ],
+  "prohibited_actions": [
+    "Emit or persist image bytes or secrets",
+    "Enumerate credentials",
+    "Deliver a real notification or capture a real page during tests",
+    "Widen a tool grant",
+    "Use broad staging, force-push, history rewrite, administration, deployment, spending, or final graduation"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run tests/cycle-ten-live-workstation-provider.test.ts tests/cycle-ten-local-workstation-provider.test.ts"
+    },
+    { "repository": "stoic1712-IRIS/IRIS", "command": "pnpm verify" }
+  ],
+  "required_evidence": [
+    "Source hashes and exact bases",
+    "No live provider effect",
+    "Adapter cancellation, expiry, replay, redaction, and audit tests",
+    "Exact changed paths, exit codes, remote equality, rollback, and cleanup"
+  ],
   "publisher": "Codex under Founder completion mandate after exact-patch verification",
   "approval_reference": "founder-cycles-ten-through-twelve-completion-2026-08-07",
   "phase0_graduation": false
