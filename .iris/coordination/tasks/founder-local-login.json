@@ -1,0 +1,116 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "founder-local-login",
+  "objective": "Replace the one-time terminal pairing bootstrap with a conventional loopback-only Founder login backed by an owner-only WSL-local scrypt credential record while preserving all existing Core authority, session, CSRF, fail-closed, and execution boundaries.",
+  "issuer": "Founder Cristofer Stoic Arellano through Codex",
+  "executor": "Codex",
+  "assigned_role": "producer",
+  "created_at": "2026-08-07T18:09:10Z",
+  "status": "approved",
+  "risk_class": "R3",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "Founder approved the Founder Local Login Implementation Plan at sha256:e7ee7e1829933265c67e33271dd8ae69ae87500b6b89b40ec8f3d7a593c0464d for inline execution through verification, publication, merge, synchronization, restart, and local smoke testing. Implement and verify only the bounded local-login change. No credential value may enter Git, logs, commands, evidence, browser storage, models, or Core.",
+  "completion_actions": [
+    "edit",
+    "verify",
+    "repair",
+    "stage",
+    "commit",
+    "push_branch",
+    "create_pull_request",
+    "independent_review",
+    "merge",
+    "synchronize",
+    "cleanup"
+  ],
+  "completion_exclusions": [
+    "Deployment or public or LAN exposure",
+    "Spending or provider resources",
+    "Repository or account administration",
+    "Destructive operations, force-push, or history rewrite",
+    "Credential disclosure or model exposure",
+    "Final Phase 0 graduation execution"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "66e99b896d0e62d3bd7119b6947ed1d0c3f73557"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "main",
+      "commit": "4881348582a1e3eb5764f5d7fa44729a3bd7d1dc"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/tasks/founder-local-login.json",
+    "docs/specifications/founder-local-login.md",
+    "tests/founder-local-login-governance.test.ts",
+    "README.md",
+    "docs/operations/stoic-iris-project-context.md",
+    "docs/superpowers/specs/2026-08-07-founder-local-login-design.md",
+    "docs/superpowers/plans/2026-08-07-founder-local-login.md",
+    "scripts/founder-auth.mjs",
+    "scripts/local-gateway.mjs",
+    "src/App.tsx",
+    "src/live-read-adapter.ts",
+    "src/styles.css",
+    "tests/app.test.tsx",
+    "tests/founder-auth.test.ts",
+    "tests/live-read-adapter.test.ts",
+    "tests/local-gateway.test.ts"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    ".claude/**",
+    "package.json",
+    "pnpm-lock.yaml",
+    "proposals/**",
+    "evidence/**"
+  ],
+  "permitted_actions": [
+    "Create and verify the versioned local-login contract amendment",
+    "Create an owner-only WSL-local credential record outside Git",
+    "Replace pairing with first-run setup and later local login",
+    "Preserve the existing authenticated session and CSRF boundary",
+    "Use disposable local test credentials and temporary directories"
+  ],
+  "prohibited_actions": [
+    "Credential disclosure, personal email embedding, or model exposure",
+    "Expose a public or LAN listener",
+    "Grant new approval, execution, deployment, provider, spending, administrative, destructive, or Phase 0 authority",
+    "Modify historical proposals or evidence",
+    "Use force-push or history rewrite"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run tests/founder-local-login-governance.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm exec vitest run tests/founder-auth.test.ts tests/live-read-adapter.test.ts tests/app.test.tsx tests/local-gateway.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "Exact base revisions and changed paths",
+    "Credential file permission and plaintext-absence tests",
+    "Setup, login, lockout, session, CSRF, origin, expiry, restart, and logout tests",
+    "Terminal output proves no pairing or credential material",
+    "Full verification exit codes",
+    "Independent exact-patch review",
+    "Remote equality and worktree cleanup"
+  ],
+  "publisher": "Codex after independent exact-patch review",
+  "approval_reference": "founder-local-login-plan-2026-08-07",
+  "phase0_graduation": false
+}
