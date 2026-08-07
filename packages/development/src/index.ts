@@ -10,3 +10,5 @@ export * from "./phase-zero-graduation-readiness.js";
 export * from "./phase-zero-graduation-transport.js";
 export * from "./sovereign-development-runtime.js";
 export * from "./self-description.js";
+export * from "./complete-software-delivery.js";
+export * from "./operator-parity-runtime.js";
