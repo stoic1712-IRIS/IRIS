@@ -19,7 +19,10 @@ const executableWorkerBoundaryPathSchema = z
   );
 
 export const executableWorkerSafePathSchema = executableWorkerBoundaryPathSchema.pipe(
-  z.string().refine((value) => value !== ".git" && !value.startsWith(".git/")),
+  z
+    .string()
+    .refine((value) => value !== ".")
+    .refine((value) => value !== ".git" && !value.startsWith(".git/")),
 );
 
 export const executableWorkerCommandSchema = z.array(z.string().min(1).max(500)).min(1).max(30);

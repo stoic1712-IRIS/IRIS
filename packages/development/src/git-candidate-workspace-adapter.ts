@@ -22,9 +22,41 @@ function digestText(value: string): string {
 }
 
 function within(path: string, roots: readonly string[]): boolean {
-  return roots.some(
-    (root) => root === "." || path === root || path.startsWith(`${root.replace(/\/$/u, "")}/`),
-  );
+  return roots.some((root) => path === root || path.startsWith(`${root.replace(/\/$/u, "")}/`));
+}
+
+function truncateUtf8(value: string, maximumBytes: number): string {
+  if (maximumBytes <= 0) return "";
+  if (Buffer.byteLength(value) <= maximumBytes) return value;
+  let low = 0;
+  let high = value.length;
+  while (low < high) {
+    const middle = Math.ceil((low + high) / 2);
+    if (Buffer.byteLength(value.slice(0, middle)) <= maximumBytes) low = middle;
+    else high = middle - 1;
+  }
+  if (low > 0 && /[\uD800-\uDBFF]/u.test(value[low - 1] ?? "")) low -= 1;
+  return value.slice(0, low);
+}
+
+function porcelainPaths(output: string): string[] {
+  const records = output.split("\0");
+  const paths: string[] = [];
+  for (let index = 0; index < records.length; index += 1) {
+    const record = records[index];
+    if (!record) continue;
+    if (record.length < 4 || record[2] !== " ")
+      throw new Error("EXECUTABLE_WORKER_GIT_STATUS_INVALID");
+    const status = record.slice(0, 2);
+    paths.push(record.slice(3).replaceAll("\\", "/"));
+    if (/[RC]/u.test(status)) {
+      const source = records[index + 1];
+      if (!source) throw new Error("EXECUTABLE_WORKER_GIT_STATUS_INVALID");
+      paths.push(source.replaceAll("\\", "/"));
+      index += 1;
+    }
+  }
+  return paths;
 }
 
 export class GitCandidateWorkspaceAdapter implements ExecutableWorkerAdapter {
@@ -138,20 +170,22 @@ export class GitCandidateWorkspaceAdapter implements ExecutableWorkerAdapter {
       .split(/\r?\n/u)
       .filter((path) => path !== "" && within(path, proposal.readPaths))
       .slice(0, 500);
-    const sections = [`Repository files:\n${files.join("\n")}`];
-    let bytes = Buffer.byteLength(sections[0] ?? "");
+    const sections: string[] = [];
+    let bytes = 0;
+    const append = (section: string) => {
+      const bounded = truncateUtf8(section, this.#maximumContextBytes - bytes);
+      if (bounded === "") return;
+      sections.push(bounded);
+      bytes += Buffer.byteLength(bounded);
+    };
+    append(`Repository files:\n${files.join("\n")}`);
     for (const path of files) {
       if (bytes >= this.#maximumContextBytes) break;
       try {
         const content = await readFile(await this.#resolveSafe(workspace, path), "utf8");
-        const section = `\n--- ${path} ---\n${content}`;
-        const remaining = this.#maximumContextBytes - bytes;
-        const bounded =
-          Buffer.byteLength(section) <= remaining ? section : section.slice(0, remaining);
-        sections.push(bounded);
-        bytes += Buffer.byteLength(bounded);
+        append(`\n--- ${path} ---\n${content}`);
       } catch {
-        sections.push(`\n--- ${path} ---\n[BINARY OR UNREADABLE]`);
+        append(`\n--- ${path} ---\n[BINARY OR UNREADABLE]`);
       }
     }
     return sections.join("");
@@ -235,11 +269,9 @@ export class GitCandidateWorkspaceAdapter implements ExecutableWorkerAdapter {
   }
 
   async changedPaths(workspace: ExecutableWorkerWorkspace): Promise<string[]> {
-    return (await this.#git(["status", "--porcelain=v1", "-uall"], workspace.path)).stdout
-      .split(/\r?\n/u)
-      .filter(Boolean)
-      .map((line) => line.slice(3).replaceAll("\\", "/"))
-      .sort();
+    return porcelainPaths(
+      (await this.#git(["status", "--porcelain=v1", "-z", "-uall"], workspace.path)).stdout,
+    ).sort();
   }
 
   async checkpoint(

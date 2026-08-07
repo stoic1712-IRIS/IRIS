@@ -91,9 +91,7 @@ function digest(value: unknown): string {
 }
 
 function within(path: string, roots: readonly string[]): boolean {
-  return roots.some(
-    (root) => root === "." || path === root || path.startsWith(`${root.replace(/\/$/u, "")}/`),
-  );
+  return roots.some((root) => path === root || path.startsWith(`${root.replace(/\/$/u, "")}/`));
 }
 
 function containsCredentialLikeText(value: string): boolean {

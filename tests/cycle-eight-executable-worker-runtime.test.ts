@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
@@ -175,6 +175,10 @@ function updatePlan(content = "export const value = 2;\n"): ExecutableWorkerPlan
 }
 
 describe("Cycle Eight executable worker contracts and runtime", () => {
+  it("rejects repository-wide dot paths from exact read and write boundaries", () => {
+    expect(() => proposal({ readPaths: ["."], writePaths: ["."] })).toThrow();
+  });
+
   it("denies an approval that is not bound to the exact proposal before creating a workspace", async () => {
     const adapter = new FixtureAdapter();
     const current = proposal();
@@ -322,6 +326,62 @@ describe("Cycle Eight executable worker contracts and runtime", () => {
 });
 
 describe("Cycle Eight real disposable Git workspace", () => {
+  it("keeps UTF-8 repository context within the exact byte budget", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "iris-cycle8-context-test-"));
+    try {
+      await writeFile(join(directory, "café.txt"), "é".repeat(100), "utf8");
+      await runFile("git", ["init", "-b", "main"], { cwd: directory });
+      await runFile("git", ["add", "café.txt"], { cwd: directory });
+      const adapter = new GitCandidateWorkspaceAdapter({
+        canonicalPath: directory,
+        maximumContextBytes: 40,
+      });
+      const context = await adapter.context(
+        { id: "workspace_context", path: directory, baseRevision, disposable: true },
+        proposal({ readPaths: ["café.txt"], writePaths: ["café.txt"] }),
+      );
+      expect(Buffer.byteLength(context)).toBeLessThanOrEqual(40);
+      expect(context).not.toContain("�");
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("parses renamed and UTF-8 paths from zero-delimited Git status", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "iris-cycle8-status-test-"));
+    try {
+      await writeFile(join(directory, "café.ts"), "export const value = 1;\n", "utf8");
+      await runFile("git", ["init", "-b", "main"], { cwd: directory });
+      await runFile("git", ["add", "café.ts"], { cwd: directory });
+      await runFile(
+        "git",
+        [
+          "-c",
+          "user.name=IRIS Test",
+          "-c",
+          "user.email=iris-test@local.invalid",
+          "commit",
+          "-m",
+          "fixture",
+        ],
+        { cwd: directory },
+      );
+      await mkdir(join(directory, "src"));
+      await runFile("git", ["mv", "café.ts", "src/renamed.ts"], { cwd: directory });
+      const changedPaths = await new GitCandidateWorkspaceAdapter({
+        canonicalPath: directory,
+      }).changedPaths({
+        id: "workspace_status",
+        path: directory,
+        baseRevision,
+        disposable: true,
+      });
+      expect(changedPaths).toEqual(["café.ts", "src/renamed.ts"]);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
   it("creates a local candidate commit while leaving the canonical branch and files untouched", async () => {
     const directory = await mkdtemp(join(tmpdir(), "iris-cycle8-test-"));
     try {
