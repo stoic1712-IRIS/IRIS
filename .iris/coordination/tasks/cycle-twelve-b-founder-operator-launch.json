@@ -10,21 +10,84 @@
   "risk_class": "R3",
   "authorization_mode": "completion_mandate",
   "completion_mandate_text": "Founder mandate: complete the remaining cycles directly with Codex. This task bundles local implementation, verification, repair, exact staging, commit, non-force push, pull request, exact-patch review, merge, synchronization, remote equality, and cleanup. It authorizes presentation of the exact final graduation statement but not its submission or execution; the Founder must separately type the exact digest-bound approval, after which IRIS operates and Codex becomes audit-only.",
-  "completion_actions": ["research", "edit", "verify", "repair", "stage", "commit", "push_branch", "create_pull_request", "independent_review", "merge", "synchronize", "cleanup"],
-  "completion_exclusions": ["Submission or execution of final Phase 0 graduation", "Unapproved protected effects", "Deployment or exposure", "Credentials or spending"],
+  "completion_actions": [
+    "research",
+    "edit",
+    "verify",
+    "repair",
+    "stage",
+    "commit",
+    "push_branch",
+    "create_pull_request",
+    "independent_review",
+    "merge",
+    "synchronize",
+    "cleanup"
+  ],
+  "completion_exclusions": [
+    "Submission or execution of final Phase 0 graduation",
+    "Unapproved protected effects",
+    "Deployment or exposure",
+    "Credentials or spending"
+  ],
   "base_revisions": [
-    {"repository": "stoic1712-IRIS/IRIS", "branch": "main", "commit": "e3a21db158df831224978de5e9fb3c9e9efc11aa"},
-    {"repository": "stoic1712-IRIS/iris-founder-command-center", "branch": "main", "commit": "97f3bdb79ce7d7d503eba3d3570b04c8309a1785"}
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "e3a21db158df831224978de5e9fb3c9e9efc11aa"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "main",
+      "commit": "97f3bdb79ce7d7d503eba3d3570b04c8309a1785"
+    }
   ],
-  "allowed_paths": ["README.md", "scripts/local-gateway.mjs", "src/App.tsx", "src/operator-client.ts", "src/styles.css", "src/views/OperatorSession.tsx", "tests/local-gateway.test.ts", "tests/operator-client.test.ts", "tests/operator-session.test.tsx"],
-  "excluded_paths": [".github/**", ".claude/**", ".iris/**", "package.json", "pnpm-lock.yaml", "C:/Projects/STOIC-IRIS/**", "C:/Projects/STOIC-IRIS-source-library/**"],
-  "permitted_actions": ["Consume the exact Core Cycle Twelve A and existing Cycle Nine graduation transports", "Add authenticated loopback-only objective, status, stop, resume, and proposal-read routes", "Present but do not submit the final exact graduation approval", "Complete ordinary repository delivery"],
-  "prohibited_actions": ["Own Core execution or approval authority in the UI", "Submit or execute final graduation", "Persist secrets or model context", "Deploy, expose, spend, administer, force-push, or rewrite history"],
+  "allowed_paths": [
+    "README.md",
+    "scripts/local-gateway.mjs",
+    "src/App.tsx",
+    "src/operator-client.ts",
+    "src/styles.css",
+    "src/views/OperatorSession.tsx",
+    "tests/local-gateway.test.ts",
+    "tests/operator-client.test.ts",
+    "tests/operator-session.test.tsx"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    ".claude/**",
+    ".iris/**",
+    "package.json",
+    "pnpm-lock.yaml",
+    "C:/Projects/STOIC-IRIS/**",
+    "C:/Projects/STOIC-IRIS-source-library/**"
+  ],
+  "permitted_actions": [
+    "Consume the exact Core Cycle Twelve A and existing Cycle Nine graduation transports",
+    "Add authenticated loopback-only objective, status, stop, resume, and proposal-read routes",
+    "Present but do not submit the final exact graduation approval",
+    "Complete ordinary repository delivery"
+  ],
+  "prohibited_actions": [
+    "Own Core execution or approval authority in the UI",
+    "Submit or execute final graduation",
+    "Persist secrets or model context",
+    "Deploy, expose, spend, administer, force-push, or rewrite history"
+  ],
   "acceptance_commands": [
-    {"repository": "stoic1712-IRIS/iris-founder-command-center", "command": "pnpm exec vitest run tests/operator-client.test.ts tests/operator-session.test.tsx tests/local-gateway.test.ts"},
-    {"repository": "stoic1712-IRIS/iris-founder-command-center", "command": "pnpm verify"}
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm exec vitest run tests/operator-client.test.ts tests/operator-session.test.tsx tests/local-gateway.test.ts"
+    },
+    { "repository": "stoic1712-IRIS/iris-founder-command-center", "command": "pnpm verify" }
   ],
-  "required_evidence": ["Exact Core contract consumption", "Objective ownership, session expiry, cancellation, resume, and fail-closed tests", "No hidden approval submission", "Exact final typed statement presentation", "Remote equality, rollback, and cleanup"],
+  "required_evidence": [
+    "Exact Core contract consumption",
+    "Objective ownership, session expiry, cancellation, resume, and fail-closed tests",
+    "No hidden approval submission",
+    "Exact final typed statement presentation",
+    "Remote equality, rollback, and cleanup"
+  ],
   "publisher": "Codex under Founder completion mandate after exact-patch verification",
   "approval_reference": "founder-cycles-ten-through-twelve-completion-2026-08-07",
   "phase0_graduation": false
