@@ -72,6 +72,17 @@ Environment-variable names may be documented; values may not. Example files must
 
 Every adopted component must document outbound destinations, ports, update checks, analytics, crash reporting, model downloads, and disablement controls. Default-open network access is prohibited for governed workers.
 
+## Local Workstation Capability Contracts
+
+Local workstation capabilities are governed by IRIS-owned, provider-independent contracts (ADR-007). Providers are replaceable adapters and never authority.
+
+- **Screenshots** must be ephemeral, byte- and dimension-bounded, bound to one exact target, and released only with an adapter redaction attestation. Image bytes never enter a result, log, evidence file, canonical memory, or model context; a screenshot handle carries only metadata and a content digest and cannot be persisted through the contract.
+- **Credential references** are opaque, provider-qualified pointers only. A reference holds no value; enumeration is denied; resolution of a real secret is refused without a later exact, unexpired, reference-bound Founder authorization, and no credential value is produced by the governance contract. Raw values, secret-like metadata, and serialization of resolved material are prohibited.
+- **Local notifications** are local-destination only, bounded redacted plain text, with no link, action, input, image, remote destination, persistence, executable, or implied approval authority.
+- **Desktop control** — keyboard or pointer injection, application or window control, and accessibility automation — is prohibited pending a separate Founder-approved ADR covering preview, exact scope, interruption, audit, recovery, and fail-closed behavior.
+
+Every accepted or denied local-capability decision is recorded in a hash-chained audit. A request or result that is oversized, malformed, unredacted, persistent, secret-bearing, actionable, remote, executable, unscoped, expired, replayed, or authority-laundering fails closed.
+
 ## Logging and Evidence
 
 Logs must be useful for audit without retaining secrets. Sensitive fields must be redacted before persistence. Redaction failures are security incidents and must not be hidden by deleting history.

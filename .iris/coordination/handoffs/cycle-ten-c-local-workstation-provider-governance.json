@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.0.0",
+  "handoff_id": "cycle-ten-c-local-workstation-provider-governance",
+  "task_id": "cycle-ten-c-local-workstation-provider-governance",
+  "producer": "Claude",
+  "recipient": "Codex",
+  "created_at": "2026-08-07T13:15:00.000Z",
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "c228c34ffa14b9a7d10cc01271e5e89fd6dc2213"
+    }
+  ],
+  "result_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "iris/cycle-ten-c-local-workstation-provider-governance",
+      "commit": null,
+      "patch_digest": "sha256:66968a33f80041e0f36ec5799aa6489714750660604dec978404188505c08f9b"
+    }
+  ],
+  "changed_paths": [
+    "packages/tool-gateway/src/local-workstation-provider.ts",
+    "packages/tool-gateway/src/index.ts",
+    "tests/cycle-ten-local-workstation-provider.test.ts",
+    "docs/architecture/decisions/ADR-007-local-workstation-capability-providers.md",
+    "docs/registries/technology-and-platform-registry.md",
+    "docs/registries/dependency-attribution-registry.md",
+    "docs/governance/security-and-secrets-policy.md",
+    "docs/specifications/cycle-ten-local-workstation-provider-governance.md",
+    "evidence/cycle-ten/local-workstation-provider-governance-2026-08-07.md",
+    ".iris/coordination/handoffs/cycle-ten-c-local-workstation-provider-governance.json"
+  ],
+  "commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm install --offline --frozen-lockfile --ignore-scripts",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run tests/cycle-ten-local-workstation-provider.test.ts tests/cycle-six-governed-tool-gateway.test.ts tests/cycle-six-connected-tool-providers.test.ts",
+      "exit_code": 0
+    },
+    { "repository": "stoic1712-IRIS/IRIS", "command": "pnpm format:check", "exit_code": 0 },
+    { "repository": "stoic1712-IRIS/IRIS", "command": "pnpm lint", "exit_code": 0 },
+    { "repository": "stoic1712-IRIS/IRIS", "command": "pnpm typecheck", "exit_code": 0 },
+    { "repository": "stoic1712-IRIS/IRIS", "command": "pnpm test", "exit_code": 1 },
+    { "repository": "stoic1712-IRIS/IRIS", "command": "pnpm build", "exit_code": 0 },
+    { "repository": "stoic1712-IRIS/IRIS", "command": "pnpm diagnostics", "exit_code": 0 },
+    { "repository": "stoic1712-IRIS/IRIS", "command": "pnpm verify", "exit_code": 1 }
+  ],
+  "evidence": [
+    "All six foundation-source SHA-256 digests verified against SOURCE-MANIFEST.md before material work; the library was read only.",
+    "Isolated Claude-owned worktree C:\\Projects\\STOIC-IRIS-cycle-ten-c on branch iris/cycle-ten-c-local-workstation-provider-governance, cut from activation revision cc13fe1664ab863c07c74eadf13301f9dbeaa518 whose recorded parent is the bound base c228c34ffa14b9a7d10cc01271e5e89fd6dc2213.",
+    "Acceptance command one passed with exit code 0: 25 tests across the new Cycle Ten C suite and both Cycle Six suites, which are unchanged.",
+    "The new suite contributes 17 tests covering redaction-gated screenshot release, byte/dimension bounds, ephemeral no-persistence no-bytes handles, unsafe-target rejection, expiry and cancellation fail-closed, opaque credential references with no value field, enumeration denial, resolution-authorization requirement with no value produced, secret-like input rejection, local-only redacted non-actionable notifications, link/secret/authority-laundering rejection, and a hash-chained decision audit.",
+    "ADR-007 records provider identities, ownership, license/security status, interfaces, limitations, replacement/removal, approval provenance, and explicit non-adoption of Windows desktop control.",
+    "Registry corrections mark SearXNG (sha256:f4c8e59d...ecde52 loopback-only), Playwright 1.62.0, and MCP SDK 1.30.0 adopted, and mark screenshot, credential-reference, and local-notification paths as bounded proposed contracts, not activated; desktop control is blocked.",
+    "No governed tool name was added and no grant was widened; contracts.ts was available but unchanged. pnpm-lock.yaml is byte-identical (sha256:c439ca27...03b9c4); no dependency version changed and no lifecycle script ran.",
+    "No live screenshot, credential-store, notification, desktop, browser-session, network, credential, provider-resource, spending, deployment, repository-mutation, canonical-memory, or Phase 0 effect. The Founder Command Center was not modified. The coordination task was not modified."
+  ],
+  "limitations": [
+    "pnpm test and the aggregate pnpm verify exit 1 on one pre-existing failure unrelated to Cycle Ten C: tests/cycle-eight-executable-worker-runtime.test.ts > 'denies a tracked symlink without modifying its external target' fails with EPERM: operation not permitted, symlink at its own setup. This Windows session cannot create symlinks at all (Developer Mode off, shell not elevated); an isolated fs.symlinkSync probe fails identically. That test imports no Cycle Ten C code, was not modified, and lies outside this task's allowed paths, so it was left unrepaired. All other 289 tests pass; format, lint, typecheck, build, and diagnostics each exit 0. Codex's full pnpm verify under WSL, where symlinks are supported, is expected to pass.",
+    "All verification uses deterministic hermetic fixtures; no provider, operating-system API, browser, credential store, notification service, screenshot API, or network was invoked.",
+    "This tranche delivers governance and safety contracts only. Live activation and Founder-facing controls remain later Cycle Ten integration."
+  ],
+  "rollback": "Close the pull request without merging, delete the remote branch iris/cycle-ten-c-local-workstation-provider-governance through the ordinary non-force path, remove the isolated worktree C:\\Projects\\STOIC-IRIS-cycle-ten-c, and run git worktree prune. main is never modified. The contracts are additive and export-only; removing the export and file restores the prior surface with no data migration.",
+  "protected_actions_remaining": [
+    "Independent Codex review of the exact producer commit",
+    "Final full pnpm verify under WSL where symlink creation is supported",
+    "Merge of the pull request after a review pass",
+    "Post-merge synchronization and branch and worktree cleanup"
+  ],
+  "ready_for_review": true
+}
