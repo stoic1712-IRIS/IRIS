@@ -28,6 +28,8 @@ Failed checks are returned to the same bounded coding agent for at most three it
 
 The Develop screen selects IRIS Core or the Founder Command Center, captures the exact objective and read/write paths, displays every capability-preflight result, presents the exact typed approval, starts the asynchronous execution, polls truthful progress, displays changed paths and the local candidate checkpoint, and exposes stop, resume, and discard controls. The browser session and CSRF boundary protect every mutation endpoint.
 
+The production gateway and Core read service retain fixed loopback-only hosts and their recorded default ports. Bounded environment port overrides exist only so an isolated verification gateway and its paired Core service can run without stopping an active Founder session; invalid, privileged, or out-of-range ports fail closed.
+
 ## Completion evidence
 
 Cycle Eight is complete locally when strict contract tests pass, a real temporary Git repository proves that a candidate branch can be created while canonical `main` and its files remain unchanged, repair and recovery tests pass, the Command Center client and gateway routes pass authentication and schema tests, the full verification suites pass in both repositories, and a real local-model disposable proof is recorded without credentials or raw private reasoning.
