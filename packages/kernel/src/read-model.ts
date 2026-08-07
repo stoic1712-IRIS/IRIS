@@ -4,16 +4,20 @@ export const founderCommandCenterAudience = "iris-founder-command-center" as con
 export const readModelScope = "read-model:v1" as const;
 export const readModelVersion = "iris.stoic/read-model/v1" as const;
 
-export interface CoreReadState {
+interface CoreReadStateBase {
   canonicalRevision: string;
   branch: string;
   remoteIdentity: string;
   trackedRemoteRevision: string;
   remoteEqual: boolean;
   observedAt: string;
-  phaseZeroGraduated: boolean;
-  graduationCheckpoint: string | null;
 }
+
+export type CoreReadState = CoreReadStateBase &
+  (
+    | { phaseZeroGraduated: false; graduationCheckpoint: null }
+    | { phaseZeroGraduated: true; graduationCheckpoint: string }
+  );
 
 export interface CoreReadRequest {
   method: "GET";
@@ -87,7 +91,7 @@ export function createCoreReadEnvelope(state: CoreReadState, generatedAt: Date) 
         citation: state.phaseZeroGraduated
           ? "evidence/wave-10/sovereign-development-graduation-2026-08-05.md"
           : "docs/specifications/cycle-nine-phase-zero-graduation-readiness.md",
-        redacted: true as const,
+        redacted: false as const,
         source: source(
           state.phaseZeroGraduated
             ? "evidence/wave-10/sovereign-development-graduation-2026-08-05.md"
@@ -119,10 +123,9 @@ export function createCoreReadEnvelope(state: CoreReadState, generatedAt: Date) 
         component: "Phase 0 graduation",
         state: state.phaseZeroGraduated ? ("healthy" as const) : ("offline" as const),
         latencyMs: 0,
-        detail:
-          state.phaseZeroGraduated && state.graduationCheckpoint !== null
-            ? `Completed at checkpoint ${state.graduationCheckpoint}.`
-            : "Readiness machinery is being completed; the deployed Founder-operated graduation has not run.",
+        detail: state.phaseZeroGraduated
+          ? `Completed at checkpoint ${state.graduationCheckpoint}.`
+          : "Readiness machinery is being completed; the deployed Founder-operated graduation has not run.",
         source: source(
           state.phaseZeroGraduated
             ? "evidence/wave-10/sovereign-development-graduation-2026-08-05.md"

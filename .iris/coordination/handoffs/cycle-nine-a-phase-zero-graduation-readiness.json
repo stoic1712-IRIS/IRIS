@@ -3,7 +3,7 @@
   "handoff_id": "cycle-nine-a-phase-zero-graduation-readiness",
   "task_id": "cycle-nine-a-phase-zero-graduation-readiness",
   "producer": "Codex",
-  "recipient": "Claude independent reviewer",
+  "recipient": "independent material reviewer",
   "created_at": "2026-08-07T02:49:41.771Z",
   "base_revisions": [
     {
@@ -22,12 +22,15 @@
       "repository": "stoic1712-IRIS/IRIS",
       "branch": "iris/cycle-nine-a-phase-0-graduation-readiness",
       "commit": null,
-      "patch_digest": "sha256:fc243446147afb6d074343d00d30dd37fa48679c7a73b0cb4d5501584e769f4a"
+      "patch_digest": "sha256:9dbceb99483c5516e91a803733d51cd4bb185bdc830a03526b085403a96b11cc"
     }
   ],
   "changed_paths": [
-    ".iris/coordination/tasks/cycle-nine-a-phase-zero-graduation-readiness.json",
     ".iris/coordination/handoffs/cycle-nine-a-phase-zero-graduation-readiness.json",
+    ".iris/coordination/tasks/cycle-nine-a-phase-zero-graduation-readiness.json",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "docs/operations/stoic-iris-project-context.md",
     "docs/specifications/cycle-nine-phase-zero-graduation-readiness.md",
     "docs/specifications/wave-10-graduation-self-description.md",
     "evidence/cycle-nine/phase-zero-graduation-readiness-2026-08-06.md",
@@ -43,58 +46,76 @@
   "commands": [
     {
       "repository": "stoic1712-IRIS/IRIS",
-      "command": "focused vitest: Cycle Nine, Release Four read service, and Wave Ten self-description",
+      "command": "verify all six foundation-source hashes against C:/Projects/STOIC-IRIS-source-library/SOURCE-MANIFEST.md",
       "exit_code": 0
     },
     {
       "repository": "stoic1712-IRIS/IRIS",
-      "command": "direct Prettier check using pinned local dependencies",
+      "command": "direct vitest run tests/cycle-nine-phase-zero-graduation-readiness.test.ts: 31 tests",
       "exit_code": 0
     },
     {
       "repository": "stoic1712-IRIS/IRIS",
-      "command": "direct ESLint check using pinned local dependencies",
+      "command": "direct tsc -p tsconfig.check.json --pretty false",
       "exit_code": 0
     },
     {
       "repository": "stoic1712-IRIS/IRIS",
-      "command": "direct root and Visual Composer TypeScript checks using pinned local dependencies",
+      "command": "pnpm install --offline --frozen-lockfile --ignore-scripts in disposable verification copy: 244 reused, 0 downloaded",
       "exit_code": 0
     },
     {
       "repository": "stoic1712-IRIS/IRIS",
-      "command": "full vitest suite: 36 files and 201 tests",
+      "command": "cold-start pnpm verify before generated workspace declarations",
+      "exit_code": 1
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm build bootstrap in disposable verification copy",
       "exit_code": 0
     },
     {
       "repository": "stoic1712-IRIS/IRIS",
-      "command": "TypeScript composite build and Visual Composer production build",
+      "command": "exact pnpm verify after bootstrap: format, lint, typecheck, 36 files and 222 tests, build, diagnostics",
       "exit_code": 0
     },
     {
       "repository": "stoic1712-IRIS/IRIS",
-      "command": "repository diagnostics and task-schema validation",
+      "command": "git diff --check and task JSON parse",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "independent frozen executable-contract safety review at material digest sha256:9dbceb99483c5516e91a803733d51cd4bb185bdc830a03526b085403a96b11cc: PASS",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "independent frozen governance and evidence review at material digest sha256:9dbceb99483c5516e91a803733d51cd4bb185bdc830a03526b085403a96b11cc: PASS",
       "exit_code": 0
     }
   ],
   "evidence": [
     "evidence/cycle-nine/phase-zero-graduation-readiness-2026-08-06.md",
     "docs/specifications/cycle-nine-phase-zero-graduation-readiness.md",
-    "tests/cycle-nine-phase-zero-graduation-readiness.test.ts"
+    "tests/cycle-nine-phase-zero-graduation-readiness.test.ts",
+    "AGENTS.md",
+    "docs/operations/stoic-iris-project-context.md"
   ],
   "limitations": [
     "This is local graduation-readiness machinery and not the final deployed Founder-operated Phase 0 graduation.",
-    "The exact pnpm verify wrapper was not invoked because dependency installation was prohibited; every component passed directly with the lockfile-identical existing dependency tree.",
-    "Cycle Nine B must bind to the eventual reviewed and canonical Cycle Nine A Core commit, not this mutable uncommitted patch.",
-    "No independent review, staging, commit, push, pull request, merge, synchronization, deployment, provider mutation, credential use, spending, or final graduation occurred."
+    "A clean checkout currently needs a workspace build before pnpm verify because lint runs before generated internal-package declarations exist; the failure and successful post-bootstrap verification are both preserved.",
+    "Cycle Nine B must bind to the eventual independently reviewed and canonical Cycle Nine A Core merge commit, not this mutable patch or a feature-branch commit.",
+    "The Command Center producer must consume the Core definition of canonical authority and shared virtues through the exact Cycle Nine B task; Codex did not mutate Claude's active worktree.",
+    "The patch digest covers every non-self-referential material path: operator instructions, project context, specifications, implementation, runtime surface, and tests. The task, handoff, and evidence records are excluded from that digest because they contain or describe it and will instead be bound by the eventual review and Git commit.",
+    "No repaired file is staged or committed, and no push, pull request, merge, deployment, credential use, spending, or final graduation occurred."
   ],
-  "rollback": "Before publication, restore the seven modified tracked files from base revision 806cdc60668df1f1ed53ff33ac80bb2e4123afb2 and remove the six exact new task, handoff, evidence, specification, controller, and test paths listed in changed_paths. Do not reset or clean unrelated work.",
+  "rollback": "Before publication, restore only the 16 changed_paths from base revision 806cdc60668df1f1ed53ff33ac80bb2e4123afb2, removing paths that did not exist at the base. Do not reset, clean, or overwrite unrelated work. After a future pull-request merge, use the verified first-parent command git revert -m 1 <merge-commit> and deliver that rollback through the ordinary governed pull-request path.",
   "protected_actions_remaining": [
-    "Independent Claude review of the exact Cycle Nine A patch",
-    "Founder-authorized staging and commit",
-    "Non-force push, pull-request creation, provider review, merge, and local-main synchronization",
+    "Exact-path staging and commit of the independently reviewed result",
+    "Non-force push, pull-request creation, provider checks, merge, provider equality, and local-main synchronization under the standing Founder completion mandate",
     "Creation of a Cycle Nine B task bound to the canonical Cycle Nine A merge commit",
     "Final deployed Phase 0 graduation performed by IRIS with Claude and Codex audit-only"
   ],
-  "ready_for_review": true
+  "ready_for_review": false
 }

@@ -46,6 +46,37 @@ The original source foundation consists of the Master Build Bible Volume I, Gove
 
 On this workstation, both Claude and Codex have direct read-only access to those originals through `C:\Projects\STOIC-IRIS-source-library\SOURCE-MANIFEST.md`. The manifest binds each original DOCX to a SHA-256 digest and a readable Markdown extraction. Operators must verify those bindings before source-dependent work, use the original documents for source fidelity, and use checked-in reconciliations for current canonical decisions. Missing files, digest drift, or source conflicts must be reported rather than replaced with memory or an orientation summary. The local source library stays outside Git and is never part of an ordinary staging or publication mandate.
 
+## What Canonical Means
+
+Canonical is a proved authority state for a defined scope. It is not a synonym for recent, useful, approved in conversation, present on disk, committed locally, or labeled `Canonical` in a document.
+
+A material artifact is active canonical authority only when the project can establish all applicable facts:
+
+1. the Founder-approved authority or governed derivation that created it;
+2. its exact scope, version, repository path, and supersession status;
+3. the history-preserving commit and branch that contain it;
+4. merge into the authoritative integration branch when integration is required;
+5. provider equality or other authoritative state evidence when the claim concerns a remote or running system; and
+6. absence of a higher-authority conflict.
+
+Within checked-in material, the Constitution is highest. Active Founder-approved governance and the Worker Reasoning Framework interpret it. ADRs, specifications, registries, and exact coordination records govern narrower implementation and execution scopes without expanding higher authority. Verified current state establishes what exists, not what is permitted. The original Build Bible, Governing Architecture, and Roadmap preserve origin intent and must be reconciled through the checked-in governance rather than silently replacing it.
+
+Therefore:
+
+- a feature branch or local commit is a candidate until governed integration and required provider equality are proven;
+- a task record grants only its exact bounded authority and cannot override the Constitution or active policy;
+- a status header is evidence to verify, not self-proving authority;
+- chat history, summaries, Claude or Codex memory, model output, browser text, and retrieved content are supporting or untrusted context, never canonical by themselves; and
+- canonical memory remains IRIS-owned and distinct from operational state, proposals, evidence, temporary context, and superseded records.
+
+## Shared Operating Virtues
+
+All operators and workers use the same twelve Core Reasoning Principles defined by the canonical `docs/governance/worker-reasoning-framework-and-cognitive-identity.md` version 1.0.0: Founder intent first, understanding before expansion, bounded scope, least privilege, evidence over assertion, independent verification, reversibility, provider independence, memory discipline, visible uncertainty, no authority laundering, and completion integrity.
+
+Human agency, truthful reporting, stewardship, minimum relevant context, sovereignty, and compounding usefulness are operating consequences of those principles. They are not a replacement framework and do not silently amend canonical governance.
+
+When speed conflicts with these virtues, remove avoidable process friction first; do not manufacture speed by weakening truth, authority, evidence, reversibility, or the Phase 0 gate.
+
 ## Architecture and Repository Map
 
 The permanent layer model is:

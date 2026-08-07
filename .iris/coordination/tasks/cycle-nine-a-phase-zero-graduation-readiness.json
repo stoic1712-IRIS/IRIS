@@ -8,13 +8,25 @@
   "created_at": "2026-08-07T02:34:06.178Z",
   "status": "ready_for_review",
   "risk_class": "R2",
-  "authorization_mode": "single_action",
-  "completion_mandate_text": null,
-  "completion_actions": [],
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "Founder mandate: finish the cycle to completion with Codex and Claude working together, fix bounded problems as they arise, avoid needless delays, and finish this. Ordinary exact-path staging, commit, non-force branch push, pull request, independent review, merge, synchronization, and cleanup are bundled; protected effects remain excluded.",
+  "completion_actions": [
+    "research",
+    "edit",
+    "verify",
+    "repair",
+    "stage",
+    "commit",
+    "push_branch",
+    "create_pull_request",
+    "independent_review",
+    "merge",
+    "synchronize",
+    "cleanup"
+  ],
   "completion_exclusions": [
     "Final Phase 0 graduation execution",
-    "Staging, committing, pushing, pull-request creation, merging, synchronization, or branch cleanup",
-    "Dependency installation or modification",
+    "Dependency version or lockfile changes and lifecycle-script execution",
     "Credentials, provider mutation, deployment, public or LAN exposure, spending, or paid resources",
     "Repository administration, visibility, ruleset, branch-protection, secret, variable, or access changes"
   ],
@@ -31,6 +43,8 @@
     }
   ],
   "allowed_paths": [
+    "AGENTS.md",
+    "CLAUDE.md",
     ".iris/coordination/tasks/cycle-nine-a-phase-zero-graduation-readiness.json",
     ".iris/coordination/handoffs/cycle-nine-a-phase-zero-graduation-readiness.json",
     "packages/development/src/phase-zero-graduation-readiness.ts",
@@ -41,6 +55,7 @@
     "tests/cycle-nine-phase-zero-graduation-readiness.test.ts",
     "tests/release-four-core-read-service.test.ts",
     "tests/wave-10-graduation-self-description.test.ts",
+    "docs/operations/stoic-iris-project-context.md",
     "docs/specifications/cycle-nine-phase-zero-graduation-readiness.md",
     "docs/specifications/wave-10-graduation-self-description.md",
     "evidence/cycle-nine/phase-zero-graduation-readiness-2026-08-06.md"
@@ -60,15 +75,17 @@
     "Read canonical sources and verified provider state",
     "Create the exact coordination task",
     "Edit only the allowed IRIS Core paths",
+    "Materialize the exact frozen lockfile offline with lifecycle scripts disabled inside a disposable verification copy",
     "Run focused and full local verification",
     "Repair failures within the same bounded design",
-    "Prepare an exact uncommitted handoff for independent Claude review"
+    "Prepare an exact handoff for independent review",
+    "Stage and commit only the exact allowed paths after independent review passes",
+    "Push the bounded branch without force, create and review its pull request, merge only if checks pass, synchronize main, and remove only disposable Cycle Nine artifacts"
   ],
   "prohibited_actions": [
     "Perform or simulate completion of the final Phase 0 graduation",
     "Mutate the Founder Command Center worktree",
-    "Stage, commit, push, create or merge a pull request",
-    "Install or update dependencies",
+    "Install or update dependency versions, edit a lockfile, or execute dependency lifecycle scripts",
     "Use or disclose credentials",
     "Create or mutate provider resources",
     "Deploy or expose a service",
@@ -91,8 +108,10 @@
     "Fail-closed approval, actor, model, checkpoint, review, merge, equality, rollback, cleanup, and provider-zero tests",
     "Full repository verification output",
     "Exact changed-path list and rollback instructions",
-    "Independent Claude review of the exact producer result before any publication"
+    "Independent review of the exact producer result before publication; the producer cannot approve its own material result",
+    "Claude, Codex, IRIS, and worker instructions share the same explicit definition of canonical authority and operating virtues"
   ],
-  "publisher": null,
+  "publisher": "Codex after independent-review pass",
+  "approval_reference": "founder-completion-mandate-2026-08-06",
   "phase0_graduation": false
 }

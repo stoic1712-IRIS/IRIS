@@ -11,56 +11,81 @@
 **Base revision:** `806cdc60668df1f1ed53ff33ac80bb2e4123afb2`
 
 **Command Center bound revision:** `f0a12b26a7271ed8cb2d2f1b08719b90c397628a`
-**Material patch digest:** `sha256:fc243446147afb6d074343d00d30dd37fa48679c7a73b0cb4d5501584e769f4a`
 
-## Scope and boundary
+**Implementation patch digest (`packages`, `scripts`, and `tests`):** `sha256:78dd92f8d66208ec2903ea653c3eb1512bfecdc954c11dbff9932507a87d3fe2`
 
-Cycle Nine A adds the missing IRIS-owned fail-closed controller that binds the existing Cycle Eight executable-worker candidate to independent IRIS review, checkpoint-first delivery, exact pull-request head, governed merge, canonical-main equality, history-preserving rollback, cleanup, paid-resource termination, and provider-authoritative zero-resource verification.
+**Whole material-result patch digest (all non-self-referential operator, context, specification, implementation, runtime, and test paths):** `sha256:9dbceb99483c5516e91a803733d51cd4bb185bdc830a03526b085403a96b11cc`
 
-This work does not perform or claim the final Phase 0 graduation. The repository-wide self-description and Core read model now truthfully report that permanent graduation remains incomplete until deployed IRIS performs the genuine Founder-operated canonical multi-file self-upgrade while Claude and Codex remain audit-only.
+## Scope and permanent boundary
+
+Cycle Nine A provides IRIS-owned fail-closed machinery for the future Phase 0 graduation. It binds the existing Cycle Eight executable-worker proposal to authenticated and durably consumed Founder approvals, prior real-model repository inspection, a verified multi-file candidate, the exact IRIS independent-review worker, checkpoint-first delivery of the candidate commit itself, a separate merge approval, canonical-main equality, first-parent merge rollback evidence, cleanup, paid-resource termination, and provider-authoritative repository/resource inspection.
+
+This work does not perform or claim the final Phase 0 graduation. Permanent Development Independence remains incomplete until deployed IRIS performs the genuine Founder-operated canonical multi-file self-upgrade while Claude and Codex remain audit-only.
+
+## Canonical authority and shared virtues
+
+- `AGENTS.md`, `CLAUDE.md`, and `docs/operations/stoic-iris-project-context.md` now define canonical as a proved, scoped authority state rather than a filename, status label, recent commit, chat statement, model output, or private memory.
+- The operator instructions require exact controlling-source and revision citations and distinguish candidate branches from authoritative integrated `main` with provider equality.
+- Claude and Codex operator instructions now cite and apply the exact twelve Core Reasoning Principles already canonical for IRIS and governed workers in `docs/governance/worker-reasoning-framework-and-cognitive-identity.md` version 1.0.0; the operator guidance does not invent a replacement framework.
+- The Command Center copy will be updated by its assigned producer only after Cycle Nine B is bound to the reviewed and integrated Core revision; Codex did not mutate Claude's active worktree.
 
 ## Foundation and repository verification
 
-- The six byte-authoritative DOCX and readable Markdown source hashes matched `C:/Projects/STOIC-IRIS-source-library/SOURCE-MANIFEST.md` before material reasoning.
-- The source library remained outside the repository and read-only.
-- The isolated worktree started from exact Core `main` revision `806cdc60668df1f1ed53ff33ac80bb2e4123afb2`.
-- The task record validates against `.iris/coordination/task.schema.json` using the already pinned local Ajv dependency.
-- `git diff --check` passed.
+- All six byte-authoritative DOCX and readable Markdown hashes matched `C:/Projects/STOIC-IRIS-source-library/SOURCE-MANIFEST.md` before the repair.
+- The source library remained outside Git and read-only.
+- The isolated worktree derives from exact Core `main` revision `806cdc60668df1f1ed53ff33ac80bb2e4123afb2`.
+- The Cycle Nine task JSON parses successfully and `git diff --check` passes.
+- Existing unrelated user work was not overwritten.
+
+## Independent-review repairs
+
+The first Claude review and two separate read-only Codex audits correctly blocked publication. The repaired contract now addresses their material findings:
+
+- rollback uses `git revert -m 1 <merge-commit>`;
+- the reviewer identity is exactly `iris-independent-review-worker` rather than Claude or Codex;
+- the nested executable-worker proposal is structurally bound and requires at least two safe paths;
+- model evidence binds prior inspection of the exact repository revision and rejects fixture-like identities;
+- candidate, review, delivery, merge, and provider evidence record IRIS actors, exact repositories, and observed Claude/Codex non-participation;
+- delivery cannot replace the reviewed candidate with another commit;
+- initial and merge approvals use authenticated session evidence and separate durable consumption receipts;
+- events bind evidence digests in a verifiable hash chain;
+- an approval-ledger write that may have succeeded before an exception is reported as `unknown`, never falsely as unconsumed;
+- the candidate must differ from and descend from the exact base, bind different base and candidate trees plus a verified diff digest, and the independent reviewer must bind the same tree and diff evidence;
+- model-observation evidence must follow the bound inspection and cannot be future-dated;
+- failure reporting records the actual attempted stage and inspects provider state after an exception instead of assuming no mutation; and
+- cleanup, paid-resource termination, and provider-zero inspection remain in the success and failure evidence chains.
+
+Two final frozen independent reviews passed the exact repaired material result: one for executable-contract safety and one for canonical authority, governance, and evidence integrity.
 
 ## Contract coverage
 
-The new tests prove:
-
-- exact digest-bound, one-time, unexpired Founder approval before any adapter execution;
-- IRIS-only, deployed-runtime, real non-fixture model execution with explicit false values for Codex and Claude mutation;
-- exact Core, Command Center, provider, model, proposal, execution, candidate-ref, and verification-command bindings;
-- separate producer and independent reviewer identities on the exact candidate commit;
-- checkpoint-first equality across private checkpoint, target branch, and draft pull-request head;
-- exact independently reviewed merge head and history-preserving merge method;
-- local, remote, and provider-authoritative canonical `main` equality;
-- exact `git revert <merge-commit>` rollback evidence and private checkpoint recoverability;
-- cleanup, paid-resource termination, and provider-authoritative zero-resource proof; and
-- hash-linked evidence events with fail-closed cleanup on mismatch.
-
-The suite also denies altered, consumed, and expired approvals; non-IRIS, non-deployed, fixture, or assistant-mutated proposals; self-review; checkpoint drift; pull-request head drift; merge-head drift; canonical-main inequality; and provider residue.
+The focused suite contains 31 tests covering the full success chain and fail-closed behavior for approval alteration, expiry, future issue time, authentication mismatch, replay and uncertain post-write ledger failures, repository and provider drift, unchanged or non-descendant candidates, tree and diff inequality, under-bound or protected-path proposals, stale, future, or fixture model evidence, operator participation, incorrect reviewer identity, delivery/checkpoint/pull-request/merge inequality, merge-parent drift, canonical-main inequality, invalid rollback, cleanup failure, future-dated resource or provider evidence, provider residue, provider mutation followed by an exception, unknown provider state, and event/evidence-chain tampering.
 
 ## Verification results
 
-- Focused tests: 3 files, 16 tests passed.
-- Typecheck: root and Visual Composer checks passed.
-- Formatting: all files passed Prettier check.
-- Lint: passed with zero warnings.
-- Full test suite: 36 files, 201 tests passed.
-- TypeScript composite build: passed.
-- Visual Composer production build: passed; Vite emitted only the existing non-failing large-chunk advisory.
-- Repository diagnostics: passed and reported the expected bounded uncommitted changed paths.
+Verification used disposable copy `C:/Projects/STOIC-IRIS-cycle-nine-a-verify-20260806-215211` with the pinned lockfile and local pnpm store.
 
-The exact `pnpm verify` wrapper was not invoked because this isolated worktree had no dependency installation authority and `pnpm` attempted to replace the linked modules tree. Instead, every component of `pnpm verify` was executed directly using the lockfile-identical, already materialized Cycle Six dependency tree. The `pnpm-lock.yaml` hashes were identical. No dependency version, lockfile, lifecycle script, or network access changed.
+- `pnpm install --offline --frozen-lockfile --ignore-scripts`: passed; 244 packages reused, 0 downloaded, no version or lockfile change.
+- Focused Cycle Nine suite: 1 file, 31 tests passed.
+- Direct root TypeScript check: passed.
+- Prettier and focused ESLint after repair: passed.
+- Clean-copy cold-start `pnpm verify`: preserved failure. Lint ran before generated workspace declarations existed and produced unresolved-type errors across unchanged packages.
+- Bootstrap `pnpm build`: passed and generated the pinned workspace declarations.
+- Exact post-bootstrap `pnpm verify`: passed.
+- Full suite: 36 files and 222 tests passed.
+- Root and Visual Composer typechecks: passed.
+- TypeScript composite and Visual Composer production builds: passed. Vite emitted only the existing non-failing large-chunk advisory.
+- Repository diagnostics: passed and reported the expected bounded branch and changed paths.
 
-## Changed paths
+The cold-start ordering defect is a real repository reproducibility finding: a clean dependency tree currently requires `pnpm build` before the declared `pnpm verify` sequence can type-resolve internal packages. It is not concealed by the successful post-bootstrap run and should be corrected in a separately bounded toolchain task rather than by silently weakening lint.
 
-- `.iris/coordination/tasks/cycle-nine-a-phase-zero-graduation-readiness.json`
+## Changed paths from the exact base
+
 - `.iris/coordination/handoffs/cycle-nine-a-phase-zero-graduation-readiness.json`
+- `.iris/coordination/tasks/cycle-nine-a-phase-zero-graduation-readiness.json`
+- `AGENTS.md`
+- `CLAUDE.md`
+- `docs/operations/stoic-iris-project-context.md`
 - `docs/specifications/cycle-nine-phase-zero-graduation-readiness.md`
 - `docs/specifications/wave-10-graduation-self-description.md`
 - `evidence/cycle-nine/phase-zero-graduation-readiness-2026-08-06.md`
@@ -73,10 +98,9 @@ The exact `pnpm verify` wrapper was not invoked because this isolated worktree h
 - `tests/release-four-core-read-service.test.ts`
 - `tests/wave-10-graduation-self-description.test.ts`
 
-## Review and publication state
+## Current state
 
-- Independent Claude review is still required on the exact uncommitted producer result.
-- No file is staged or committed.
-- No branch is pushed and no pull request exists.
-- No provider, credential, deployment, spending, or public/LAN action occurred.
-- Cycle Nine B correctly remains blocked until it can bind to a reviewed, published, canonical Cycle Nine A Core revision.
+- The frozen executable-contract and governance/evidence reviews both passed.
+- At this evidence freeze, no repair file had been staged or committed yet.
+- No branch push, pull request, merge, provider mutation, credential use, deployment, spending, or public/LAN action occurred during this repair.
+- Cycle Nine B remains implementation-blocked until its task binds the reviewed and integrated Cycle Nine A Core revision and exact read contract.
