@@ -1,0 +1,106 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "cycle-nine-b-founder-graduation-controls",
+  "objective": "Complete the Founder Command Center Cycle Nine B control surface against canonical IRIS Core revision cbcd369025d12011aae8721d7d485365a176024e: render only strictly validated Core-owned Phase 0 graduation readiness state, present exact initial and merge approval statements, forward complete authenticated approval envelopes only to a Core-owned loopback endpoint, fail closed when that endpoint or contract is unavailable, and never invent, persist, consume, execute, or declare graduation state in the Command Center.",
+  "issuer": "Founder Cristofer Stoic Arellano",
+  "executor": "Claude",
+  "assigned_role": "producer",
+  "created_at": "2026-08-07T05:02:00.000Z",
+  "status": "approved",
+  "risk_class": "R2",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "Founder mandate: finish the cycle to completion with Codex and Claude working together, fix bounded problems as they arise, avoid needless delays, and finish this. Ordinary exact-path implementation, verification, repair, staging, commit, non-force branch push, pull request, independent review, merge, synchronization, and cleanup are bundled; protected effects remain excluded.",
+  "completion_actions": [
+    "research",
+    "edit",
+    "verify",
+    "repair",
+    "stage",
+    "commit",
+    "push_branch",
+    "create_pull_request",
+    "independent_review",
+    "merge",
+    "synchronize",
+    "cleanup"
+  ],
+  "completion_exclusions": [
+    "Final Phase 0 graduation execution or any claim that Phase 0 is complete",
+    "IRIS Core repository mutation by the Command Center producer",
+    "Persistent credentials, deployment, startup registration, public or LAN exposure, spending, paid resources, or provider-resource creation",
+    "Repository administration, visibility, ruleset, branch-protection, secret, variable, release, billing, access-control, or organization changes",
+    "Force-push, history rewrite, destructive cleanup, canonical evidence deletion, or unrelated work"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "cbcd369025d12011aae8721d7d485365a176024e"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "main",
+      "commit": "f0a12b26a7271ed8cb2d2f1b08719b90c397628a"
+    }
+  ],
+  "allowed_paths": [
+    "README.md",
+    "scripts/local-gateway.mjs",
+    "src/App.tsx",
+    "src/styles.css",
+    "src/graduation-client.ts",
+    "src/views/Graduation.tsx",
+    "tests/local-gateway.test.ts",
+    "tests/graduation-client.test.ts",
+    "tests/graduation.test.tsx"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    ".claude/**",
+    ".iris/**",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "C:/Projects/STOIC-IRIS-source-library/**",
+    "C:/Projects/STOIC-IRIS/**"
+  ],
+  "permitted_actions": [
+    "Read canonical Core revision cbcd369025d12011aae8721d7d485365a176024e, the Cycle Nine A task, handoff, specification, evidence, controller, read model, AGENTS.md, CLAUDE.md, and Worker Reasoning Framework version 1.0.0",
+    "Repair only the exact allowed Command Center paths in the existing isolated Cycle Nine B worktree",
+    "Use the exact frozen lockfile with lifecycle scripts disabled to materialize already pinned dependencies only if the current isolated worktree still lacks them",
+    "Run focused and full local verification and repair bounded failures",
+    "Stage and commit only exact allowed paths after a frozen independent review passes",
+    "Push non-force, create a pull request, merge only after exact-head review and checks pass, synchronize main, and clean only disposable Cycle Nine B artifacts"
+  ],
+  "prohibited_actions": [
+    "Read or write an invented .iris/graduation status file or make the Command Center the owner of approval or graduation truth",
+    "Accept incomplete, impossible, expired, future-dated, replayed, semantically inconsistent, or contract-version-mismatched Core records",
+    "Store approval authority in process-local variables as the authoritative ledger",
+    "Add an execute, activate, merge, provider-mutation, repository-write, or graduation-completion route",
+    "Mutate IRIS Core or Claude and Codex private memory",
+    "Use credentials, deploy, expose public or LAN ports, spend, administer GitHub, force-push, rewrite history, or delete canonical evidence"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm exec vitest run tests/graduation-client.test.ts tests/graduation.test.tsx tests/local-gateway.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "All six foundation-source hashes verified against SOURCE-MANIFEST.md",
+    "Exact Core and Command Center base revisions and exact changed-path list",
+    "Strict versioned contract validation derived from canonical Core cbcd369025d12011aae8721d7d485365a176024e with no duplicated divergent stage list",
+    "All stale STOIC-IRIS-cycle-six test roots removed; tests use canonical Core cbcd369025d12011aae8721d7d485365a176024e or a hermetic fixture generated from that exact contract and exercise valid presented, approval-forwarding, and concluded paths",
+    "Unavailable or invalid state for absent endpoint, EACCES, EIO, malformed JSON, impossible success, contract drift, expiry, future timestamps, replay, and semantic cross-binding failures",
+    "Full initial and merge approval envelopes forwarded only through authenticated paired loopback and CSRF protections; Core remains the durable consumption authority",
+    "No execute or mutation route and no false Phase 0 completion claim",
+    "Focused and full verification results, frozen material digest, rollback instructions, and independent reviewer PASS before publication"
+  ],
+  "publisher": "Codex after independent-review pass",
+  "approval_reference": "founder-completion-mandate-2026-08-06",
+  "phase0_graduation": false
+}
