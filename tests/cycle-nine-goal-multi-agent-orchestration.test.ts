@@ -471,6 +471,24 @@ describe("Cycle Nine additive goal and multi-agent orchestration", () => {
     expect(failed.tasks[0]?.lastError).toBe("GOAL_OPERATION_TIMEOUT");
   });
 
+  it("fails a bounded non-cooperative completion evaluator rather than returning running", async () => {
+    const runtime = new GoalOrchestrator({
+      store: new MemoryGoalStore(),
+      worker: { execute: (request) => Promise.resolve(result(request)) },
+      reviewer: passingReviewer(),
+      completionEvaluator: { evaluate: () => new Promise(() => undefined) },
+      availableCapabilities: ["research.search", "repository.edit"],
+      maximumParallelWorkers: 2,
+      operationTimeoutMs: 10,
+      now: () => new Date(createdAt),
+    });
+    const single = definition({ goalId: "goal_completion-timeout", tasks: [firstTask()] });
+    await runtime.create(single);
+    const failed = await runtime.run(single.goalId);
+    expect(failed.status).toBe("failed");
+    expect(failed.events.at(-1)?.summary).toBe("GOAL_OPERATION_TIMEOUT");
+  });
+
   it("fails closed when a worker reports a write outside its declared scope", async () => {
     const runtime = orchestrator({
       execute: (request) =>
@@ -508,11 +526,20 @@ describe("Cycle Nine additive goal and multi-agent orchestration", () => {
     firstCreatedTask.status = "running";
     await store.save(created);
 
-    const restored = await runtime.restore(single.goalId);
+    const restarted = new GoalOrchestrator({
+      store,
+      worker: { execute: (request) => Promise.resolve(result(request)) },
+      reviewer: passingReviewer(),
+      completionEvaluator: passingCompletionEvaluator(),
+      availableCapabilities: ["research.search", "repository.edit"],
+      maximumParallelWorkers: 4,
+      now: () => new Date(createdAt),
+    });
+    const restored = await restarted.restore(single.goalId);
     expect(restored.status).toBe("paused");
     expect(restored.tasks[0]?.status).toBe("recovery-ready");
     expect(verifyGoalEventChain(restored.events)).toBe(true);
-    expect((await runtime.resume(single.goalId)).status).toBe("completed");
+    expect((await restarted.resume(single.goalId)).status).toBe("completed");
   });
 
   it("rejects credential-like context and steering before model exposure", async () => {

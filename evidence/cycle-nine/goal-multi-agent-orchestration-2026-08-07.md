@@ -47,14 +47,16 @@ The first independent review correctly blocked publication and identified six ma
 
 Six regression tests were added for these findings. The canonical task's execution-base record is being corrected in a separate one-path governance pull request; no implementation scope or authority changes with that correction.
 
+The second independent review found three further restart and timeout edge cases. The final repair uses restart-safe default event identifiers, distinguishes completion-evaluator timeout from an external Founder abort, and rejects an already-fired abort immediately. The recovery test now constructs a genuinely new orchestrator over the persisted file store, and a non-cooperative completion evaluator has a bounded failure regression.
+
 ## Verification results
 
 - `pnpm install --offline --frozen-lockfile --ignore-scripts`: exit 0; pinned tree materialized with no lockfile change.
-- Focused Cycle Nine D suite after independent-review repair: 15 tests passed.
+- Focused Cycle Nine D suite after independent-review repair: 16 tests passed.
 - Task acceptance suite before the review repair: 52 tests passed; the repaired focused suite and full suite supersede that earlier count.
 - `pnpm lint`: exit 0.
 - `pnpm typecheck`: exit 0.
-- `pnpm verify`: exit 0; formatting, lint, typecheck, 42 files and 336 tests, production build, and diagnostics passed.
+- `pnpm verify`: exit 0; formatting, lint, typecheck, 42 files and 337 tests, production build, and diagnostics passed.
 - Vite emitted only the existing non-failing large-chunk advisory.
 - `git diff --check`: exit 0.
 

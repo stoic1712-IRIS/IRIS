@@ -17,7 +17,7 @@
       "repository": "stoic1712-IRIS/IRIS",
       "branch": "iris/cycle-nine-d-goal-multi-agent-orchestration",
       "commit": null,
-      "patch_digest": "sha256:9b0928a892e7a0ca1d748aff42e8886d18b3e137bd819b9523baae61c5e5c91a"
+      "patch_digest": "sha256:11002f75f13b6d0b802e8efafba36f6465bae62f75be1474dd002103762a5d2f"
     }
   ],
   "changed_paths": [
@@ -57,11 +57,11 @@
   ],
   "evidence": [
     "Pinned dependencies materialized offline in the isolated worktree with lifecycle scripts disabled and no lockfile change.",
-    "The repaired focused Cycle Nine D acceptance file passed 15 tests after adding regressions for every independent-review finding.",
-    "Full pnpm verify passed formatting, lint, type checking, 42 files and 336 tests, production build, and diagnostics.",
+    "The repaired focused Cycle Nine D acceptance file passed 16 tests after adding regressions for every independent-review finding.",
+    "Full pnpm verify passed formatting, lint, type checking, 42 files and 337 tests, production build, and diagnostics.",
     "Serialized durable mutation, unique atomic file writes, capability and reviewer preflight, dependency evidence, measurable completion evaluation, bounded provider timeout, terminal Founder control state, write-scope enforcement, recovery, and event identity and chain integrity are covered.",
     "The canonical task execution-base binding was independently reviewed and corrected through IRIS PR #66 without changing scope or authority.",
-    "The repaired material patch excluding this self-referential handoff is bound by sha256:9b0928a892e7a0ca1d748aff42e8886d18b3e137bd819b9523baae61c5e5c91a."
+    "The final repaired material patch excluding this self-referential handoff is bound by sha256:11002f75f13b6d0b802e8efafba36f6465bae62f75be1474dd002103762a5d2f."
   ],
   "limitations": [
     "Worker and reviewer execution remain injected adapters; this tranche adds orchestration and does not deploy or activate a provider.",

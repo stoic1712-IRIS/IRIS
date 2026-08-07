@@ -24,7 +24,7 @@ A goal containing reviewer-required work also fails preflight when no independen
 
 Ready tasks may run concurrently only when their dependency and write-set contracts permit it. Each worker receives only its task definition, dependency evidence, deterministic compacted context, bounded steering messages, and an abort signal. Worker results must remain inside their declared write paths.
 
-Execution may be parallel, but all snapshot mutations are serialized per goal. Workers never load and blindly overwrite independent copies. File-store writes use unique temporary names and atomic rename. Worker, reviewer, and completion-evaluator calls have a bounded timeout, including providers that ignore abort signals.
+Execution may be parallel, but all snapshot mutations are serialized per goal. Workers never load and blindly overwrite independent copies. File-store writes use unique temporary names and atomic rename. Default event identifiers use restart-safe random UUID material. Worker, reviewer, and completion-evaluator calls have a bounded timeout, including providers that ignore abort signals. An abort observed before the timeout wrapper registers is rejected immediately rather than waiting for a second abort event that will never arrive.
 
 Reviewer-required tasks are inspected by a distinct reviewer actor. A producer cannot approve its own output. A bounded `revise` result returns the exact findings to the task as steering and retries only while the task's attempt budget remains. A passing independent review is required before downstream tasks become ready.
 
@@ -42,6 +42,6 @@ Every lifecycle event binds its sequence, timestamp, goal and optional task iden
 
 ## Verification requirements
 
-The focused acceptance suite covers capability and reviewer preflight, dependency ordering and evidence, durable parallel execution, overlapping-write denial, deterministic compaction, independent repair and self-review denial, measurable completion evaluation, pause/resume/cancel/steer, non-cooperative provider timeout, terminal cancellation, out-of-scope writes, atomic file recovery, and event identity and chain integrity. The complete repository `pnpm verify` command remains mandatory before integration.
+The focused acceptance suite covers capability and reviewer preflight, dependency ordering and evidence, durable parallel execution, overlapping-write denial, deterministic compaction, independent repair and self-review denial, measurable completion evaluation, pause/resume/cancel/steer, non-cooperative worker and completion-evaluator timeout, terminal cancellation, out-of-scope writes, a genuine new-runtime file recovery, and event identity and chain integrity. The complete repository `pnpm verify` command remains mandatory before integration.
 
 Passing tests prove this additive runtime is ready for governed integration. They do not independently prove deployment, provider authority, permanent Phase 0 graduation, or Founder handoff certification.

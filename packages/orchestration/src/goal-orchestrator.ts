@@ -453,8 +453,7 @@ export class GoalOrchestrator {
     this.#maximumParallelWorkers = Math.min(options.maximumParallelWorkers, 8);
     this.#operationTimeoutMs = operationTimeoutMs;
     this.#now = options.now;
-    let sequence = 0;
-    this.#id = options.id ?? (() => `event_goal-${String(++sequence).padStart(8, "0")}`);
+    this.#id = options.id ?? (() => `event_${randomUUID().replaceAll("-", "")}`);
   }
 
   async create(input: GoalDefinition): Promise<GoalSnapshot> {
@@ -694,6 +693,7 @@ export class GoalOrchestrator {
     if (started === undefined) return;
     const { controller, key, request } = started;
     try {
+      controller.signal.throwIfAborted();
       const result = goalWorkerResultSchema.parse(
         await this.#bounded(this.#worker.execute(request, controller.signal), controller),
       );
@@ -740,6 +740,7 @@ export class GoalOrchestrator {
       });
       if (reviewRequest === undefined) return;
       if (this.#reviewer === undefined) throw new Error("GOAL_REVIEWER_PREFLIGHT_INVARIANT");
+      controller.signal.throwIfAborted();
       const review = goalReviewResultSchema.parse(
         await this.#bounded(this.#reviewer.review(reviewRequest, controller.signal), controller),
       );
@@ -887,6 +888,7 @@ export class GoalOrchestrator {
     if (started === undefined) return await this.state(goalId);
     const { controller, key, request } = started;
     try {
+      controller.signal.throwIfAborted();
       const result = goalCompletionResultSchema.parse(
         await this.#bounded(
           this.#completionEvaluator.evaluate(request, controller.signal),
@@ -918,7 +920,11 @@ export class GoalOrchestrator {
         return structuredClone(snapshot);
       });
     } catch (error) {
-      if (controller.signal.aborted) return await this.state(goalId);
+      if (
+        controller.signal.aborted &&
+        !(error instanceof Error && error.message === "GOAL_OPERATION_TIMEOUT")
+      )
+        return await this.state(goalId);
       return await this.#failGoal(
         goalId,
         error instanceof Error ? error.message : "Goal completion evaluation failed safely.",
@@ -1037,6 +1043,7 @@ export class GoalOrchestrator {
         controller.abort();
       }, this.#operationTimeoutMs);
       controller.signal.addEventListener("abort", onAbort, { once: true });
+      if (controller.signal.aborted) onAbort();
       operation.then(
         (value) => {
           finish(() => {
