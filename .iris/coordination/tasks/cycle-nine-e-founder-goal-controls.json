@@ -6,11 +6,23 @@
   "executor": "Codex",
   "assigned_role": "producer",
   "created_at": "2026-08-07T12:10:04Z",
-  "status": "draft",
+  "status": "approved",
   "risk_class": "R3",
-  "authorization_mode": "single_action",
-  "completion_mandate_text": null,
-  "completion_actions": [],
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "Founder mandate: preserve every existing Phase 0, wave, release, and cycle capability and complete the remaining additive development cycles through governed publication and Founder handoff. This task binds the exact integrated Cycle Nine D Core contract and bundles bounded Command Center implementation, local verification and repair, exact-path staging, commit, non-force branch push, pull-request creation, independent review, merge, synchronization, remote equality, and cleanup. It does not authorize credentials, spending, deployment, public or LAN exposure, administration, force-push, history rewrite, destructive operations, or final Phase 0 graduation execution.",
+  "completion_actions": [
+    "edit",
+    "verify",
+    "repair",
+    "stage",
+    "commit",
+    "push_branch",
+    "create_pull_request",
+    "independent_review",
+    "merge",
+    "synchronize",
+    "cleanup"
+  ],
   "completion_exclusions": [
     "Core authority ownership in the Command Center",
     "Secret or credential persistence",
@@ -22,7 +34,7 @@
     {
       "repository": "stoic1712-IRIS/IRIS",
       "branch": "main",
-      "commit": "63c6319967a8785dae4c5c1a5e829e3c1d433141"
+      "commit": "3af9a173b9aba2aa8514831ee4c542770f774748"
     },
     {
       "repository": "stoic1712-IRIS/iris-founder-command-center",
@@ -79,7 +91,7 @@
     "No Command Center authority laundering",
     "Remote equality, rollback, and cleanup"
   ],
-  "publisher": null,
+  "publisher": "Codex under Founder completion mandate after exact-patch verification",
   "approval_reference": "founder-additive-development-cycle-completion-2026-08-07",
   "phase0_graduation": false
 }
