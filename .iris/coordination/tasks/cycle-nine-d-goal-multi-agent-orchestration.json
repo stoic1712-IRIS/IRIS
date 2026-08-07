@@ -1,0 +1,90 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "cycle-nine-d-goal-multi-agent-orchestration",
+  "objective": "Add the remaining additive Cycle Nine IRIS Core goal and multi-agent orchestration capabilities: persistent measurable goals, dependency-ordered task graphs, bounded parallel workers with separate compacted context, pause/resume/cancel/steer controls, independent review, overlapping-write conflict detection, durable recovery state, and hash-chained evidence without removing or weakening any existing Phase 0 or Cycle Nine machinery.",
+  "issuer": "Founder Cristofer Stoic Arellano through Codex",
+  "executor": "Codex",
+  "assigned_role": "producer",
+  "created_at": "2026-08-07T12:10:03Z",
+  "status": "approved",
+  "risk_class": "R2",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "Founder mandate: preserve all existing Phase 0 and cycle work and finish every remaining additive development cycle so IRIS can be handed off for Founder testing. This task bundles bounded implementation, verification, repair, exact-path staging, commit, non-force branch push, pull-request creation, independent review, merge, synchronization, remote equality, and cleanup. It excludes secret use, spending, deployment, public or LAN exposure, administration, force-push, history rewrite, destructive operations, and final Phase 0 graduation execution.",
+  "completion_actions": [
+    "research",
+    "edit",
+    "verify",
+    "repair",
+    "stage",
+    "commit",
+    "push_branch",
+    "create_pull_request",
+    "independent_review",
+    "merge",
+    "synchronize",
+    "cleanup"
+  ],
+  "completion_exclusions": [
+    "Deletion, renaming, reclassification, or supersession of existing work",
+    "Secret use or disclosure",
+    "Deployment or public or LAN exposure",
+    "Spending or provider-resource creation",
+    "Final Phase 0 graduation execution"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "63c6319967a8785dae4c5c1a5e829e3c1d433141"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/handoffs/cycle-nine-d-goal-multi-agent-orchestration.json",
+    "docs/specifications/cycle-nine-goal-multi-agent-orchestration.md",
+    "evidence/cycle-nine/goal-multi-agent-orchestration-2026-08-07.md",
+    "packages/orchestration/src/goal-orchestrator.ts",
+    "packages/orchestration/src/index.ts",
+    "tests/cycle-nine-goal-multi-agent-orchestration.test.ts"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    ".claude/**",
+    ".iris/coordination/tasks/**",
+    "package.json",
+    "pnpm-lock.yaml",
+    "C:/Projects/STOIC-IRIS-source-library/**"
+  ],
+  "permitted_actions": [
+    "Compose existing planning, worker, coordination, audit, and execution contracts without weakening them",
+    "Use injected hermetic worker, reviewer, clock, and durable-store adapters",
+    "Run independent worker tasks concurrently only when their declared write sets do not overlap",
+    "Complete the ordinary governed repository lifecycle"
+  ],
+  "prohibited_actions": [
+    "Allow a worker to self-approve or widen authority",
+    "Run overlapping writers concurrently",
+    "Persist raw secrets or unbounded model context",
+    "Remove or weaken existing Phase 0 or Cycle Nine machinery",
+    "Deploy, spend, administer, force-push, rewrite history, or execute final graduation"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run tests/cycle-nine-goal-multi-agent-orchestration.test.ts tests/cycle-eight-executable-worker-runtime.test.ts tests/cycle-nine-phase-zero-graduation-readiness.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "Persistent goal and dependency graph recovery",
+    "Parallelism only for non-overlapping write sets",
+    "Separate compacted worker contexts and steering",
+    "Pause, resume, cancellation, reviewer separation, and failure recovery",
+    "Exact paths, checks, remote equality, rollback, and cleanup"
+  ],
+  "publisher": "Codex under Founder completion mandate after exact-patch verification",
+  "approval_reference": "founder-additive-post-phase-zero-cycle-completion-2026-08-07",
+  "phase0_graduation": false
+}
