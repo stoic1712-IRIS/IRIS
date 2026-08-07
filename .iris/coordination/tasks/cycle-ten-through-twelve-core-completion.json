@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "cycle-ten-through-twelve-core-completion",
+  "objective": "Complete the remaining additive IRIS Core capability program without removing or reclassifying earlier work: add a restricted Founder Full access session contract over registered ordinary capabilities, compose the complete governed software-delivery lifecycle, and expose a resumable operator-parity runtime that stops at protected boundaries and is ready for Founder handoff testing.",
+  "issuer": "Founder Cristofer Stoic Arellano through Codex",
+  "executor": "Codex",
+  "assigned_role": "producer",
+  "created_at": "2026-08-07T14:08:00Z",
+  "status": "approved",
+  "risk_class": "R3",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "Founder mandate: preserve every existing Phase 0, wave, release, and additive-cycle capability and finish all remaining additive cycles so IRIS can be handed off for Founder testing. This task bundles bounded implementation, verification, repair, exact-path staging, commit, non-force branch push, pull-request creation, independent review, merge, synchronization, remote equality, and cleanup. It does not authorize credentials, secret disclosure, spending, deployment, public or LAN exposure, repository or account administration, destructive operations, force-push, history rewrite, or execution of the final Phase 0 graduation self-upgrade.",
+  "completion_actions": [
+    "research",
+    "edit",
+    "verify",
+    "repair",
+    "stage",
+    "commit",
+    "push_branch",
+    "create_pull_request",
+    "independent_review",
+    "merge",
+    "synchronize",
+    "cleanup"
+  ],
+  "completion_exclusions": [
+    "Credentials or secret disclosure",
+    "Spending or paid provider resources",
+    "Deployment or public or LAN exposure",
+    "Repository or account administration",
+    "Destructive operations, force-push, or history rewrite",
+    "Final Phase 0 graduation execution"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "3ad3e2a0df7d25448edd9d54d7869b0634ec8160"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "main",
+      "commit": "8314f596250562d47a11cdde4aadaaaeb7bc9d23"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/handoffs/cycle-ten-through-twelve-core-completion.json",
+    "docs/specifications/cycle-ten-founder-full-access-profile.md",
+    "docs/specifications/cycle-eleven-complete-software-delivery.md",
+    "docs/specifications/cycle-twelve-operator-parity-runtime.md",
+    "evidence/cycle-twelve/core-completion-2026-08-07.md",
+    "packages/development/src/complete-software-delivery.ts",
+    "packages/development/src/index.ts",
+    "packages/development/src/operator-parity-runtime.ts",
+    "packages/kernel/src/founder-access-profile.ts",
+    "packages/kernel/src/index.ts",
+    "tests/cycle-eleven-complete-software-delivery.test.ts",
+    "tests/cycle-ten-founder-full-access-profile.test.ts",
+    "tests/cycle-twelve-operator-parity-runtime.test.ts"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    ".claude/**",
+    ".iris/coordination/tasks/**",
+    "package.json",
+    "pnpm-lock.yaml",
+    "C:/Projects/STOIC-IRIS-source-library/**"
+  ],
+  "permitted_actions": [
+    "Compose existing approved Core contracts without widening them",
+    "Create explicit authenticated time-bounded revocable ordinary-capability access profiles",
+    "Compose disposable implementation, verification, review, repair, repository delivery, CI observation, remote equality, and cleanup through injected adapters",
+    "Preserve resumable evidence and stop before every protected action",
+    "Complete the ordinary repository lifecycle for this task"
+  ],
+  "prohibited_actions": [
+    "Treat Full access as unrestricted autonomy",
+    "Allow workers to self-approve, expand scope, or handle raw secrets",
+    "Perform live provider effects during verification",
+    "Claim Phase 0 graduation from fixtures or this additive completion",
+    "Deploy, spend, administer, force-push, rewrite history, or destroy canonical evidence"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run tests/cycle-ten-founder-full-access-profile.test.ts tests/cycle-eleven-complete-software-delivery.test.ts tests/cycle-twelve-operator-parity-runtime.test.ts tests/cycle-eight-executable-worker-runtime.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "Immutable restricted Full access grant and revocation tests",
+    "End-to-end ordinary delivery state-machine tests",
+    "Independent review, repair, CI, remote-equality, rollback, and cleanup tests",
+    "Resume, cancellation, evidence-chain, and protected-stop tests",
+    "No regression of prior Phase 0, wave, release, or additive-cycle artifacts"
+  ],
+  "publisher": "Codex under Founder completion mandate after independent exact-patch review",
+  "approval_reference": "founder-finish-all-additive-cycles-2026-08-07",
+  "phase0_graduation": false
+}
