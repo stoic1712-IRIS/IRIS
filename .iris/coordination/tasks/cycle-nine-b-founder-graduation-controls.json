@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "task_id": "cycle-nine-b-founder-graduation-controls",
-  "objective": "Complete the Founder Command Center Cycle Nine B control surface against canonical IRIS Core revision cbcd369025d12011aae8721d7d485365a176024e: render only strictly validated Core-owned Phase 0 graduation readiness state, present exact initial and merge approval statements, forward complete authenticated approval envelopes only to a Core-owned loopback endpoint, fail closed when that endpoint or contract is unavailable, and never invent, persist, consume, execute, or declare graduation state in the Command Center.",
+  "objective": "Complete the Founder Command Center Cycle Nine B control surface against canonical IRIS Core revision 1d39d633343378b685748a8935af2d1d2740d405: render only strictly validated Core-owned Phase 0 graduation readiness state, present exact initial and merge approval statements, forward complete authenticated approval envelopes only to the Core-owned loopback transport, fail closed when that endpoint, authoritative store, or contract is unavailable, and never invent, persist, consume, execute, or declare graduation state in the Command Center.",
   "issuer": "Founder Cristofer Stoic Arellano",
   "executor": "Claude",
   "assigned_role": "producer",
@@ -35,12 +35,12 @@
     {
       "repository": "stoic1712-IRIS/IRIS",
       "branch": "main",
-      "commit": "cbcd369025d12011aae8721d7d485365a176024e"
+      "commit": "1d39d633343378b685748a8935af2d1d2740d405"
     },
     {
       "repository": "stoic1712-IRIS/iris-founder-command-center",
       "branch": "main",
-      "commit": "f0a12b26a7271ed8cb2d2f1b08719b90c397628a"
+      "commit": "924490d2e591eafae1af9f24f6234738b4d96827"
     }
   ],
   "allowed_paths": [
@@ -65,7 +65,7 @@
     "C:/Projects/STOIC-IRIS/**"
   ],
   "permitted_actions": [
-    "Read canonical Core revision cbcd369025d12011aae8721d7d485365a176024e, the Cycle Nine A task, handoff, specification, evidence, controller, read model, AGENTS.md, CLAUDE.md, and Worker Reasoning Framework version 1.0.0",
+    "Read canonical Core revision 1d39d633343378b685748a8935af2d1d2740d405, the Cycle Nine A and C tasks, specifications, evidence, controller, transport, read model, AGENTS.md, CLAUDE.md, and Worker Reasoning Framework version 1.0.0",
     "Repair only the exact allowed Command Center paths in the existing isolated Cycle Nine B worktree",
     "Use the exact frozen lockfile with lifecycle scripts disabled to materialize already pinned dependencies only if the current isolated worktree still lacks them",
     "Run focused and full local verification and repair bounded failures",
@@ -93,10 +93,10 @@
   "required_evidence": [
     "All six foundation-source hashes verified against SOURCE-MANIFEST.md",
     "Exact Core and Command Center base revisions and exact changed-path list",
-    "Strict versioned contract validation derived from canonical Core cbcd369025d12011aae8721d7d485365a176024e with no duplicated divergent stage list",
-    "All stale STOIC-IRIS-cycle-six test roots removed; tests use canonical Core cbcd369025d12011aae8721d7d485365a176024e or a hermetic fixture generated from that exact contract and exercise valid presented, approval-forwarding, and concluded paths",
+    "Strict versioned contract validation derived from canonical Core 1d39d633343378b685748a8935af2d1d2740d405 with the exact exported stage order, hash-chain verification, semantic stage progression, and complete-success evidence invariants",
+    "All stale STOIC-IRIS-cycle-six test roots removed; tests use canonical Core 1d39d633343378b685748a8935af2d1d2740d405 or a hermetic fixture generated from that exact contract and exercise valid idle, presented, complete approval-forwarding, concluded, and unavailable paths",
     "Unavailable or invalid state for absent endpoint, EACCES, EIO, malformed JSON, impossible success, contract drift, expiry, future timestamps, replay, and semantic cross-binding failures",
-    "Full initial and merge approval envelopes forwarded only through authenticated paired loopback and CSRF protections; Core remains the durable consumption authority",
+    "Full initial and merge approval envelopes include Core approval IDs and merge delivery, review, and pull-request bindings; the Core request HMAC binds the exact body digest through separate read and approval scopes; Core remains the durable consumption authority",
     "No execute or mutation route and no false Phase 0 completion claim",
     "Focused and full verification results, frozen material digest, rollback instructions, and independent reviewer PASS before publication"
   ],
