@@ -117,6 +117,13 @@ export const researchSessionStateSchema = z
     plan: researchPlanSchema,
     executedQueries: z.array(z.string().min(1).max(500)).max(25),
     sources: z.array(researchSourceSchema).max(100),
+    /**
+     * Results examined during isolation, including those later dropped for
+     * quarantine or a below-threshold score. Serialized because quarantined
+     * results are not retained as sources, so without it no sound bound on
+     * `quarantined` can be checked on resume.
+     */
+    observedResults: z.number().int().nonnegative(),
     quarantined: z.number().int().nonnegative(),
     cancelled: z.boolean(),
   })
@@ -433,6 +440,7 @@ export class ResearchSession {
   readonly #plan: ResearchPlan;
   readonly #executedQueries: string[];
   readonly #sources: ResearchSource[];
+  #observedResults: number;
   #quarantined: number;
   #cancelled: boolean;
 
@@ -442,6 +450,7 @@ export class ResearchSession {
       this.#plan = declared;
       this.#executedQueries = [];
       this.#sources = [];
+      this.#observedResults = 0;
       this.#quarantined = 0;
       this.#cancelled = false;
       return;
@@ -452,18 +461,24 @@ export class ResearchSession {
     // wider budget, silently granting queries the Founder never approved.
     if (stableJson(state.plan) !== stableJson(declared))
       throw new ResearchResumePlanMismatchError();
-    // Malformed state must not widen bounds either.
+    // Malformed state must not widen bounds either. Every check below is a
+    // property that `state()` guarantees by construction, so any state this
+    // class emits resumes exactly. Quarantined results are dropped rather than
+    // retained as sources, so `observedResults` — not the source count — is the
+    // only sound bound on `quarantined`.
     if (
       state.executedQueries.length > state.plan.maximumQueries ||
       state.sources.length > state.plan.maximumSources ||
       new Set(state.executedQueries).size !== state.executedQueries.length ||
       new Set(state.sources.map((source) => source.canonicalUrl)).size !== state.sources.length ||
-      state.quarantined > state.sources.length + state.executedQueries.length
+      state.quarantined > state.observedResults ||
+      state.sources.length > state.observedResults
     )
       throw new ResearchResumeStateInvalidError();
     this.#plan = state.plan;
     this.#executedQueries = [...state.executedQueries];
     this.#sources = [...state.sources];
+    this.#observedResults = state.observedResults;
     this.#quarantined = state.quarantined;
     this.#cancelled = state.cancelled;
   }
@@ -490,6 +505,7 @@ export class ResearchSession {
       plan: this.#plan,
       executedQueries: [...this.#executedQueries],
       sources: structuredClone(this.#sources),
+      observedResults: this.#observedResults,
       quarantined: this.#quarantined,
       cancelled: this.#cancelled,
     });
@@ -518,10 +534,17 @@ export class ResearchSession {
     const normalized = normalizeQuery(input.query);
     if (this.#executedQueries.includes(normalized)) return [];
     if (this.remainingQueries <= 0) throw new ResearchBudgetExceededError();
-    this.#executedQueries.push(normalized);
+
+    // The complete bounded batch is resolved into locals first. Nothing on the
+    // session is mutated until the whole batch succeeds, so a refused result —
+    // a non-network scheme, or malformed input — leaves sources, quarantine
+    // count, executed queries, and remaining budget exactly as they were.
     const accepted: ResearchSource[] = [];
+    const seen = new Set(this.#sources.map((source) => source.canonicalUrl));
+    let quarantinedDelta = 0;
+    let observedDelta = 0;
     for (const candidate of input.results) {
-      if (this.#sources.length >= this.#plan.maximumSources) break;
+      if (this.#sources.length + accepted.length >= this.#plan.maximumSources) break;
       const result = searchResultSchema.parse(candidate);
       let canonicalUrl: string;
       try {
@@ -532,14 +555,15 @@ export class ResearchSession {
         if (error instanceof UnsupportedSourceSchemeError) throw error;
         continue;
       }
-      if (this.#sources.some((source) => source.canonicalUrl === canonicalUrl)) continue;
+      if (seen.has(canonicalUrl)) continue;
+      observedDelta += 1;
       const isolated = isolateContent({
         origin: "search",
         sourceUrl: canonicalUrl,
         retrievedAt: input.retrievedAt,
         text: `${result.title}\n${result.snippet}`,
       });
-      if (isolated.quarantined) this.#quarantined += 1;
+      if (isolated.quarantined) quarantinedDelta += 1;
       const quality = scoreSource({ url: canonicalUrl, origin: "search", isolated });
       if (quality.score < this.#plan.minimumSourceScore) continue;
       const source = researchSourceSchema.parse({
@@ -552,9 +576,15 @@ export class ResearchSession {
         quality,
         isolated,
       });
-      this.#sources.push(source);
+      seen.add(canonicalUrl);
       accepted.push(source);
     }
+
+    // Commit point. Every mutation below is total.
+    this.#executedQueries.push(normalized);
+    this.#sources.push(...accepted);
+    this.#quarantined += quarantinedDelta;
+    this.#observedResults += observedDelta;
     return structuredClone(accepted);
   }
 

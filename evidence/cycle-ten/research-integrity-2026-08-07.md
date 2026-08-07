@@ -2,10 +2,44 @@
 
 ## Status
 
-Implemented, independently reviewed, repaired, and re-verified by the producer. Codex returned
-CHANGES REQUIRED on head `58baeec8e4bdb6a65ae5ef1c6ca197d7ab26a259` with three blocking findings; all
-three are repaired below. A further independent Codex review of the new exact head is required before
-merge. Claude cannot approve its own material output.
+Implemented, independently reviewed twice, repaired twice, and re-verified by the producer.
+
+- Codex review of head `58baeec8e4bdb6a65ae5ef1c6ca197d7ab26a259`: CHANGES REQUIRED, three blocking
+  findings. Repaired in `3c58b29d64047465b60a1938fc3b5fb5a9d5eecb`.
+- Codex re-review of `3c58b29d64047465b60a1938fc3b5fb5a9d5eecb`: CHANGES REQUIRED, two blocking
+  follow-ups. Repaired in this revision.
+
+A further independent Codex review of the new exact head is required before merge, including the final
+full `pnpm verify` under WSL where symlink creation is supported. Claude cannot approve its own material
+output.
+
+## Second independent review repairs
+
+### 4. Rejected batches were not atomic (blocking)
+
+`recordSearch` pushed the normalized query onto `executedQueries` and then mutated `sources` and the
+quarantine count while iterating. Throwing `RESEARCH_SOURCE_SCHEME_DENIED` part-way through left the
+earlier valid sources retained and the query budget spent, contradicting the specification's claim that
+the whole batch is refused.
+
+Repair: the complete bounded batch is resolved into locals, with a single commit point after it
+succeeds. A refused batch leaves `sources`, quarantine count, observation count, `executedQueries`, and
+remaining budget exactly unchanged, so the caller can retry a corrected batch against the same budget.
+Regression tests prove full-state equality before and after a refused mixed batch, both on an empty
+session and on top of previously accepted state.
+
+### 5. Valid emitted state could reject its own resume (blocking)
+
+The invariant `quarantined > sources.length + executedQueries.length` was unsound. Quarantined results
+are dropped rather than retained as sources, so one query returning five quarantined results legitimately
+produces `{quarantined: 5, sources: 0, executedQueries: 1}` — which `resume()` then rejected with
+`RESEARCH_RESUME_STATE_INVALID`. A session could be locked out of its own serialized state.
+
+Repair: `observedResults` is now serialized, counting every result examined during isolation including
+those later dropped. The invariant becomes `quarantined <= observedResults` and
+`sources.length <= observedResults`, both of which `state()` guarantees by construction. Every state the
+session emits now resumes exactly. Regression tests cover the exact five-quarantined-zero-source case
+with full state equality after resume, and a round-trip over active and cancelled shapes.
 
 ## Independent review repairs
 
@@ -82,12 +116,12 @@ the work. The library was read only and never staged.
 
 Commands run in the isolated worktree with Node `24.19.0` and pnpm `11.20.0`.
 
-Post-repair run:
+Second-repair run:
 
 | Command | Exit |
 | --- | --- |
 | `pnpm install --offline --frozen-lockfile --ignore-scripts` | **0** — see limitation 1 |
-| `pnpm exec vitest run tests/cycle-ten-research-integrity.test.ts tests/cycle-six-connected-tool-providers.test.ts tests/cycle-six-governed-tool-gateway.test.ts` | **0** — 48 passed |
+| `pnpm exec vitest run tests/cycle-ten-research-integrity.test.ts tests/cycle-six-connected-tool-providers.test.ts tests/cycle-six-governed-tool-gateway.test.ts` | **0** — 52 passed |
 | `pnpm format:check` | 0 |
 | `pnpm lint` | 0 |
 | `pnpm typecheck` | 0 |
@@ -115,7 +149,9 @@ The Cycle Six governed-tool-gateway and connected-provider suites are unchanged 
    treated as precedent. This repair used **`--offline` only**, which now exits 0. `pnpm-lock.yaml`
    remains byte-identical (`sha256:c439ca27…03b9c4`) across both passes, and no dependency version or
    lifecycle script was ever changed or run.
-2. **One pre-existing full-suite failure, unrelated to Cycle Ten.** Unchanged by the repair.
+2. **One pre-existing full-suite failure, unrelated to Cycle Ten.** Unchanged by either repair. Codex
+   will run the final full `pnpm verify` under WSL, where symlink creation is supported and this failure
+   is expected to disappear.
    `tests/cycle-eight-executable-worker-runtime.test.ts > denies a tracked symlink without modifying its
    external target` fails with `EPERM: operation not permitted, symlink` at its own setup (line 464).
    This Windows session cannot create symlinks at all: Developer Mode is off and the shell is not

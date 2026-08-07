@@ -39,14 +39,29 @@ and is refused fail-closed with `RESEARCH_SOURCE_SCHEME_DENIED`. `scoreSource` i
 `score: 0`, tier `rejected` for such a URL, and `recordSearch` refuses the whole batch rather than
 quietly dropping the entry, because a non-network scheme is an attack surface, not a low-quality result.
 
+### Batch atomicity
+
+`recordSearch` resolves the complete bounded batch into locals before mutating anything. A refused
+result — an unsupported scheme, or malformed input — leaves `sources`, the quarantine count, the
+observation count, `executedQueries`, and the remaining budget exactly as they were. There is a single
+commit point after the whole batch succeeds, so a partially-consumed batch is not a reachable state and
+a caller can safely retry the corrected batch against the same budget.
+
 ### Resumption binding
 
 A resumed session binds to its **own serialized plan**. Supplying a different plan alongside a resume
 state raises `RESEARCH_RESUME_PLAN_MISMATCH`; accepting the supplied plan would let an exhausted state
 be reopened under a wider budget, silently granting queries the Founder never approved. Resume state is
 additionally validated against its plan — executed queries within budget, sources within the ceiling, no
-duplicate queries or canonical URLs, and a quarantine count that cannot exceed observed items — raising
-`RESEARCH_RESUME_STATE_INVALID` otherwise.
+duplicate queries or canonical URLs — raising `RESEARCH_RESUME_STATE_INVALID` otherwise.
+
+**Every state `state()` emits resumes exactly.** Each invariant is a property the session guarantees by
+construction, so a legitimate session can never be locked out of its own resume. This requires
+serializing `observedResults`: quarantined results are dropped rather than retained as sources, so a
+session can legitimately hold five quarantined results and zero sources. Bounding `quarantined` by the
+source count would reject that real state. `observedResults` counts every result examined during
+isolation, including those later dropped, and is the only sound bound on both `quarantined` and the
+retained source count.
 
 ## Untrusted content isolation
 
