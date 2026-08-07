@@ -1,0 +1,80 @@
+{
+  "schema_version": "1.0.0",
+  "handoff_id": "cycle-ten-d-live-workstation-providers",
+  "task_id": "cycle-ten-d-live-workstation-providers",
+  "producer": "Codex under Founder completion mandate",
+  "recipient": "Founder and canonical main publication",
+  "created_at": "2026-08-07T10:35:00.000Z",
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "e3a21db158df831224978de5e9fb3c9e9efc11aa"
+    }
+  ],
+  "result_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "iris/cycle-ten-d-live-workstation-providers",
+      "commit": null,
+      "patch_digest": "sha256:724b3a02403a2cc20092f6009e59894dcfc18eaaff95f6acde4d3a43e77f578d"
+    }
+  ],
+  "changed_paths": [
+    ".iris/coordination/handoffs/cycle-ten-d-live-workstation-providers.json",
+    "docs/architecture/decisions/ADR-007-local-workstation-capability-providers.md",
+    "docs/registries/dependency-attribution-registry.md",
+    "docs/registries/technology-and-platform-registry.md",
+    "docs/specifications/cycle-ten-live-workstation-providers.md",
+    "evidence/cycle-ten/live-workstation-providers-2026-08-07.md",
+    "packages/tool-gateway/src/index.ts",
+    "packages/tool-gateway/src/live-local-workstation-provider.ts",
+    "tests/cycle-ten-live-workstation-provider.test.ts"
+  ],
+  "commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm install --offline --frozen-lockfile --ignore-scripts",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run tests/cycle-ten-live-workstation-provider.test.ts tests/cycle-ten-local-workstation-provider.test.ts",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm format:check && pnpm lint && pnpm typecheck",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify",
+      "exit_code": 0
+    }
+  ],
+  "evidence": [
+    "All six foundation-source SHA-256 values matched SOURCE-MANIFEST.md before material work; the source library remained read only.",
+    "Execution used isolated branch iris/cycle-ten-d-live-workstation-providers at task-issuance descendant 281ae576201b8ce970a079e259a448be455e40f8 and incorporated the semantic-preserving task-format correction 0dbf48fa242a68dab2281a645204ab0f5f159620.",
+    "Offline frozen materialization reused all 244 packages with zero downloads and no lifecycle scripts; pnpm-lock.yaml remained unchanged.",
+    "Focused acceptance passed 33 tests across the existing Cycle Ten C contracts and the six new Cycle Ten D tests.",
+    "Full pnpm verify passed format, lint, type checking, all 306 tests, build, and diagnostics under WSL.",
+    "The screenshot adapter masks sensitive controls, zeroes the in-memory PNG buffer after hashing, and returns metadata only; the credential registry has no enumeration or resolution method; the notification adapter is inert until explicitly invoked, accepts an injected runner, and never propagates provider stderr into an IRIS error or audit record.",
+    "No governed tool grant widened and no live provider effect occurred."
+  ],
+  "limitations": [
+    "The screenshot adapter supports an already-governed Playwright browser page only, not OS windows or the full desktop.",
+    "Credential resolution remains unavailable; only exact opaque reference registration, lookup, and removal exist.",
+    "Founder-facing activation is intentionally deferred to the separately bound Cycle Ten E task.",
+    "Verification used hermetic adapters and did not invoke Playwright, Windows Credential Manager, PowerShell notifications, a network provider, or a desktop API."
+  ],
+  "rollback": "Before merge, close the pull request, delete the feature branch without force, remove C:\\Projects\\STOIC-IRIS-cycle-ten-d, and prune worktrees. After merge, history-preservingly revert the Cycle Ten D merge commit. The adapter module and export are additive and no data or provider resource requires migration or destructive cleanup.",
+  "protected_actions_remaining": [
+    "Commit the exact staged paths",
+    "Push the feature branch without force",
+    "Create and verify one pull request",
+    "Merge after the exact patch and provider state pass",
+    "Synchronize main and remove the feature worktree and branch"
+  ],
+  "ready_for_review": true
+}
