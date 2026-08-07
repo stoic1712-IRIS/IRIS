@@ -1,0 +1,28 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "cycle-twelve-a-operator-parity-runtime",
+  "objective": "Implement the IRIS Core operator-parity runtime that turns one bounded Founder objective into a resumable plan, selects approved models and tools, delegates governed workers, supervises budgets and cancellation, verifies outputs, repairs within authority, preserves evidence, and stops at protected approval boundaries without granting unrestricted autonomy.",
+  "issuer": "Founder Cristofer Stoic Arellano through Codex",
+  "executor": "Codex",
+  "assigned_role": "producer",
+  "created_at": "2026-08-07T12:00:04Z",
+  "status": "approved",
+  "risk_class": "R2",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "Founder mandate: complete the remaining cycles directly with Codex so IRIS can take over ordinary complex work under supervision. This task bundles bounded implementation, verification, repair, exact staging, commit, non-force push, pull request, exact-patch review, merge, synchronization, remote equality, and cleanup. It excludes protected live effects not independently authorized, deployment, public or LAN exposure, spending, credential use, administration, force-push, history rewrite, and the final Phase 0 self-upgrade itself.",
+  "completion_actions": ["research", "edit", "verify", "repair", "stage", "commit", "push_branch", "create_pull_request", "independent_review", "merge", "synchronize", "cleanup"],
+  "completion_exclusions": ["Unrestricted autonomy", "Unapproved protected effects", "Deployment", "Final Phase 0 graduation execution"],
+  "base_revisions": [{"repository": "stoic1712-IRIS/IRIS", "branch": "main", "commit": "e3a21db158df831224978de5e9fb3c9e9efc11aa"}],
+  "allowed_paths": [".iris/coordination/handoffs/cycle-twelve-a-operator-parity-runtime.json", "docs/specifications/cycle-twelve-operator-parity-runtime.md", "evidence/cycle-twelve/operator-parity-runtime-2026-08-07.md", "packages/development/src/index.ts", "packages/development/src/operator-parity-runtime.ts", "tests/cycle-twelve-operator-parity-runtime.test.ts"],
+  "excluded_paths": [".github/**", ".claude/**", ".iris/coordination/tasks/**", "package.json", "pnpm-lock.yaml", "C:/Projects/STOIC-IRIS-source-library/**"],
+  "permitted_actions": ["Compose existing Core contracts without widening them", "Use deterministic injected model, tool, worker, repository, and evidence adapters", "Verify resumability, repair, protected stops, and cleanup", "Complete ordinary repository delivery"],
+  "prohibited_actions": ["Bypass an existing approval or provider contract", "Allow workers to self-approve or expand scope", "Claim final parity from fixtures alone", "Deploy, spend, use credentials, or execute final graduation"],
+  "acceptance_commands": [
+    {"repository": "stoic1712-IRIS/IRIS", "command": "pnpm exec vitest run tests/cycle-twelve-operator-parity-runtime.test.ts tests/cycle-eight-executable-worker-runtime.test.ts tests/cycle-nine-phase-zero-graduation-readiness.test.ts"},
+    {"repository": "stoic1712-IRIS/IRIS", "command": "pnpm verify"}
+  ],
+  "required_evidence": ["Bounded plan and immutable authority tests", "Model and tool routing without scope widening", "Resume, cancellation, repair, evidence, and cleanup tests", "Protected-action stop and graduation boundary tests", "Remote equality, rollback, and cleanup"],
+  "publisher": "Codex under Founder completion mandate after exact-patch verification",
+  "approval_reference": "founder-cycles-ten-through-twelve-completion-2026-08-07",
+  "phase0_graduation": false
+}

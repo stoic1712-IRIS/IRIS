@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "cycle-ten-e-founder-workstation-controls",
+  "objective": "Complete the Founder Command Center tranche of Cycle Ten by adding authenticated loopback-only controls and truthful status for the Core-owned screenshot, credential-reference, and local-notification capabilities while keeping every protected effect disabled until an exact one-shot Founder authorization is supplied.",
+  "issuer": "Founder Cristofer Stoic Arellano through Codex",
+  "executor": "Codex",
+  "assigned_role": "producer",
+  "created_at": "2026-08-07T12:00:01Z",
+  "status": "approved",
+  "risk_class": "R2",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "Founder mandate: go back to Codex doing everything, then do it for all remaining Cycles Ten through Twelve. This task bundles implementation, verification, repair, exact staging, commit, non-force push, pull request, exact-patch review, merge after a pass, synchronization, remote equality, and cleanup. It excludes live protected effects, credentials, deployment, exposure, spending, provider resources, administration, force-push, history rewrite, and final graduation.",
+  "completion_actions": ["research", "edit", "verify", "repair", "stage", "commit", "push_branch", "create_pull_request", "independent_review", "merge", "synchronize", "cleanup"],
+  "completion_exclusions": ["Live protected provider effects", "Credential values", "Desktop control", "Deployment or final Phase 0 graduation"],
+  "base_revisions": [
+    {"repository": "stoic1712-IRIS/IRIS", "branch": "main", "commit": "e3a21db158df831224978de5e9fb3c9e9efc11aa"},
+    {"repository": "stoic1712-IRIS/iris-founder-command-center", "branch": "main", "commit": "97f3bdb79ce7d7d503eba3d3570b04c8309a1785"}
+  ],
+  "allowed_paths": ["README.md", "scripts/local-gateway.mjs", "src/App.tsx", "src/styles.css", "src/views/Workstation.tsx", "src/workstation-client.ts", "tests/local-gateway.test.ts", "tests/workstation-client.test.ts", "tests/workstation.test.tsx"],
+  "excluded_paths": [".github/**", ".claude/**", ".iris/**", "package.json", "pnpm-lock.yaml", "C:/Projects/STOIC-IRIS/**", "C:/Projects/STOIC-IRIS-source-library/**"],
+  "permitted_actions": ["Consume the exact Core Cycle Ten D contract through the existing IRIS_ROOT boundary", "Add authenticated same-origin CSRF-protected loopback routes", "Render metadata-only status and exact approval statements", "Verify with hermetic fixtures"],
+  "prohibited_actions": ["Copy or replace Core authority", "Expose secret or screenshot bytes", "Perform live provider effects in tests", "Grant desktop control, repository mutation, deployment, spending, or final graduation"],
+  "acceptance_commands": [
+    {"repository": "stoic1712-IRIS/iris-founder-command-center", "command": "pnpm exec vitest run tests/workstation-client.test.ts tests/workstation.test.tsx tests/local-gateway.test.ts"},
+    {"repository": "stoic1712-IRIS/iris-founder-command-center", "command": "pnpm verify"}
+  ],
+  "required_evidence": ["Exact Core and Command Center bases", "Authentication, CSRF, expiry, replay, cancellation, and fail-closed tests", "No credential value or image bytes in routes or UI", "Exact paths, exit codes, remote equality, rollback, and cleanup"],
+  "publisher": "Codex under Founder completion mandate after exact-patch verification",
+  "approval_reference": "founder-cycles-ten-through-twelve-completion-2026-08-07",
+  "phase0_graduation": false
+}
