@@ -1,0 +1,84 @@
+{
+  "schema_version": "1.0.0",
+  "handoff_id": "cycle-eleven-a-governed-desktop-control",
+  "task_id": "cycle-eleven-a-governed-desktop-control",
+  "producer": "Codex under Founder completion mandate",
+  "recipient": "Founder and canonical main publication",
+  "created_at": "2026-08-07T11:30:00.000Z",
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "ad02d192c97efc5436f46fadb0f91f1de1158e94"
+    }
+  ],
+  "result_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "iris/cycle-eleven-a-governed-desktop-control",
+      "commit": null,
+      "patch_digest": "sha256:32c71b7b7cc28ccde48dbb3baedbe284036dcfaebd2fc3f2ff55597ccaa6db5d"
+    }
+  ],
+  "changed_paths": [
+    ".iris/coordination/handoffs/cycle-eleven-a-governed-desktop-control.json",
+    "docs/architecture/decisions/ADR-008-governed-desktop-control.md",
+    "docs/governance/security-and-secrets-policy.md",
+    "docs/registries/dependency-attribution-registry.md",
+    "docs/registries/technology-and-platform-registry.md",
+    "docs/specifications/cycle-eleven-governed-desktop-control.md",
+    "evidence/cycle-eleven/governed-desktop-control-2026-08-07.md",
+    "packages/tool-gateway/src/desktop-control-provider.ts",
+    "packages/tool-gateway/src/index.ts",
+    "tests/cycle-eleven-governed-desktop-control.test.ts"
+  ],
+  "commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm install --offline --frozen-lockfile --ignore-scripts",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run tests/cycle-eleven-governed-desktop-control.test.ts tests/cycle-ten-local-workstation-provider.test.ts",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm typecheck",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm lint",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify",
+      "exit_code": 0
+    }
+  ],
+  "evidence": [
+    "All six foundation-source SHA-256 values matched SOURCE-MANIFEST.md before material work; the source library remained read only and outside Git.",
+    "The isolated branch started clean at task-activation revision ad02d192c97efc5436f46fadb0f91f1de1158e94, equal to origin/main at implementation start.",
+    "The implementation payload digest excluding this self-referential handoff is sha256:32c71b7b7cc28ccde48dbb3baedbe284036dcfaebd2fc3f2ff55597ccaa6db5d.",
+    "Focused acceptance passed 42 tests: 15 Cycle Eleven governed desktop-control tests and all 27 unchanged Cycle Ten local-workstation tests.",
+    "Full pnpm verify passed formatting, lint, type checking, all 321 tests, build, and diagnostics under the repository-pinned WSL Node 24.19.0 and pnpm 11.20.0 toolchain.",
+    "Offline frozen dependency materialization reused 244 cached packages with zero downloads, disabled lifecycle scripts, and no lockfile or dependency change.",
+    "The contract proves exact coordinate-free application/window scope, metadata-only preview, digest-bound one-shot Founder approval, default disablement, immediate cancellation and hard timeout against non-cooperative adapters, bounded recovery, replay denial, required hash-chained audit, and metadata-only receipts.",
+    "Only injected hermetic adapters were invoked. No live desktop, application, window, operating-system API, keyboard, pointer, clipboard, credential, browser, network, provider resource, spending, deployment, port, or Phase 0 effect occurred."
+  ],
+  "limitations": [
+    "Cycle Eleven A supplies the Core contract and an inert injected adapter only; no live Windows UI Automation runner is included or authorized.",
+    "Founder-facing preview controls remain Cycle Eleven B and must bind the exact merged Cycle Eleven A Core revision.",
+    "The first fake-timer timeout test attached its rejection assertion too late and produced an unhandled-rejection report despite the expected timeout; the test harness was corrected before final verification, with no production behavior change."
+  ],
+  "rollback": "Before merge, close the pull request, delete branch iris/cycle-eleven-a-governed-desktop-control without force, remove the isolated worktree, and prune worktrees. After merge, history-preservingly revert the Cycle Eleven A merge commit. The module and export are additive; no live state, provider resource, secret, persisted artifact, or data migration requires destructive cleanup.",
+  "protected_actions_remaining": [
+    "Exact-path commit and non-force feature-branch push",
+    "Pull-request creation and exact-patch verification",
+    "Merge after verification, provider equality, synchronization, and safe worktree cleanup"
+  ],
+  "ready_for_review": true
+}
