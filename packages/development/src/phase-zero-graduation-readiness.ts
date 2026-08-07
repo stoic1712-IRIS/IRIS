@@ -408,20 +408,22 @@ export const phaseZeroProviderInspectionSchema = z.strictObject({
 });
 export type PhaseZeroProviderInspection = z.infer<typeof phaseZeroProviderInspectionSchema>;
 
-export type PhaseZeroGraduationStage =
-  | "approval"
-  | "preflight"
-  | "candidate"
-  | "independent-review"
-  | "delivery"
-  | "merge-approval"
-  | "merge"
-  | "canonical-equality"
-  | "rollback"
-  | "cleanup"
-  | "resource-termination"
-  | "provider-zero"
-  | "completed";
+export const phaseZeroGraduationStages = [
+  "approval",
+  "preflight",
+  "candidate",
+  "independent-review",
+  "delivery",
+  "merge-approval",
+  "merge",
+  "canonical-equality",
+  "rollback",
+  "cleanup",
+  "resource-termination",
+  "provider-zero",
+  "completed",
+] as const;
+export type PhaseZeroGraduationStage = (typeof phaseZeroGraduationStages)[number];
 
 export interface PhaseZeroGraduationEvent {
   sequence: number;

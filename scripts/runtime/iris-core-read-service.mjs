@@ -5,7 +5,16 @@ import {
   createCoreReadEnvelope,
   verifyCoreRequest,
 } from "../../packages/kernel/dist/read-model.js";
+import {
+  parseCoreGraduationRequest,
+  verifyCoreGraduationBody,
+  verifyCoreGraduationRequest,
+} from "../../packages/kernel/dist/graduation-service.js";
 import { parseCoreReadRequest } from "../../packages/kernel/dist/read-service.js";
+import {
+  createIdlePhaseZeroGraduationEnvelope,
+  phaseZeroGraduationApprovalEnvelopeSchema,
+} from "../../packages/development/dist/index.js";
 
 const host = "127.0.0.1";
 const port = readLoopbackPort("IRIS_CORE_READ_PORT", 4181);
@@ -67,33 +76,82 @@ async function readBootstrap() {
 
 const { requestKey, responseKey } = await readBootstrap();
 const seen = new Map();
-const server = createServer((request, response) => {
-  const parsed = parseCoreReadRequest(request.method, request.url, request.headers);
-  const now = new Date();
-  if (!parsed || !verifyCoreRequest(requestKey, parsed, now) || seen.has(parsed.requestId)) {
-    response.writeHead(404, { "content-type": "application/json", "cache-control": "no-store" });
-    response.end('{"error":"unavailable"}');
-    return;
-  }
-  seen.set(parsed.requestId, now.getTime());
+const unavailable = (response) => {
+  response.writeHead(404, { "content-type": "application/json", "cache-control": "no-store" });
+  response.end('{"error":"unavailable"}');
+};
+const fresh = (requestId, now) => {
+  if (seen.has(requestId)) return false;
+  seen.set(requestId, now.getTime());
   for (const [id, observed] of seen) if (now.getTime() - observed > 60_000) seen.delete(id);
-  const result =
-    parsed.path === "/v1/health" ? { state: "ready" } : createCoreReadEnvelope(realState(now), now);
+  return true;
+};
+const writeResult = (response, requestId, result) => {
   const body = JSON.stringify(result);
-  if (Buffer.byteLength(body) > maximumBytes) {
-    response.writeHead(500, { "content-type": "application/json", "cache-control": "no-store" });
-    response.end('{"error":"unavailable"}');
-    return;
-  }
+  if (Buffer.byteLength(body) > maximumBytes) return unavailable(response);
   response.writeHead(200, {
     "content-type": "application/json",
     "content-length": Buffer.byteLength(body),
     "cache-control": "no-store",
     "x-content-type-options": "nosniff",
-    "x-iris-request-id": parsed.requestId,
+    "x-iris-request-id": requestId,
     "x-iris-attestation": attestCoreResponse(responseKey, body),
   });
   response.end(body);
+};
+const readBody = async (request) => {
+  let body = "";
+  for await (const chunk of request) {
+    body += chunk.toString("utf8");
+    if (Buffer.byteLength(body) > maximumBytes) throw new Error("BODY_OVERSIZED");
+  }
+  return body;
+};
+
+const server = createServer(async (request, response) => {
+  const now = new Date();
+  const readRequest = parseCoreReadRequest(request.method, request.url, request.headers);
+  if (readRequest !== null) {
+    if (!verifyCoreRequest(requestKey, readRequest, now) || !fresh(readRequest.requestId, now))
+      return unavailable(response);
+    const result =
+      readRequest.path === "/v1/health"
+        ? { state: "ready" }
+        : createCoreReadEnvelope(realState(now), now);
+    return writeResult(response, readRequest.requestId, result);
+  }
+
+  const graduationRequest = parseCoreGraduationRequest(
+    request.method,
+    request.url,
+    request.headers,
+  );
+  if (
+    graduationRequest === null ||
+    !verifyCoreGraduationRequest(requestKey, graduationRequest, now) ||
+    !fresh(graduationRequest.requestId, now)
+  )
+    return unavailable(response);
+
+  if (graduationRequest.method === "GET") {
+    if (!verifyCoreGraduationBody(graduationRequest, "")) return unavailable(response);
+    return writeResult(
+      response,
+      graduationRequest.requestId,
+      createIdlePhaseZeroGraduationEnvelope(realState(now).canonicalRevision, now),
+    );
+  }
+
+  try {
+    const body = await readBody(request);
+    if (!verifyCoreGraduationBody(graduationRequest, body)) return unavailable(response);
+    phaseZeroGraduationApprovalEnvelopeSchema.parse(JSON.parse(body));
+  } catch {
+    return unavailable(response);
+  }
+  // No active authoritative graduation store is configured in the ordinary
+  // read service. Approval is never consumed or retained here.
+  return unavailable(response);
 });
 
 server.listen(port, host, () => console.log("IRIS_CORE_READ_READY"));
