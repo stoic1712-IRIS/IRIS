@@ -58,6 +58,7 @@ describe("Release Four Core read boundary", () => {
         state: "offline",
       }),
     );
+    expect(envelope.payload.evidence).toEqual([expect.objectContaining({ redacted: true })]);
     expect(Date.parse(envelope.expiresAt) - Date.parse(envelope.generatedAt)).toBe(30_000);
   });
 

@@ -91,7 +91,7 @@ export function createCoreReadEnvelope(state: CoreReadState, generatedAt: Date) 
         citation: state.phaseZeroGraduated
           ? "evidence/wave-10/sovereign-development-graduation-2026-08-05.md"
           : "docs/specifications/cycle-nine-phase-zero-graduation-readiness.md",
-        redacted: false as const,
+        redacted: true as const,
         source: source(
           state.phaseZeroGraduated
             ? "evidence/wave-10/sovereign-development-graduation-2026-08-05.md"
