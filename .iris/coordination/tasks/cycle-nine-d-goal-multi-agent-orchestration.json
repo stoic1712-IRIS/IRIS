@@ -9,7 +9,7 @@
   "status": "approved",
   "risk_class": "R2",
   "authorization_mode": "completion_mandate",
-  "completion_mandate_text": "Founder mandate: preserve all existing Phase 0 and cycle work and finish every remaining additive development cycle so IRIS can be handed off for Founder testing. This task bundles bounded implementation, verification, repair, exact-path staging, commit, non-force branch push, pull-request creation, independent review, merge, synchronization, remote equality, and cleanup. It excludes secret use, spending, deployment, public or LAN exposure, administration, force-push, history rewrite, destructive operations, and final Phase 0 graduation execution.",
+  "completion_mandate_text": "Founder mandate: preserve all existing Phase 0 and cycle work and finish every remaining additive development cycle so IRIS can be handed off for Founder testing. The additive program was defined after the Phase 0 foundation program but does not claim that permanent Phase 0 graduation has passed. This task bundles bounded implementation, verification, repair, exact-path staging, commit, non-force branch push, pull-request creation, independent review, merge, synchronization, remote equality, and cleanup. It excludes secret use, spending, deployment, public or LAN exposure, administration, force-push, history rewrite, destructive operations, and final Phase 0 graduation execution.",
   "completion_actions": [
     "research",
     "edit",
@@ -85,6 +85,6 @@
     "Exact paths, checks, remote equality, rollback, and cleanup"
   ],
   "publisher": "Codex under Founder completion mandate after exact-patch verification",
-  "approval_reference": "founder-additive-post-phase-zero-cycle-completion-2026-08-07",
+  "approval_reference": "founder-additive-development-cycle-completion-2026-08-07",
   "phase0_graduation": false
 }

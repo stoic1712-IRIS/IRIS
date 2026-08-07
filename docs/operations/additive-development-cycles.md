@@ -1,12 +1,14 @@
-# Post-Phase-0 Development Cycles
+# Additive Development Cycles
 
-**Status:** Founder-directed additive completion program
+**Status:** Founder-directed additive completion program; does not claim Phase 0 graduation
 
 **Recorded:** 2026-08-07
 
 ## Additive interpretation
 
-The development-cycle capability program is additive to every existing Phase 0 wave, release, task, specification, implementation, and evidence record. It does not delete, rename, revert, reclassify, supersede, or invalidate earlier work. A cycle may contain multiple bounded tranches. Completion requires the earlier tranches and the additional criteria below.
+The development-cycle capability program was added after the Phase 0 foundation program was defined. It is additive to every existing Phase 0 wave, release, task, specification, implementation, and evidence record. It does not delete, rename, revert, reclassify, supersede, or invalidate earlier work. A cycle may contain multiple bounded tranches. Completion requires the earlier tranches and the additional criteria below.
+
+This sequencing statement does not claim that the permanent Phase 0 Development Independence graduation gate has passed. That gate remains separately evidence-bound and incomplete until IRIS performs the canonical self-upgrade while Codex and Claude remain audit-only.
 
 ## Cycle Eight — Executable Worker Runtime
 
