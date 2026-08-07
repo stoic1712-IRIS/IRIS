@@ -192,6 +192,38 @@ const injectionPatterns: readonly { category: InjectionCategory; pattern: RegExp
   },
 ];
 
+/**
+ * Categories severe enough to withhold the content entirely rather than retain
+ * it as readable data.
+ */
+const highSeverityCategories = new Set<InjectionCategory>([
+  "instruction-override",
+  "authority-laundering",
+  "credential-exfiltration",
+  "tool-invocation",
+]);
+
+const hiddenCharacterPattern = /[\u200B-\u200F\u202A-\u202E\u2060-\u2064]/gu;
+
+/** Removes zero-width and bidirectional controls used to split payloads. */
+export function normalizeHiddenCharacters(text: string): string {
+  return text.replace(hiddenCharacterPattern, "");
+}
+
+/**
+ * Schemes a research source may use. HTTPS is the normal path. Plain HTTP is
+ * retained for loopback and legacy documentation sources but is penalized by
+ * `scoreSource`. Every other scheme — `file:`, `javascript:`, `data:`, `ftp:`,
+ * and anything else — is a non-network or code-execution source and is refused.
+ */
+const allowedSourceProtocols = new Set(["https:", "http:"]);
+
+export class UnsupportedSourceSchemeError extends Error {
+  constructor(readonly scheme: string) {
+    super("RESEARCH_SOURCE_SCHEME_DENIED");
+  }
+}
+
 const highTrustHosts = new Set([
   "www.rfc-editor.org",
   "datatracker.ietf.org",
@@ -216,6 +248,11 @@ function sourceId(canonicalUrl: string): string {
  */
 export function canonicalizeUrl(value: string): string {
   const url = new URL(value);
+  // Fail closed on non-network schemes. file:, javascript:, data:, and the
+  // rest are either local-filesystem reads or code execution, never research
+  // sources, and must not enter a session at any score.
+  if (!allowedSourceProtocols.has(url.protocol))
+    throw new UnsupportedSourceSchemeError(url.protocol);
   url.hash = "";
   url.hostname = url.hostname.toLowerCase();
   if (
@@ -267,20 +304,18 @@ export function isolateContent(input: {
   retrievedAt: string;
   text: string;
 }): IsolatedContent {
-  const findings = detectInjection(input.text);
-  const quarantined = findings.some((finding) =>
-    (
-      [
-        "instruction-override",
-        "authority-laundering",
-        "credential-exfiltration",
-        "tool-invocation",
-      ] as const
-    ).includes(finding.category as "instruction-override"),
-  );
-  const neutralized = input.text
-    .replace(/[\u200B-\u200F\u202A-\u202E\u2060-\u2064]/gu, "")
-    .slice(0, 20_000);
+  // Hidden and bidirectional controls are stripped BEFORE high-severity
+  // detection. Detecting on the raw text first would let a single zero-width
+  // character split a payload ("prev<ZWSP>ious") past every pattern, after
+  // which the stripped text would be retained as a clean instruction. The
+  // hidden-content finding is still raised from the original text, and the
+  // digest still binds the exact original bytes.
+  const neutralized = normalizeHiddenCharacters(input.text);
+  const findings = [
+    ...detectInjection(input.text).filter((finding) => finding.category === "hidden-content"),
+    ...detectInjection(neutralized).filter((finding) => finding.category !== "hidden-content"),
+  ];
+  const quarantined = findings.some((finding) => highSeverityCategories.has(finding.category));
   return isolatedContentSchema.parse({
     origin: input.origin,
     sourceUrl: input.sourceUrl,
@@ -289,7 +324,7 @@ export function isolateContent(input: {
     quarantined,
     findings,
     contentDigest: sha256(input.text),
-    ...(quarantined ? {} : { text: neutralized }),
+    ...(quarantined ? {} : { text: neutralized.slice(0, 20_000) }),
   });
 }
 
@@ -304,6 +339,12 @@ export function scoreSource(input: {
   let url: URL;
   try {
     url = new URL(input.url);
+    if (!allowedSourceProtocols.has(url.protocol))
+      return {
+        score: 0,
+        tier: "rejected",
+        signals: [`Unsupported non-network source scheme ${url.protocol}`],
+      };
   } catch {
     return { score: 0, tier: "rejected", signals: ["Unparseable source URL."] };
   }
@@ -361,6 +402,27 @@ export class ResearchCancelledError extends Error {
     super("RESEARCH_SESSION_CANCELLED");
   }
 }
+export class ResearchResumePlanMismatchError extends Error {
+  constructor() {
+    super("RESEARCH_RESUME_PLAN_MISMATCH");
+  }
+}
+export class ResearchResumeStateInvalidError extends Error {
+  constructor() {
+    super("RESEARCH_RESUME_STATE_INVALID");
+  }
+}
+
+/** Order-independent structural comparison for exact plan binding. */
+function stableJson(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
+  if (value !== null && typeof value === "object")
+    return `{${Object.entries(value as Record<string, unknown>)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, item]) => `${JSON.stringify(key)}:${stableJson(item)}`)
+      .join(",")}}`;
+  return JSON.stringify(value);
+}
 
 /**
  * A bounded, resumable research session. Every query consumes budget exactly
@@ -375,13 +437,35 @@ export class ResearchSession {
   #cancelled: boolean;
 
   constructor(plan: ResearchPlan, resumeFrom?: ResearchSessionState) {
-    this.#plan = researchPlanSchema.parse(plan);
-    const state =
-      resumeFrom === undefined ? undefined : researchSessionStateSchema.parse(resumeFrom);
-    this.#executedQueries = [...(state?.executedQueries ?? [])];
-    this.#sources = [...(state?.sources ?? [])];
-    this.#quarantined = state?.quarantined ?? 0;
-    this.#cancelled = state?.cancelled ?? false;
+    const declared = researchPlanSchema.parse(plan);
+    if (resumeFrom === undefined) {
+      this.#plan = declared;
+      this.#executedQueries = [];
+      this.#sources = [];
+      this.#quarantined = 0;
+      this.#cancelled = false;
+      return;
+    }
+    const state = researchSessionStateSchema.parse(resumeFrom);
+    // A resumed session binds to its own serialized plan. Accepting a
+    // separately supplied plan would let an exhausted state be reopened under a
+    // wider budget, silently granting queries the Founder never approved.
+    if (stableJson(state.plan) !== stableJson(declared))
+      throw new ResearchResumePlanMismatchError();
+    // Malformed state must not widen bounds either.
+    if (
+      state.executedQueries.length > state.plan.maximumQueries ||
+      state.sources.length > state.plan.maximumSources ||
+      new Set(state.executedQueries).size !== state.executedQueries.length ||
+      new Set(state.sources.map((source) => source.canonicalUrl)).size !== state.sources.length ||
+      state.quarantined > state.sources.length + state.executedQueries.length
+    )
+      throw new ResearchResumeStateInvalidError();
+    this.#plan = state.plan;
+    this.#executedQueries = [...state.executedQueries];
+    this.#sources = [...state.sources];
+    this.#quarantined = state.quarantined;
+    this.#cancelled = state.cancelled;
   }
 
   static resume(state: ResearchSessionState): ResearchSession {
@@ -442,7 +526,10 @@ export class ResearchSession {
       let canonicalUrl: string;
       try {
         canonicalUrl = canonicalizeUrl(result.url);
-      } catch {
+      } catch (error) {
+        // A non-network scheme is an attack surface, not a low-quality result.
+        // Refuse the whole batch rather than quietly dropping one entry.
+        if (error instanceof UnsupportedSourceSchemeError) throw error;
         continue;
       }
       if (this.#sources.some((source) => source.canonicalUrl === canonicalUrl)) continue;

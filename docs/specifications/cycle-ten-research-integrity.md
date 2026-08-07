@@ -30,11 +30,36 @@ A `ResearchSession` binds one `ResearchPlan`: objective, `maximumQueries`, `maxi
 - Accepting sources stops exactly at `maximumSources`.
 - Sources scoring below `minimumSourceScore` are not retained.
 
+### Source schemes
+
+Only `https:` and `http:` may enter a session. HTTPS is the normal path; plain HTTP is retained for
+loopback and legacy documentation sources but is penalized by `scoreSource`. Every other scheme —
+`file:`, `javascript:`, `data:`, `ftp:`, and anything else — is a non-network or code-execution source
+and is refused fail-closed with `RESEARCH_SOURCE_SCHEME_DENIED`. `scoreSource` independently returns
+`score: 0`, tier `rejected` for such a URL, and `recordSearch` refuses the whole batch rather than
+quietly dropping the entry, because a non-network scheme is an attack surface, not a low-quality result.
+
+### Resumption binding
+
+A resumed session binds to its **own serialized plan**. Supplying a different plan alongside a resume
+state raises `RESEARCH_RESUME_PLAN_MISMATCH`; accepting the supplied plan would let an exhausted state
+be reopened under a wider budget, silently granting queries the Founder never approved. Resume state is
+additionally validated against its plan — executed queries within budget, sources within the ceiling, no
+duplicate queries or canonical URLs, and a quarantine count that cannot exceed observed items — raising
+`RESEARCH_RESUME_STATE_INVALID` otherwise.
+
 ## Untrusted content isolation
 
 Every retrieved item from `search`, `browser`, or `mcp` is wrapped as `IsolatedContent` with
 `trusted: false`, its origin, source URL, retrieval time, and a SHA-256 digest of the exact original
 text. Isolation is pattern-based and never depends on a model reading the content.
+
+**Normalization precedes high-severity detection.** Zero-width and bidirectional controls are stripped
+first, and the high-severity patterns run against the normalized text. Detecting on the raw text first
+would let a single zero-width character split a payload — `prev<ZWSP>ious` — past every pattern, after
+which the stripped text would be retained as a clean instruction. The `hidden-content` finding is still
+raised from the original text, and `contentDigest` still binds the exact original bytes, so tampering
+evidence survives normalization.
 
 Six detection categories: `instruction-override`, `authority-laundering`, `credential-exfiltration`,
 `tool-invocation`, `exfiltration-channel`, and `hidden-content`.

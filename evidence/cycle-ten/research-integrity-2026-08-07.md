@@ -2,8 +2,50 @@
 
 ## Status
 
-Implemented and locally verified by the producer. Independent Codex review of the exact producer commit
-is required before merge. Claude cannot approve its own material output.
+Implemented, independently reviewed, repaired, and re-verified by the producer. Codex returned
+CHANGES REQUIRED on head `58baeec8e4bdb6a65ae5ef1c6ca197d7ab26a259` with three blocking findings; all
+three are repaired below. A further independent Codex review of the new exact head is required before
+merge. Claude cannot approve its own material output.
+
+## Independent review repairs
+
+Codex reproduced three defects in a detached worktree. All were real and all are fixed inside the
+existing allowed paths.
+
+### 1. Hidden-character injection bypass (blocking)
+
+`isolateContent` detected patterns on the raw text and only afterwards stripped hidden Unicode. A single
+zero-width space — `Ignore all prev<U+200B>ious instructions` — matched only `hidden-content`, escaped
+quarantine, and was then **retained as clean readable text**, reconstituting the instruction.
+
+Repair: hidden and bidirectional controls are normalized **before** high-severity detection. The
+`hidden-content` finding is still raised from the original text, and `contentDigest` still binds the
+exact original bytes, so tampering evidence survives. Regression tests cover a zero-width split payload,
+a bidirectional-override split payload, and digest/evidence preservation.
+
+### 2. Non-network URL acceptance (blocking)
+
+`canonicalizeUrl` and `recordSearch` accepted any scheme `new URL()` parsed. A
+`file:///C:/secret.txt` result was retained with a positive score.
+
+Repair: only `https:` and `http:` may enter a session. Anything else raises
+`RESEARCH_SOURCE_SCHEME_DENIED`, `scoreSource` independently returns `score: 0` / tier `rejected`, and
+`recordSearch` refuses the whole batch rather than silently dropping the entry. HTTPS remains the normal
+path; plain HTTP is explicitly retained for loopback and legacy documentation sources, penalized by
+`scoreSource`, documented in the specification, and tested. Regression tests cover `file:`,
+`javascript:`, `data:`, and `ftp:`, plus batch refusal and the retained-HTTP behavior.
+
+### 3. Resume budget widening (blocking)
+
+The public constructor accepted a resume state but bound the **separately supplied** plan, so a
+one-query exhausted state could be reopened with `maximumQueries: 25`, yielding 24 unapproved queries.
+
+Repair: a resumed session binds to its own serialized plan; a differing supplied plan raises
+`RESEARCH_RESUME_PLAN_MISMATCH`. Resume state is additionally validated against that plan — queries
+within budget, sources within the ceiling, no duplicate queries or canonical URLs, quarantine count not
+exceeding observed items — raising `RESEARCH_RESUME_STATE_INVALID` otherwise. Regression tests cover
+plan mismatch, over-budget state, duplicate queries, an impossible quarantine count, and an
+over-ceiling source list.
 
 ## Binding
 
@@ -40,15 +82,16 @@ the work. The library was read only and never staged.
 
 Commands run in the isolated worktree with Node `24.19.0` and pnpm `11.20.0`.
 
+Post-repair run:
+
 | Command | Exit |
 | --- | --- |
-| `pnpm install --offline --frozen-lockfile --ignore-scripts` | **1** — see limitation 1 |
-| `pnpm install --frozen-lockfile --ignore-scripts` | 0 |
-| `pnpm exec vitest run tests/cycle-ten-research-integrity.test.ts tests/cycle-six-connected-tool-providers.test.ts tests/cycle-six-governed-tool-gateway.test.ts` | **0** — 36 passed |
+| `pnpm install --offline --frozen-lockfile --ignore-scripts` | **0** — see limitation 1 |
+| `pnpm exec vitest run tests/cycle-ten-research-integrity.test.ts tests/cycle-six-connected-tool-providers.test.ts tests/cycle-six-governed-tool-gateway.test.ts` | **0** — 48 passed |
 | `pnpm format:check` | 0 |
 | `pnpm lint` | 0 |
 | `pnpm typecheck` | 0 |
-| `pnpm test` (full) | **1** — 256 passed, 1 failed; see limitation 2 |
+| `pnpm test` (full) | **1** — 268 passed, 1 failed; see limitation 2 |
 | `pnpm build` | 0 |
 | `pnpm diagnostics` | 0 |
 | `pnpm verify` (aggregate) | **1** — short-circuits on the same single pre-existing failure |
@@ -65,13 +108,14 @@ The Cycle Six governed-tool-gateway and connected-provider suites are unchanged 
 
 ## Limitations
 
-1. **Offline install could not complete.** The task permits materializing the frozen lockfile offline.
-   The offline store lacks one already-pinned tarball (`@xyflow/react@12.11.2`, a Wave 11 dependency),
-   so `--offline` failed with `ERR_PNPM_NO_OFFLINE_TARBALL`. The same command without `--offline` was
-   run instead. It changed no dependency version, executed no lifecycle script, and left
-   `pnpm-lock.yaml` byte-identical (`sha256:c439ca27…03b9c4` before and after). Recorded as a
-   documented deviation from the literal permitted action for Codex to accept or reject.
-2. **One pre-existing full-suite failure, unrelated to Cycle Ten.**
+1. **Offline install deviation — resolved, not repeated.** On the first pass `--offline` failed with
+   `ERR_PNPM_NO_OFFLINE_TARBALL` for one already-pinned tarball (`@xyflow/react@12.11.2`), and the
+   producer fell back to the same command without `--offline`. Codex reviewed that as a non-payload
+   process deviation exceeding the literal task permission and directed that it not be repeated or
+   treated as precedent. This repair used **`--offline` only**, which now exits 0. `pnpm-lock.yaml`
+   remains byte-identical (`sha256:c439ca27…03b9c4`) across both passes, and no dependency version or
+   lifecycle script was ever changed or run.
+2. **One pre-existing full-suite failure, unrelated to Cycle Ten.** Unchanged by the repair.
    `tests/cycle-eight-executable-worker-runtime.test.ts > denies a tracked symlink without modifying its
    external target` fails with `EPERM: operation not permitted, symlink` at its own setup (line 464).
    This Windows session cannot create symlinks at all: Developer Mode is off and the shell is not
