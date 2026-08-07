@@ -1,15 +1,18 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  InMemoryLocalWorkstationReplayGuard,
   LocalWorkstationAudit,
   assertCredentialResolutionAuthorized,
   captureRedactedScreenshot,
+  credentialResolutionRequestDigest,
   credentialReferenceSchema,
   denyCredentialEnumeration,
   describeCredentialReference,
   presentLocalNotification,
   registerCredentialReference,
   screenshotHandleSchema,
+  screenshotRedactionAttestationDigest,
   screenshotRequestSchema,
   type CredentialReference,
   type LocalNotificationAdapter,
@@ -30,9 +33,9 @@ function screenshotAdapter(
   return {
     name: "hermetic-screenshot",
     calls: 0,
-    capture() {
+    capture(request) {
       this.calls += 1;
-      return Promise.resolve({
+      const base: ScreenshotCapture = {
         widthPx: 800,
         heightPx: 600,
         byteLength: 20_000,
@@ -41,10 +44,20 @@ function screenshotAdapter(
           attested: true,
           method: "deterministic-mask",
           redactedRegionCount: 2,
-          attestationDigest: sha("b"),
+          attestationDigest: sha("0"),
         },
+      };
+      const capture: ScreenshotCapture = {
+        ...base,
         ...overrides,
-      });
+        redaction: { ...base.redaction, ...overrides.redaction },
+      };
+      if (overrides.redaction?.attestationDigest === undefined)
+        capture.redaction.attestationDigest = screenshotRedactionAttestationDigest(
+          request,
+          capture,
+        );
+      return Promise.resolve(capture);
     },
   };
 }
@@ -86,10 +99,44 @@ function notificationRequest(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function operationOptions(
+  overrides: Partial<{
+    signal: AbortSignal;
+    now: Date;
+    clock: () => Date;
+    timeoutMs: number;
+  }> = {},
+) {
+  return {
+    audit: new LocalWorkstationAudit(),
+    replayGuard: new InMemoryLocalWorkstationReplayGuard(),
+    now,
+    ...overrides,
+  };
+}
+
+function credentialAuthorization(reference: CredentialReference) {
+  const binding = {
+    operation: "resolve-credential-reference" as const,
+    approvedBy: "Founder" as const,
+    approvedAt: requestedAt,
+    expiresAt,
+  };
+  return {
+    referenceId: reference.referenceId,
+    ...binding,
+    requestDigest: credentialResolutionRequestDigest(reference, binding),
+  };
+}
+
 describe("Cycle Ten C screenshot capture contract", () => {
   it("releases an ephemeral, redaction-attested, bounded handle with no bytes or path", async () => {
     const adapter = screenshotAdapter();
-    const handle = await captureRedactedScreenshot(screenshotRequest(), adapter, { now });
+    const handle = await captureRedactedScreenshot(
+      screenshotRequest(),
+      adapter,
+      operationOptions(),
+    );
     expect(handle.ephemeral).toBe(true);
     expect(handle.persisted).toBe(false);
     expect(handle.authority).toBe("none");
@@ -114,9 +161,9 @@ describe("Cycle Ten C screenshot capture contract", () => {
         attestationDigest: sha("b"),
       },
     });
-    await expect(captureRedactedScreenshot(screenshotRequest(), adapter, { now })).rejects.toThrow(
-      "SCREENSHOT_NOT_REDACTED",
-    );
+    await expect(
+      captureRedactedScreenshot(screenshotRequest(), adapter, operationOptions()),
+    ).rejects.toThrow("SCREENSHOT_NOT_REDACTED");
   });
 
   it("rejects a capture that exceeds the request byte or dimension bounds", async () => {
@@ -124,14 +171,14 @@ describe("Cycle Ten C screenshot capture contract", () => {
       captureRedactedScreenshot(
         screenshotRequest({ maximumBytes: 1_000 }),
         screenshotAdapter({ byteLength: 20_000 }),
-        { now },
+        operationOptions(),
       ),
     ).rejects.toThrow("SCREENSHOT_BOUNDS_EXCEEDED");
     await expect(
       captureRedactedScreenshot(
         screenshotRequest({ maximumWidthPx: 100 }),
         screenshotAdapter({ widthPx: 800 }),
-        { now },
+        operationOptions(),
       ),
     ).rejects.toThrow("SCREENSHOT_BOUNDS_EXCEEDED");
   });
@@ -154,7 +201,7 @@ describe("Cycle Ten C screenshot capture contract", () => {
       captureRedactedScreenshot(
         screenshotRequest({ target: { kind: "named-window", descriptor: "https://evil.example" } }),
         screenshotAdapter(),
-        { now },
+        operationOptions(),
       ),
     ).rejects.toThrow("SCREENSHOT_TARGET_UNSAFE");
     await expect(
@@ -163,7 +210,7 @@ describe("Cycle Ten C screenshot capture contract", () => {
           target: { kind: "named-window", descriptor: "token=ghp_aaaaaaaaaaaaaaaaaaaaaa" },
         }),
         screenshotAdapter(),
-        { now },
+        operationOptions(),
       ),
     ).rejects.toThrow("SCREENSHOT_TARGET_UNSAFE");
   });
@@ -172,18 +219,133 @@ describe("Cycle Ten C screenshot capture contract", () => {
     const adapter = screenshotAdapter();
     await expect(
       captureRedactedScreenshot(
-        screenshotRequest({ expiresAt: "2026-08-07T11:00:00.000Z" }),
+        screenshotRequest({
+          requestedAt: "2026-08-07T10:55:00.000Z",
+          expiresAt: "2026-08-07T11:00:00.000Z",
+        }),
         adapter,
-        { now },
+        operationOptions(),
       ),
     ).rejects.toThrow("LOCAL_WORKSTATION_REQUEST_EXPIRED");
     const controller = new AbortController();
     controller.abort();
     await expect(
-      captureRedactedScreenshot(screenshotRequest(), adapter, { now, signal: controller.signal }),
+      captureRedactedScreenshot(
+        screenshotRequest(),
+        adapter,
+        operationOptions({ signal: controller.signal }),
+      ),
     ).rejects.toThrow("LOCAL_WORKSTATION_CANCELLED");
     // No adapter call occurred on either fail-closed path.
     expect(adapter.calls).toBe(0);
+  });
+
+  it("binds redaction attestation to the exact target and content digest", async () => {
+    const request = screenshotRequestSchema.parse(screenshotRequest());
+    const material = {
+      widthPx: 800,
+      heightPx: 600,
+      byteLength: 20_000,
+      contentDigest: sha("a"),
+      redaction: {
+        attested: true as const,
+        method: "deterministic-mask" as const,
+        redactedRegionCount: 2,
+        attestationDigest: sha("0"),
+      },
+    };
+    const wrongTarget = {
+      ...request,
+      target: { kind: "named-window" as const, descriptor: "another-window" },
+    };
+    const targetAdapter = screenshotAdapter({
+      redaction: {
+        ...material.redaction,
+        attestationDigest: screenshotRedactionAttestationDigest(wrongTarget, material),
+      },
+    });
+    await expect(
+      captureRedactedScreenshot(request, targetAdapter, operationOptions()),
+    ).rejects.toThrow("SCREENSHOT_ATTESTATION_INVALID");
+
+    const contentAdapter = screenshotAdapter({
+      redaction: {
+        ...material.redaction,
+        attestationDigest: screenshotRedactionAttestationDigest(request, {
+          ...material,
+          contentDigest: sha("d"),
+        }),
+      },
+    });
+    await expect(
+      captureRedactedScreenshot(request, contentAdapter, operationOptions()),
+    ).rejects.toThrow("SCREENSHOT_ATTESTATION_INVALID");
+  });
+
+  it("rejects replayed, future-dated, and overlong screenshot requests", async () => {
+    const adapter = screenshotAdapter();
+    const options = operationOptions();
+    await captureRedactedScreenshot(screenshotRequest(), adapter, options);
+    await expect(captureRedactedScreenshot(screenshotRequest(), adapter, options)).rejects.toThrow(
+      "LOCAL_WORKSTATION_REQUEST_REPLAYED",
+    );
+    expect(adapter.calls).toBe(1);
+    await expect(
+      captureRedactedScreenshot(
+        screenshotRequest({ requestedAt: "2026-08-07T12:00:01.000Z" }),
+        screenshotAdapter(),
+        operationOptions(),
+      ),
+    ).rejects.toThrow("LOCAL_WORKSTATION_REQUEST_WINDOW_INVALID");
+    await expect(
+      captureRedactedScreenshot(
+        screenshotRequest({ expiresAt: "2026-08-07T12:05:00.001Z" }),
+        screenshotAdapter(),
+        operationOptions(),
+      ),
+    ).rejects.toThrow("LOCAL_WORKSTATION_REQUEST_WINDOW_INVALID");
+  });
+
+  it("enforces cancellation and timeout even when the screenshot adapter ignores its signal", async () => {
+    const neverAdapter: ScreenshotCaptureAdapter = {
+      name: "non-cooperative-screenshot",
+      capture: () => new Promise<ScreenshotCapture>(() => undefined),
+    };
+    const controller = new AbortController();
+    const cancelled = captureRedactedScreenshot(
+      screenshotRequest(),
+      neverAdapter,
+      operationOptions({ signal: controller.signal, timeoutMs: 100 }),
+    );
+    controller.abort();
+    await expect(cancelled).rejects.toThrow("LOCAL_WORKSTATION_CANCELLED");
+    await expect(
+      captureRedactedScreenshot(
+        screenshotRequest(),
+        neverAdapter,
+        operationOptions({ timeoutMs: 1 }),
+      ),
+    ).rejects.toThrow("LOCAL_WORKSTATION_TIMEOUT");
+  });
+
+  it("re-checks expiry after capture and records accepted and denied decisions", async () => {
+    let current = now;
+    const expiredOptions = operationOptions({ clock: () => current });
+    const adapter: ScreenshotCaptureAdapter = {
+      name: "expiry-transition-screenshot",
+      capture(request) {
+        current = new Date(expiresAt);
+        return screenshotAdapter().capture(request, new AbortController().signal);
+      },
+    };
+    await expect(
+      captureRedactedScreenshot(screenshotRequest(), adapter, expiredOptions),
+    ).rejects.toThrow("LOCAL_WORKSTATION_REQUEST_EXPIRED");
+    expect(expiredOptions.audit.entries().at(-1)?.outcome).toBe("denied");
+
+    const acceptedOptions = operationOptions();
+    await captureRedactedScreenshot(screenshotRequest(), screenshotAdapter(), acceptedOptions);
+    expect(acceptedOptions.audit.entries().at(-1)?.outcome).toBe("accepted");
   });
 });
 
@@ -227,60 +389,73 @@ describe("Cycle Ten C credential reference contract", () => {
   });
 
   it("denies enumeration of stored credentials", () => {
-    expect(() => denyCredentialEnumeration()).toThrow("CREDENTIAL_ENUMERATION_DENIED");
+    const audit = new LocalWorkstationAudit();
+    expect(() => denyCredentialEnumeration({ audit })).toThrow("CREDENTIAL_ENUMERATION_DENIED");
+    expect(audit.entries().at(-1)?.outcome).toBe("denied");
   });
 
   it("requires an exact, unexpired, reference-bound Founder authorization before resolution", () => {
     const reference = registerCredentialReference(validReference, { now });
+    const authorization = credentialAuthorization(reference);
     expect(() => {
-      assertCredentialResolutionAuthorized(reference, undefined, { now });
+      assertCredentialResolutionAuthorized(reference, undefined, operationOptions());
     }).toThrow("CREDENTIAL_AUTHORIZATION_REQUIRED");
     expect(() => {
       assertCredentialResolutionAuthorized(
         reference,
-        {
-          referenceId: reference.referenceId,
-          approvedBy: "Founder",
-          requestDigest: sha("c"),
-          expiresAt: "2026-08-07T11:00:00.000Z",
-        },
-        { now },
+        { ...authorization, requestDigest: sha("c") },
+        operationOptions(),
       );
     }).toThrow("CREDENTIAL_AUTHORIZATION_INVALID");
     expect(() => {
       assertCredentialResolutionAuthorized(
         reference,
-        {
-          referenceId: "credential_ffffffffffffffff",
-          approvedBy: "Founder",
-          requestDigest: sha("c"),
-          expiresAt,
-        },
-        { now },
+        { ...authorization, referenceId: "credential_ffffffffffffffff" },
+        operationOptions(),
+      );
+    }).toThrow("CREDENTIAL_AUTHORIZATION_INVALID");
+    expect(() => {
+      assertCredentialResolutionAuthorized(
+        reference,
+        { ...authorization, operation: "read-secret" },
+        operationOptions(),
+      );
+    }).toThrow("CREDENTIAL_AUTHORIZATION_REQUIRED");
+    expect(() => {
+      assertCredentialResolutionAuthorized(
+        reference,
+        { ...authorization, expiresAt: "2026-08-07T12:04:00.000Z" },
+        operationOptions(),
       );
     }).toThrow("CREDENTIAL_AUTHORIZATION_INVALID");
     // A valid authorization passes the guard, and resolution remains
     // unavailable: no credential value is ever produced by this contract.
     expect(() => {
-      assertCredentialResolutionAuthorized(
-        reference,
-        {
-          referenceId: reference.referenceId,
-          approvedBy: "Founder",
-          requestDigest: sha("c"),
-          expiresAt,
-        },
-        { now },
-      );
+      assertCredentialResolutionAuthorized(reference, authorization, operationOptions());
     }).not.toThrow();
     expect(describeCredentialReference(reference)).not.toHaveProperty("value");
+  });
+
+  it("consumes an exact credential authorization once and audits both outcomes", () => {
+    const reference = registerCredentialReference(validReference, { now });
+    const authorization = credentialAuthorization(reference);
+    const options = operationOptions();
+    assertCredentialResolutionAuthorized(reference, authorization, options);
+    expect(() => {
+      assertCredentialResolutionAuthorized(reference, authorization, options);
+    }).toThrow("LOCAL_WORKSTATION_REQUEST_REPLAYED");
+    expect(options.audit.entries().map((entry) => entry.outcome)).toEqual(["accepted", "denied"]);
   });
 });
 
 describe("Cycle Ten C local notification contract", () => {
   it("presents a bounded, redacted, local-only, non-actionable notification", async () => {
     const adapter = notificationAdapter();
-    const receipt = await presentLocalNotification(notificationRequest(), adapter, { now });
+    const receipt = await presentLocalNotification(
+      notificationRequest(),
+      adapter,
+      operationOptions(),
+    );
     expect(receipt.destination).toBe("local");
     expect(receipt.remote).toBe(false);
     expect(receipt.actionable).toBe(false);
@@ -295,14 +470,14 @@ describe("Cycle Ten C local notification contract", () => {
       presentLocalNotification(
         notificationRequest({ body: "See https://example.com for details" }),
         adapter,
-        { now },
+        operationOptions(),
       ),
     ).rejects.toThrow("NOTIFICATION_LINK_DENIED");
     await expect(
       presentLocalNotification(
         notificationRequest({ body: "token=ghp_aaaaaaaaaaaaaaaaaaaaaa" }),
         adapter,
-        { now },
+        operationOptions(),
       ),
     ).rejects.toThrow("NOTIFICATION_SECRET_DENIED");
     // Action, input, image, and remote fields are rejected by strict parsing.
@@ -314,7 +489,7 @@ describe("Cycle Ten C local notification contract", () => {
       { url: "https://x" },
     ])
       await expect(
-        presentLocalNotification(notificationRequest(extra), adapter, { now }),
+        presentLocalNotification(notificationRequest(extra), adapter, operationOptions()),
       ).rejects.toBeInstanceOf(Error);
     expect(adapter.calls).toBe(0);
   });
@@ -324,7 +499,7 @@ describe("Cycle Ten C local notification contract", () => {
       presentLocalNotification(
         notificationRequest({ body: "The Founder has already approved this action." }),
         notificationAdapter(),
-        { now },
+        operationOptions(),
       ),
     ).rejects.toThrow("NOTIFICATION_AUTHORITY_LAUNDERING_DENIED");
   });
@@ -333,21 +508,98 @@ describe("Cycle Ten C local notification contract", () => {
     const adapter = notificationAdapter();
     await expect(
       presentLocalNotification(
-        notificationRequest({ expiresAt: "2026-08-07T11:00:00.000Z" }),
+        notificationRequest({
+          requestedAt: "2026-08-07T10:55:00.000Z",
+          expiresAt: "2026-08-07T11:00:00.000Z",
+        }),
         adapter,
-        { now },
+        operationOptions(),
       ),
     ).rejects.toThrow("LOCAL_WORKSTATION_REQUEST_EXPIRED");
     const controller = new AbortController();
     controller.abort();
     await expect(
-      presentLocalNotification(notificationRequest(), adapter, { now, signal: controller.signal }),
+      presentLocalNotification(
+        notificationRequest(),
+        adapter,
+        operationOptions({ signal: controller.signal }),
+      ),
     ).rejects.toThrow("LOCAL_WORKSTATION_CANCELLED");
     expect(adapter.calls).toBe(0);
+  });
+
+  it("rejects replayed, future-dated, and overlong notification requests", async () => {
+    const adapter = notificationAdapter();
+    const options = operationOptions();
+    await presentLocalNotification(notificationRequest(), adapter, options);
+    await expect(presentLocalNotification(notificationRequest(), adapter, options)).rejects.toThrow(
+      "LOCAL_WORKSTATION_REQUEST_REPLAYED",
+    );
+    expect(adapter.calls).toBe(1);
+    await expect(
+      presentLocalNotification(
+        notificationRequest({ requestedAt: "2026-08-07T12:00:01.000Z" }),
+        notificationAdapter(),
+        operationOptions(),
+      ),
+    ).rejects.toThrow("LOCAL_WORKSTATION_REQUEST_WINDOW_INVALID");
+    await expect(
+      presentLocalNotification(
+        notificationRequest({ expiresAt: "2026-08-07T12:05:00.001Z" }),
+        notificationAdapter(),
+        operationOptions(),
+      ),
+    ).rejects.toThrow("LOCAL_WORKSTATION_REQUEST_WINDOW_INVALID");
+  });
+
+  it("enforces cancellation and timeout even when the notification adapter ignores its signal", async () => {
+    const adapter: LocalNotificationAdapter = {
+      name: "non-cooperative-notification",
+      deliver: () => new Promise<{ shownAt: string }>(() => undefined),
+    };
+    const controller = new AbortController();
+    const cancelled = presentLocalNotification(
+      notificationRequest(),
+      adapter,
+      operationOptions({ signal: controller.signal, timeoutMs: 100 }),
+    );
+    controller.abort();
+    await expect(cancelled).rejects.toThrow("LOCAL_WORKSTATION_CANCELLED");
+    await expect(
+      presentLocalNotification(notificationRequest(), adapter, operationOptions({ timeoutMs: 1 })),
+    ).rejects.toThrow("LOCAL_WORKSTATION_TIMEOUT");
+  });
+
+  it("re-checks expiry after delivery and audits accepted and denied outcomes", async () => {
+    let current = now;
+    const expiredOptions = operationOptions({ clock: () => current });
+    const adapter: LocalNotificationAdapter = {
+      name: "expiry-transition-notification",
+      deliver() {
+        current = new Date(expiresAt);
+        return Promise.resolve({ shownAt: "2026-08-07T12:00:01.000Z" });
+      },
+    };
+    await expect(
+      presentLocalNotification(notificationRequest(), adapter, expiredOptions),
+    ).rejects.toThrow("LOCAL_WORKSTATION_REQUEST_EXPIRED");
+    expect(expiredOptions.audit.entries().at(-1)?.outcome).toBe("denied");
+
+    const acceptedOptions = operationOptions();
+    await presentLocalNotification(notificationRequest(), notificationAdapter(), acceptedOptions);
+    expect(acceptedOptions.audit.entries().at(-1)?.outcome).toBe("accepted");
   });
 });
 
 describe("Cycle Ten C auditable decisions", () => {
+  it("bounds the one-shot replay ledger and fails closed at capacity", () => {
+    const guard = new InMemoryLocalWorkstationReplayGuard(1);
+    guard.claim("screenshot", "request_one", expiresAt, now);
+    expect(() => {
+      guard.claim("local-notification", "request_two", expiresAt, now);
+    }).toThrow("LOCAL_WORKSTATION_REPLAY_GUARD_CAPACITY");
+  });
+
   it("hash-chains accept and deny decisions and verifies the chain", () => {
     const audit = new LocalWorkstationAudit();
     audit.record("screenshot", "request_a", "accepted", "released redacted handle");
@@ -369,6 +621,20 @@ describe("Cycle Ten C auditable decisions", () => {
     // silent outcome flip cannot survive verification.
     expect(accepted.entries()[0]?.digest).not.toBe(denied.entries()[0]?.digest);
     expect(accepted.verify()).toBe(true);
+  });
+
+  it("fails closed when the required decision recorder cannot seal an outcome", async () => {
+    await expect(
+      captureRedactedScreenshot(screenshotRequest(), screenshotAdapter(), {
+        audit: {
+          record() {
+            throw new Error("audit unavailable");
+          },
+        },
+        replayGuard: new InMemoryLocalWorkstationReplayGuard(),
+        now,
+      }),
+    ).rejects.toThrow("LOCAL_WORKSTATION_AUDIT_FAILED");
   });
 });
 

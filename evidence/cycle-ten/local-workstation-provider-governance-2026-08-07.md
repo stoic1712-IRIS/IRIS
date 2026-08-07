@@ -2,7 +2,7 @@
 
 ## Status
 
-Implemented and locally verified by the producer. Independent Codex review of the exact producer commit is required before merge. Claude cannot approve its own material output.
+Claude produced the initial bounded branch. Codex independently reviewed exact commit `b4e0427c747ac2acae694fea0dc1531941dadb59`, found five blocking fail-closed defects, and posted one consolidated review. The Founder then explicitly ended Claude participation and reassigned completion to Codex. Codex repaired only the reviewed defects under the same task scope and allowed paths; no provider was activated.
 
 ## Binding
 
@@ -11,8 +11,8 @@ Implemented and locally verified by the producer. Independent Codex review of th
 - Bound Core base (activation parent): `c228c34ffa14b9a7d10cc01271e5e89fd6dc2213`
 - Bound Command Center base: `97f3bdb79ce7d7d503eba3d3570b04c8309a1785` (registered only; not modified)
 - Branch: `iris/cycle-ten-c-local-workstation-provider-governance`
-- Isolated Claude-owned worktree: `C:\Projects\STOIC-IRIS-cycle-ten-c`, clean before work
-- Producer: Claude · Independent reviewer and publisher: Codex
+- Isolated worktree: `C:\Projects\STOIC-IRIS-cycle-ten-c`, clean at operator transfer
+- Initial producer: Claude · Exact-head independent reviewer, repair operator, and publisher after explicit Founder reassignment: Codex
 
 All six foundation-source SHA-256 digests were verified against `SOURCE-MANIFEST.md` before material work. The library was read only.
 
@@ -38,6 +38,18 @@ All six foundation-source SHA-256 digests were verified against `SOURCE-MANIFEST
 - **Security policy** gains a Local Workstation Capability Contracts section.
 - **Provider-independent Core contracts** with injected hermetic adapters for ephemeral redaction-attested screenshots, opaque credential references, and local-only notifications, plus a hash-chained decision audit.
 
+## Independent review and bounded repair
+
+Codex's exact-head review identified five real contract defects before merge:
+
+1. adapter cancellation and timeout were advisory rather than enforced by Core;
+2. replay and request-window rejection were absent despite the task's explicit acceptance requirement;
+3. the credential authorization digest was syntactic and never compared with an exact binding;
+4. screenshot redaction attestations were not bound to their request target or capture metadata; and
+5. the audit implementation was optional and disconnected from protected operations.
+
+The repair adds a Core-enforced provider race with post-call cancellation and expiry checks, a bounded one-shot replay guard, a five-minute request-window ceiling, exact screenshot-attestation and credential-authorization digest payloads, and mandatory injected decision recording that fails closed when recording fails. New hermetic regressions cover non-cooperative adapters, mid-flight cancellation, timeout, replay, future and overlong windows, post-provider expiry, target/content attestation mismatch, credential field tampering, authorization replay, accepted/denied audit outcomes, and audit-recorder failure.
+
 ## Verification
 
 Commands run in the isolated worktree with Node `24.19.0` and pnpm `11.20.0`.
@@ -45,22 +57,22 @@ Commands run in the isolated worktree with Node `24.19.0` and pnpm `11.20.0`.
 | Command | Exit |
 | --- | --- |
 | `pnpm install --offline --frozen-lockfile --ignore-scripts` | 0 |
-| `pnpm exec vitest run tests/cycle-ten-local-workstation-provider.test.ts tests/cycle-six-governed-tool-gateway.test.ts tests/cycle-six-connected-tool-providers.test.ts` | **0** — 25 passed |
+| `pnpm exec vitest run tests/cycle-ten-local-workstation-provider.test.ts tests/cycle-six-governed-tool-gateway.test.ts tests/cycle-six-connected-tool-providers.test.ts` | **0** — 35 passed |
 | `pnpm format:check` | 0 |
 | `pnpm lint` | 0 |
 | `pnpm typecheck` | 0 |
-| `pnpm test` (full) | **1** — 289 passed, 1 failed; see limitation 1 |
+| `pnpm test` (full, WSL) | **0** — 300 passed |
 | `pnpm build` | 0 |
 | `pnpm diagnostics` | 0 |
-| `pnpm verify` (aggregate) | **1** — short-circuits on the same single failure |
+| `pnpm verify` (aggregate, WSL) | **0** |
 
-The new suite contributes 17 tests: redaction-gated screenshot release; byte and dimension bounds; ephemeral, no-persistence, no-bytes handles; unsafe-target rejection; expiry and cancellation fail-closed; opaque credential references with no value field; enumeration denial; resolution-authorization requirement with no value produced; secret-like input rejection; local-only, redacted, non-actionable notifications; link, secret, and authority-laundering rejection; and a hash-chained decision audit with outcome binding. The Cycle Six governed-tool-gateway and connected-provider suites are unchanged and passing.
+The repaired suite contributes 27 tests. In addition to the original contract coverage, it proves exact target/content redaction binding, one-shot screenshot/credential/notification requests, a bounded replay-ledger capacity, bounded request windows, Core-enforced cancellation and timeout against non-cooperative adapters, post-provider expiry rejection, exact credential authorization binding, and required accepted/denied audit outcomes. The Cycle Six governed-tool-gateway and connected-provider suites are unchanged and passing.
 
 `pnpm-lock.yaml` is byte-identical before and after the offline materialization: `sha256:` unchanged; no dependency version changed and no lifecycle script ran.
 
 ## Limitations
 
-1. **One pre-existing full-suite failure, unrelated to Cycle Ten C.** `tests/cycle-eight-executable-worker-runtime.test.ts > "denies a tracked symlink without modifying its external target"` fails with `EPERM: operation not permitted, symlink` at its own setup. This Windows session cannot create symlinks at all: an isolated `fs.symlinkSync` probe fails identically (Developer Mode off, shell not elevated). That test imports no Cycle Ten C code, was not modified, and lies outside this task's allowed paths, so it was left unrepaired. All other 289 tests pass, and format, lint, typecheck, build, and diagnostics each exit 0. Codex's full `pnpm verify` under WSL, where symlink creation is supported, is expected to pass.
+1. **Windows-only symlink limitation cleared by required WSL verification.** The initial Windows producer run could not create the Cycle Eight test symlink. Codex reran the complete aggregate suite under the repository-pinned WSL toolchain; all 300 tests and every verification stage passed. No test was weakened or skipped.
 2. **No live effect.** All verification uses deterministic hermetic fixtures; no screenshot API, credential store, notification service, desktop, browser session, or network was invoked.
 3. **Contracts, not activation.** This tranche delivers governance and safety contracts only. Live activation and Founder-facing controls remain later Cycle Ten integration.
 

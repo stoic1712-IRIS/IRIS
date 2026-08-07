@@ -60,9 +60,16 @@ function digest(value: unknown): `sha256:${string}` {
   return `sha256:${createHash("sha256").update(JSON.stringify(value)).digest("hex")}`;
 }
 
-function assertLive(request: { expiresAt: string }, now: Date): void {
+const maximumRequestLifetimeMs = 5 * 60 * 1_000;
+
+function assertLive(request: { requestedAt: string; expiresAt: string }, now: Date): void {
+  const requested = Date.parse(request.requestedAt);
   const expires = Date.parse(request.expiresAt);
-  if (!Number.isFinite(expires) || expires <= now.getTime())
+  if (!Number.isFinite(requested) || !Number.isFinite(expires) || expires <= requested)
+    throw new LocalWorkstationDeniedError("LOCAL_WORKSTATION_REQUEST_WINDOW_INVALID");
+  if (requested > now.getTime() || expires - requested > maximumRequestLifetimeMs)
+    throw new LocalWorkstationDeniedError("LOCAL_WORKSTATION_REQUEST_WINDOW_INVALID");
+  if (expires <= now.getTime())
     throw new LocalWorkstationDeniedError("LOCAL_WORKSTATION_REQUEST_EXPIRED");
 }
 
@@ -87,6 +94,17 @@ export const localWorkstationDecisionSchema = z
   })
   .strict();
 export type LocalWorkstationDecision = z.infer<typeof localWorkstationDecisionSchema>;
+type LocalWorkstationCapability = LocalWorkstationDecision["capability"];
+type LocalWorkstationOutcome = LocalWorkstationDecision["outcome"];
+
+export interface LocalWorkstationDecisionRecorder {
+  record(
+    capability: LocalWorkstationCapability,
+    requestId: string,
+    outcome: LocalWorkstationOutcome,
+    detail: string,
+  ): LocalWorkstationDecision;
+}
 
 /** A minimal, append-only, hash-chained audit of accept/deny decisions. */
 export class LocalWorkstationAudit {
@@ -126,6 +144,150 @@ export class LocalWorkstationAudit {
         unsigned.previousDigest === this.#entries[index - 1]?.digest && digest(unsigned) === actual
       );
     });
+  }
+}
+
+export interface LocalWorkstationReplayGuard {
+  claim(
+    capability: LocalWorkstationCapability,
+    requestId: string,
+    expiresAt: string,
+    now: Date,
+  ): void;
+}
+
+/** In-memory, provider-independent one-shot request guard. */
+export class InMemoryLocalWorkstationReplayGuard implements LocalWorkstationReplayGuard {
+  readonly #claims = new Map<string, number>();
+
+  constructor(readonly maximumClaims = 10_000) {
+    if (!Number.isInteger(maximumClaims) || maximumClaims < 1 || maximumClaims > 10_000)
+      throw new LocalWorkstationDeniedError("LOCAL_WORKSTATION_REPLAY_GUARD_INVALID");
+  }
+
+  claim(
+    capability: LocalWorkstationCapability,
+    requestId: string,
+    expiresAt: string,
+    now: Date,
+  ): void {
+    for (const [key, expiry] of this.#claims) if (expiry <= now.getTime()) this.#claims.delete(key);
+    const key = `${capability}:${requestId}`;
+    if (this.#claims.has(key))
+      throw new LocalWorkstationDeniedError("LOCAL_WORKSTATION_REQUEST_REPLAYED");
+    if (this.#claims.size >= this.maximumClaims)
+      throw new LocalWorkstationDeniedError("LOCAL_WORKSTATION_REPLAY_GUARD_CAPACITY");
+    this.#claims.set(key, Date.parse(expiresAt));
+  }
+}
+
+function safeDecisionId(input: unknown): string {
+  if (typeof input === "object" && input !== null && "requestId" in input) {
+    const value = (input as { requestId?: unknown }).requestId;
+    if (typeof value === "string" && value.length > 0) return value.slice(0, 200);
+  }
+  return "unparseable-request";
+}
+
+function recordDecision(
+  recorder: LocalWorkstationDecisionRecorder,
+  capability: LocalWorkstationCapability,
+  requestId: string,
+  outcome: LocalWorkstationOutcome,
+  detail: string,
+): void {
+  try {
+    localWorkstationDecisionSchema.parse(recorder.record(capability, requestId, outcome, detail));
+  } catch {
+    throw new LocalWorkstationDeniedError("LOCAL_WORKSTATION_AUDIT_FAILED");
+  }
+}
+
+function denialDetail(error: unknown): string {
+  return error instanceof LocalWorkstationDeniedError
+    ? error.code
+    : "LOCAL_WORKSTATION_OPERATION_FAILED";
+}
+
+async function auditedOperation<T>(
+  recorder: LocalWorkstationDecisionRecorder,
+  capability: LocalWorkstationCapability,
+  requestId: string,
+  acceptedDetail: string,
+  operation: () => Promise<T>,
+): Promise<T> {
+  let result: T;
+  try {
+    result = await operation();
+  } catch (error) {
+    recordDecision(recorder, capability, requestId, "denied", denialDetail(error));
+    throw error;
+  }
+  recordDecision(recorder, capability, requestId, "accepted", acceptedDetail);
+  return result;
+}
+
+function auditedGuard(
+  recorder: LocalWorkstationDecisionRecorder,
+  capability: LocalWorkstationCapability,
+  requestId: string,
+  acceptedDetail: string,
+  operation: () => void,
+): void {
+  try {
+    operation();
+  } catch (error) {
+    recordDecision(recorder, capability, requestId, "denied", denialDetail(error));
+    throw error;
+  }
+  recordDecision(recorder, capability, requestId, "accepted", acceptedDetail);
+}
+
+interface ProviderOperationOptions {
+  audit: LocalWorkstationDecisionRecorder;
+  replayGuard: LocalWorkstationReplayGuard;
+  signal?: AbortSignal;
+  now?: Date;
+  clock?: () => Date;
+  timeoutMs?: number;
+}
+
+function operationNow(options: Pick<ProviderOperationOptions, "clock" | "now">): Date {
+  return options.clock?.() ?? options.now ?? new Date();
+}
+
+async function awaitBoundedProvider<T>(
+  invoke: (signal: AbortSignal) => Promise<T>,
+  options: Pick<ProviderOperationOptions, "signal" | "timeoutMs">,
+): Promise<T> {
+  assertNotAborted(options.signal);
+  const timeoutMs = Math.min(Math.max(options.timeoutMs ?? 30_000, 1), 30_000);
+  const controller = new AbortController();
+  const signal =
+    options.signal === undefined
+      ? controller.signal
+      : AbortSignal.any([options.signal, controller.signal]);
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  let abortListener: (() => void) | undefined;
+  const timeoutPromise = new Promise<never>((_resolve, reject) => {
+    timeout = setTimeout(() => {
+      controller.abort();
+      reject(new LocalWorkstationDeniedError("LOCAL_WORKSTATION_TIMEOUT"));
+    }, timeoutMs);
+  });
+  const cancellationPromise = new Promise<never>((_resolve, reject) => {
+    if (options.signal === undefined) return;
+    abortListener = () => {
+      controller.abort();
+      reject(new LocalWorkstationDeniedError("LOCAL_WORKSTATION_CANCELLED"));
+    };
+    options.signal.addEventListener("abort", abortListener, { once: true });
+  });
+  try {
+    return await Promise.race([invoke(signal), timeoutPromise, cancellationPromise]);
+  } finally {
+    if (timeout !== undefined) clearTimeout(timeout);
+    if (abortListener !== undefined) options.signal?.removeEventListener("abort", abortListener);
   }
 }
 
@@ -199,6 +361,42 @@ export const screenshotCaptureSchema = z
   .strict();
 export type ScreenshotCapture = z.infer<typeof screenshotCaptureSchema>;
 
+export const screenshotRedactionAttestationPayloadSchema = z
+  .object({
+    requestId,
+    target: screenshotTargetSchema,
+    widthPx: z.number().int().min(1).max(8_192),
+    heightPx: z.number().int().min(1).max(8_192),
+    byteLength: z.number().int().min(1).max(4_194_304),
+    contentDigest: sha256DigestSchema,
+    method: redactionFields.method,
+    redactedRegionCount: redactionFields.redactedRegionCount,
+  })
+  .strict();
+export type ScreenshotRedactionAttestationPayload = z.infer<
+  typeof screenshotRedactionAttestationPayloadSchema
+>;
+
+/** Computes the exact Core-owned digest an adapter must attest. */
+export function screenshotRedactionAttestationDigest(
+  request: ScreenshotRequest,
+  capture: Pick<ScreenshotCapture, "widthPx" | "heightPx" | "byteLength" | "contentDigest"> & {
+    redaction: Pick<RedactionReport, "method" | "redactedRegionCount">;
+  },
+): `sha256:${string}` {
+  const payload = screenshotRedactionAttestationPayloadSchema.parse({
+    requestId: request.requestId,
+    target: request.target,
+    widthPx: capture.widthPx,
+    heightPx: capture.heightPx,
+    byteLength: capture.byteLength,
+    contentDigest: capture.contentDigest,
+    method: capture.redaction.method,
+    redactedRegionCount: capture.redaction.redactedRegionCount,
+  });
+  return digest(payload);
+}
+
 export const screenshotHandleSchema = z
   .object({
     screenshotId: z.string().regex(/^screenshot_[a-f0-9]{16}$/u),
@@ -233,52 +431,60 @@ export interface ScreenshotCaptureAdapter {
 export async function captureRedactedScreenshot(
   input: unknown,
   adapter: ScreenshotCaptureAdapter,
-  options: { signal?: AbortSignal; now?: Date } = {},
+  options: ProviderOperationOptions,
 ): Promise<ScreenshotHandle> {
-  const now = options.now ?? new Date();
-  const request = screenshotRequestSchema.parse(input);
-  assertLive(request, now);
-  assertNotAborted(options.signal);
-  if (scanForSecret(request.target.descriptor) || scanForUrl(request.target.descriptor))
-    throw new LocalWorkstationDeniedError("SCREENSHOT_TARGET_UNSAFE");
-  const controller = new AbortController();
-  const timeout = setTimeout(() => {
-    controller.abort();
-  }, 30_000);
-  const signal =
-    options.signal === undefined
-      ? controller.signal
-      : AbortSignal.any([options.signal, controller.signal]);
-  let capture: ScreenshotCapture;
-  try {
-    capture = screenshotCaptureSchema.parse(await adapter.capture(request, signal));
-  } finally {
-    clearTimeout(timeout);
-  }
-  if (!capture.redaction.attested) throw new LocalWorkstationDeniedError("SCREENSHOT_NOT_REDACTED");
-  if (
-    capture.byteLength > request.maximumBytes ||
-    capture.widthPx > request.maximumWidthPx ||
-    capture.heightPx > request.maximumHeightPx
-  )
-    throw new LocalWorkstationDeniedError("SCREENSHOT_BOUNDS_EXCEEDED");
-  return screenshotHandleSchema.parse({
-    screenshotId: `screenshot_${createHash("sha256")
-      .update(`${request.requestId}:${capture.contentDigest}`)
-      .digest("hex")
-      .slice(0, 16)}`,
-    target: request.target,
-    capturedAt: now.toISOString(),
-    expiresAt: request.expiresAt,
-    widthPx: capture.widthPx,
-    heightPx: capture.heightPx,
-    byteLength: capture.byteLength,
-    contentDigest: capture.contentDigest,
-    redaction: capture.redaction,
-    ephemeral: true,
-    persisted: false,
-    authority: "none",
-  });
+  const decisionId = safeDecisionId(input);
+  return auditedOperation(
+    options.audit,
+    "screenshot",
+    decisionId,
+    "redacted handle released",
+    async () => {
+      const request = screenshotRequestSchema.parse(input);
+      const startedAt = operationNow(options);
+      assertLive(request, startedAt);
+      assertNotAborted(options.signal);
+      if (scanForSecret(request.target.descriptor) || scanForUrl(request.target.descriptor))
+        throw new LocalWorkstationDeniedError("SCREENSHOT_TARGET_UNSAFE");
+      options.replayGuard.claim("screenshot", request.requestId, request.expiresAt, startedAt);
+      const capture = screenshotCaptureSchema.parse(
+        await awaitBoundedProvider((signal) => adapter.capture(request, signal), options),
+      );
+      assertNotAborted(options.signal);
+      const completedAt = operationNow(options);
+      assertLive(request, completedAt);
+      if (!capture.redaction.attested)
+        throw new LocalWorkstationDeniedError("SCREENSHOT_NOT_REDACTED");
+      if (
+        capture.redaction.attestationDigest !==
+        screenshotRedactionAttestationDigest(request, capture)
+      )
+        throw new LocalWorkstationDeniedError("SCREENSHOT_ATTESTATION_INVALID");
+      if (
+        capture.byteLength > request.maximumBytes ||
+        capture.widthPx > request.maximumWidthPx ||
+        capture.heightPx > request.maximumHeightPx
+      )
+        throw new LocalWorkstationDeniedError("SCREENSHOT_BOUNDS_EXCEEDED");
+      return screenshotHandleSchema.parse({
+        screenshotId: `screenshot_${createHash("sha256")
+          .update(`${request.requestId}:${capture.contentDigest}`)
+          .digest("hex")
+          .slice(0, 16)}`,
+        target: request.target,
+        capturedAt: completedAt.toISOString(),
+        expiresAt: request.expiresAt,
+        widthPx: capture.widthPx,
+        heightPx: capture.heightPx,
+        byteLength: capture.byteLength,
+        contentDigest: capture.contentDigest,
+        redaction: capture.redaction,
+        ephemeral: true,
+        persisted: false,
+        authority: "none",
+      });
+    },
+  );
 }
 
 /* -------------------------------------------------------------------------- */
@@ -353,14 +559,62 @@ export function describeCredentialReference(reference: CredentialReference): {
 }
 
 /** Enumeration is never permitted: listing stored credentials is refused. */
-export function denyCredentialEnumeration(): never {
+export function denyCredentialEnumeration(options: {
+  audit: LocalWorkstationDecisionRecorder;
+}): never {
+  auditedGuard(
+    options.audit,
+    "credential-reference",
+    "credential-enumeration",
+    "unreachable",
+    () => {
+      throw new LocalWorkstationDeniedError("CREDENTIAL_ENUMERATION_DENIED");
+    },
+  );
   throw new LocalWorkstationDeniedError("CREDENTIAL_ENUMERATION_DENIED");
+}
+
+export const credentialResolutionOperationSchema = z.literal("resolve-credential-reference");
+
+export const credentialResolutionAuthorizationPayloadSchema = z
+  .object({
+    referenceId: z.string().regex(/^credential_[a-f0-9]{16}$/u),
+    provider: credentialProviderSchema,
+    reference: z.string().regex(/^wcm:\/\/[A-Za-z0-9._/-]{1,200}$/u),
+    operation: credentialResolutionOperationSchema,
+    approvedBy: z.literal("Founder"),
+    approvedAt: timestampSchema,
+    expiresAt: timestampSchema,
+  })
+  .strict();
+export type CredentialResolutionAuthorizationPayload = z.infer<
+  typeof credentialResolutionAuthorizationPayloadSchema
+>;
+
+export function credentialResolutionRequestDigest(
+  reference: CredentialReference,
+  authorization: Pick<
+    CredentialResolutionAuthorizationPayload,
+    "operation" | "approvedBy" | "approvedAt" | "expiresAt"
+  >,
+): `sha256:${string}` {
+  const parsedReference = credentialReferenceSchema.parse(reference);
+  return digest(
+    credentialResolutionAuthorizationPayloadSchema.parse({
+      referenceId: parsedReference.referenceId,
+      provider: parsedReference.provider,
+      reference: parsedReference.reference,
+      ...authorization,
+    }),
+  );
 }
 
 export const credentialResolutionAuthorizationSchema = z
   .object({
     referenceId: z.string().regex(/^credential_[a-f0-9]{16}$/u),
+    operation: credentialResolutionOperationSchema,
     approvedBy: z.literal("Founder"),
+    approvedAt: timestampSchema,
     requestDigest: sha256DigestSchema,
     expiresAt: timestampSchema,
   })
@@ -379,16 +633,47 @@ export type CredentialResolutionAuthorization = z.infer<
 export function assertCredentialResolutionAuthorized(
   reference: CredentialReference,
   authorization: unknown,
-  options: { now?: Date } = {},
+  options: {
+    audit: LocalWorkstationDecisionRecorder;
+    replayGuard: LocalWorkstationReplayGuard;
+    now?: Date;
+    clock?: () => Date;
+  },
 ): void {
-  const now = options.now ?? new Date();
-  const parsed = credentialResolutionAuthorizationSchema.safeParse(authorization);
-  if (!parsed.success) throw new LocalWorkstationDeniedError("CREDENTIAL_AUTHORIZATION_REQUIRED");
-  if (
-    parsed.data.referenceId !== reference.referenceId ||
-    Date.parse(parsed.data.expiresAt) <= now.getTime()
-  )
-    throw new LocalWorkstationDeniedError("CREDENTIAL_AUTHORIZATION_INVALID");
+  auditedGuard(
+    options.audit,
+    "credential-reference",
+    reference.referenceId,
+    "exact resolution authorization accepted",
+    () => {
+      const parsedReference = credentialReferenceSchema.parse(reference);
+      const parsed = credentialResolutionAuthorizationSchema.safeParse(authorization);
+      if (!parsed.success)
+        throw new LocalWorkstationDeniedError("CREDENTIAL_AUTHORIZATION_REQUIRED");
+      const current = options.clock?.() ?? options.now ?? new Date();
+      assertLive(
+        { requestedAt: parsed.data.approvedAt, expiresAt: parsed.data.expiresAt },
+        current,
+      );
+      const expectedDigest = credentialResolutionRequestDigest(parsedReference, {
+        operation: parsed.data.operation,
+        approvedBy: parsed.data.approvedBy,
+        approvedAt: parsed.data.approvedAt,
+        expiresAt: parsed.data.expiresAt,
+      });
+      if (
+        parsed.data.referenceId !== parsedReference.referenceId ||
+        parsed.data.requestDigest !== expectedDigest
+      )
+        throw new LocalWorkstationDeniedError("CREDENTIAL_AUTHORIZATION_INVALID");
+      options.replayGuard.claim(
+        "credential-reference",
+        parsed.data.requestDigest,
+        parsed.data.expiresAt,
+        current,
+      );
+    },
+  );
 }
 
 /* -------------------------------------------------------------------------- */
@@ -439,42 +724,49 @@ export interface LocalNotificationAdapter {
 export async function presentLocalNotification(
   input: unknown,
   adapter: LocalNotificationAdapter,
-  options: { signal?: AbortSignal; now?: Date } = {},
+  options: ProviderOperationOptions,
 ): Promise<LocalNotificationReceipt> {
-  const now = options.now ?? new Date();
-  const request = localNotificationRequestSchema.parse(input);
-  assertLive(request, now);
-  assertNotAborted(options.signal);
-  const text = `${request.title}\n${request.body}`;
-  if (scanForUrl(text)) throw new LocalWorkstationDeniedError("NOTIFICATION_LINK_DENIED");
-  if (scanForSecret(text)) throw new LocalWorkstationDeniedError("NOTIFICATION_SECRET_DENIED");
-  if (scanForAuthorityLaundering(text))
-    throw new LocalWorkstationDeniedError("NOTIFICATION_AUTHORITY_LAUNDERING_DENIED");
-  const controller = new AbortController();
-  const timeout = setTimeout(() => {
-    controller.abort();
-  }, 30_000);
-  const signal =
-    options.signal === undefined
-      ? controller.signal
-      : AbortSignal.any([options.signal, controller.signal]);
-  let shownAt: string;
-  try {
-    ({ shownAt } = await adapter.deliver(request, signal));
-  } finally {
-    clearTimeout(timeout);
-  }
-  return localNotificationReceiptSchema.parse({
-    notificationId: `notification_${createHash("sha256")
-      .update(`${request.requestId}:${shownAt}`)
-      .digest("hex")
-      .slice(0, 16)}`,
-    destination: "local",
-    shownAt,
-    urgency: request.urgency,
-    persisted: false,
-    remote: false,
-    actionable: false,
-    authority: "none",
-  });
+  const decisionId = safeDecisionId(input);
+  return auditedOperation(
+    options.audit,
+    "local-notification",
+    decisionId,
+    "local notification receipt released",
+    async () => {
+      const request = localNotificationRequestSchema.parse(input);
+      const startedAt = operationNow(options);
+      assertLive(request, startedAt);
+      assertNotAborted(options.signal);
+      const text = `${request.title}\n${request.body}`;
+      if (scanForUrl(text)) throw new LocalWorkstationDeniedError("NOTIFICATION_LINK_DENIED");
+      if (scanForSecret(text)) throw new LocalWorkstationDeniedError("NOTIFICATION_SECRET_DENIED");
+      if (scanForAuthorityLaundering(text))
+        throw new LocalWorkstationDeniedError("NOTIFICATION_AUTHORITY_LAUNDERING_DENIED");
+      options.replayGuard.claim(
+        "local-notification",
+        request.requestId,
+        request.expiresAt,
+        startedAt,
+      );
+      const { shownAt } = await awaitBoundedProvider(
+        (signal) => adapter.deliver(request, signal),
+        options,
+      );
+      assertNotAborted(options.signal);
+      assertLive(request, operationNow(options));
+      return localNotificationReceiptSchema.parse({
+        notificationId: `notification_${createHash("sha256")
+          .update(`${request.requestId}:${shownAt}`)
+          .digest("hex")
+          .slice(0, 16)}`,
+        destination: "local",
+        shownAt,
+        urgency: request.urgency,
+        persisted: false,
+        remote: false,
+        actionable: false,
+        authority: "none",
+      });
+    },
+  );
 }
