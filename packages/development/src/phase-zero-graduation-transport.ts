@@ -242,9 +242,11 @@ export interface PhaseZeroGraduationTransportStore {
  */
 export class PhaseZeroGraduationReadinessController {
   readonly #store: PhaseZeroGraduationTransportStore;
+  readonly #now: () => Date;
 
-  constructor(store: PhaseZeroGraduationTransportStore) {
+  constructor(store: PhaseZeroGraduationTransportStore, now: () => Date = () => new Date()) {
     this.#store = store;
+    this.#now = now;
   }
 
   async read() {
@@ -261,7 +263,8 @@ export class PhaseZeroGraduationReadinessController {
       receipt.graduationId !== envelope.approval.graduationId ||
       receipt.proposalDigest !== envelope.approval.proposalDigest ||
       receipt.approvalType !== envelope.approvalType ||
-      Date.parse(receipt.consumedAt) < Date.parse(envelope.approval.issuedAt)
+      Date.parse(receipt.consumedAt) < Date.parse(envelope.approval.issuedAt) ||
+      Date.parse(receipt.consumedAt) > this.#now().getTime()
     )
       throw new Error("PHASE_ZERO_APPROVAL_RECEIPT_MISMATCH");
     return receipt;

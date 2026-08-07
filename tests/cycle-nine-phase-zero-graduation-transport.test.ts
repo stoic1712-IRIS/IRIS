@@ -84,19 +84,22 @@ describe("Cycle Nine Core graduation transport", () => {
 
   it("rejects a durable receipt that does not bind the submitted approval", async () => {
     const proposalDigest = `sha256:${"e".repeat(64)}` as const;
-    const controller = new PhaseZeroGraduationReadinessController({
-      read: () => Promise.resolve(createIdlePhaseZeroGraduationEnvelope("b".repeat(40), now)),
-      consumeApproval: () =>
-        Promise.resolve({
-          approvalId: `approval_phase0-${"f".repeat(8)}`,
-          graduationId: "graduation_phase0-transport-0001",
-          proposalDigest,
-          approvalType: "graduation",
-          consumedBy: "IRIS",
-          durableLedger: true,
-          consumedAt: now.toISOString(),
-        }),
-    });
+    const controller = new PhaseZeroGraduationReadinessController(
+      {
+        read: () => Promise.resolve(createIdlePhaseZeroGraduationEnvelope("b".repeat(40), now)),
+        consumeApproval: () =>
+          Promise.resolve({
+            approvalId: `approval_phase0-${"f".repeat(8)}`,
+            graduationId: "graduation_phase0-transport-0001",
+            proposalDigest,
+            approvalType: "graduation",
+            consumedBy: "IRIS",
+            durableLedger: true,
+            consumedAt: now.toISOString(),
+          }),
+      },
+      () => now,
+    );
     await expect(
       controller.consumeApproval({
         approvalType: "graduation",
