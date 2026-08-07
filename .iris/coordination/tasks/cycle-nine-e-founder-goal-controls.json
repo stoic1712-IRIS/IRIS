@@ -1,0 +1,85 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "cycle-nine-e-founder-goal-controls",
+  "objective": "Add the authenticated loopback Founder Command Center surface for additive Cycle Nine long-running goals, dependency graphs, worker activity, compacted context summaries, steering, pause, resume, cancel, conflicts, independent review, evidence, and recovery while IRIS Core remains the sole orchestration authority.",
+  "issuer": "Founder Cristofer Stoic Arellano through Codex",
+  "executor": "Codex",
+  "assigned_role": "producer",
+  "created_at": "2026-08-07T12:10:04Z",
+  "status": "draft",
+  "risk_class": "R3",
+  "authorization_mode": "single_action",
+  "completion_mandate_text": null,
+  "completion_actions": [],
+  "completion_exclusions": [
+    "Core authority ownership in the Command Center",
+    "Secret or credential persistence",
+    "Deployment or public or LAN exposure",
+    "Spending, administration, force-push, or history rewrite",
+    "Final Phase 0 graduation execution"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "63c6319967a8785dae4c5c1a5e829e3c1d433141"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "main",
+      "commit": "89b198946de906bceb5069850fbbb6286ab2b3c8"
+    }
+  ],
+  "allowed_paths": [
+    "README.md",
+    "scripts/local-gateway.mjs",
+    "src/App.tsx",
+    "src/goal-client.ts",
+    "src/styles.css",
+    "src/views/Goals.tsx",
+    "tests/goal-client.test.ts",
+    "tests/goals.test.tsx",
+    "tests/local-gateway.test.ts"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    ".claude/**",
+    ".iris/**",
+    "package.json",
+    "pnpm-lock.yaml",
+    "C:/Projects/STOIC-IRIS/**",
+    "C:/Projects/STOIC-IRIS-source-library/**"
+  ],
+  "permitted_actions": [
+    "Consume the exact reviewed Cycle Nine D Core contract",
+    "Add authenticated objective, status, steer, pause, resume, cancel, and evidence routes",
+    "Use memory-only Founder session state and hermetic fixtures",
+    "Complete the ordinary governed repository lifecycle"
+  ],
+  "prohibited_actions": [
+    "Invent or own orchestration truth in the UI",
+    "Allow worker self-approval or scope expansion",
+    "Persist raw model context or credentials",
+    "Deploy, expose, spend, administer, force-push, rewrite history, or execute final graduation"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm exec vitest run tests/goal-client.test.ts tests/goals.test.tsx tests/local-gateway.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "Exact Core contract consumption",
+    "Authenticated long-running goal controls and truthful status",
+    "Steering, cancellation, conflict, reviewer, recovery, and expiry tests",
+    "No Command Center authority laundering",
+    "Remote equality, rollback, and cleanup"
+  ],
+  "publisher": null,
+  "approval_reference": "founder-additive-development-cycle-completion-2026-08-07",
+  "phase0_graduation": false
+}
