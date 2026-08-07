@@ -1,0 +1,31 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "cycle-eleven-b-founder-desktop-controls",
+  "objective": "Add the Founder Command Center preview, typed-approval, immediate-stop, status, and audit surface for Cycle Eleven governed desktop control while preserving Core ownership and keeping real control disabled until an exact active Founder session authorizes one bounded action.",
+  "issuer": "Founder Cristofer Stoic Arellano through Codex",
+  "executor": "Codex",
+  "assigned_role": "producer",
+  "created_at": "2026-08-07T12:00:03Z",
+  "status": "approved",
+  "risk_class": "R3",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "Founder mandate: complete the remaining cycles directly with Codex. This task authorizes bounded local implementation, hermetic verification, and the ordinary repository lifecycle. It excludes live desktop control, credentials, persistence of typed input, deployment, exposure, spending, provider resources, administration, force-push, history rewrite, and final graduation.",
+  "completion_actions": ["research", "edit", "verify", "repair", "stage", "commit", "push_branch", "create_pull_request", "independent_review", "merge", "synchronize", "cleanup"],
+  "completion_exclusions": ["Live desktop action", "Credential or secret input", "Deployment", "Final Phase 0 graduation"],
+  "base_revisions": [
+    {"repository": "stoic1712-IRIS/IRIS", "branch": "main", "commit": "e3a21db158df831224978de5e9fb3c9e9efc11aa"},
+    {"repository": "stoic1712-IRIS/iris-founder-command-center", "branch": "main", "commit": "97f3bdb79ce7d7d503eba3d3570b04c8309a1785"}
+  ],
+  "allowed_paths": ["README.md", "scripts/local-gateway.mjs", "src/App.tsx", "src/desktop-client.ts", "src/styles.css", "src/views/DesktopControl.tsx", "tests/desktop-client.test.ts", "tests/desktop-control.test.tsx", "tests/local-gateway.test.ts"],
+  "excluded_paths": [".github/**", ".claude/**", ".iris/**", "package.json", "pnpm-lock.yaml", "C:/Projects/STOIC-IRIS/**", "C:/Projects/STOIC-IRIS-source-library/**"],
+  "permitted_actions": ["Consume the exact Core Cycle Eleven A contract", "Add authenticated preview, approval, stop, and status routes", "Use hermetic fixtures", "Complete ordinary repository delivery"],
+  "prohibited_actions": ["Own desktop authority in the UI process", "Control the live desktop during verification", "Persist typed input or secrets", "Deploy, spend, or perform final graduation"],
+  "acceptance_commands": [
+    {"repository": "stoic1712-IRIS/iris-founder-command-center", "command": "pnpm exec vitest run tests/desktop-client.test.ts tests/desktop-control.test.tsx tests/local-gateway.test.ts"},
+    {"repository": "stoic1712-IRIS/iris-founder-command-center", "command": "pnpm verify"}
+  ],
+  "required_evidence": ["Exact Core contract consumption", "Typed approval and preview digest binding", "Immediate stop and fail-closed tests", "No live control", "Remote equality, rollback, and cleanup"],
+  "publisher": "Codex under Founder completion mandate after exact-patch verification",
+  "approval_reference": "founder-cycles-ten-through-twelve-completion-2026-08-07",
+  "phase0_graduation": false
+}
