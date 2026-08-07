@@ -1,0 +1,29 @@
+{
+  "cycle": 8,
+  "proof": "fictional-disposable-local-model-execution",
+  "executedAt": "2026-08-06",
+  "model": "qwen3-coder:30b",
+  "proposalDigest": "sha256:cbc592912a6424226284ec40d0369978a78567cf158301c71f740c175fafde71",
+  "status": "succeeded",
+  "iteration": 1,
+  "candidateCommit": "e9a383e2a28551879070a9a0140840ec010163ab",
+  "candidateRef": "refs/heads/iris/candidate/cycle8-live-model-proof-0001",
+  "changedPaths": ["math.mjs"],
+  "checks": [
+    {
+      "command": ["node", "--test", "math.test.mjs"],
+      "exitCode": 0,
+      "outputDigest": "sha256:b707331863027bf9a39d60c49a56aee97277ea7f208070bc178e9f84034bf607"
+    }
+  ],
+  "canonicalRevisionUnchanged": true,
+  "canonicalContentUnchanged": true,
+  "candidateCorrected": true,
+  "cleanupVerified": true,
+  "eventChainVerified": true,
+  "recoveryAvailable": false,
+  "rawModelReasoningRetained": false,
+  "credentialsUsed": false,
+  "externalMutation": false,
+  "budgetUsd": 0
+}

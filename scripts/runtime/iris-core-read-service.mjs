@@ -8,9 +8,20 @@ import {
 import { parseCoreReadRequest } from "../../packages/kernel/dist/read-service.js";
 
 const host = "127.0.0.1";
-const port = 4181;
+const port = readLoopbackPort("IRIS_CORE_READ_PORT", 4181);
 const checkpoint = "468f81e4c2f91afe101796157d867926123c853d";
 const maximumBytes = 256 * 1024;
+
+function readLoopbackPort(name, fallback) {
+  const value = process.env[name];
+  if (value === undefined) return fallback;
+  if (!/^[0-9]{1,5}$/u.test(value)) throw new Error(`${name}_INVALID`);
+  const candidate = Number(value);
+  if (!Number.isInteger(candidate) || candidate < 1024 || candidate > 65_535) {
+    throw new Error(`${name}_INVALID`);
+  }
+  return candidate;
+}
 
 function git(...args) {
   const options = {
