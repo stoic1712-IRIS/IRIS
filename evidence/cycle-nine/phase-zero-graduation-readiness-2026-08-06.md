@@ -1,11 +1,16 @@
 # Cycle Nine A Phase 0 Graduation Readiness Evidence
 
-**Date:** 2026-08-06 America/Denver  
-**Producer:** Codex  
-**Repository:** `stoic1712-IRIS/IRIS`  
-**Branch:** `iris/cycle-nine-a-phase-0-graduation-readiness`  
-**Base revision:** `806cdc60668df1f1ed53ff33ac80bb2e4123afb2`  
-**Command Center bound revision:** `f0a12b26a7271ed8cb2d2f1b08719b90c397628a`  
+**Date:** 2026-08-06 America/Denver
+
+**Producer:** Codex
+
+**Repository:** `stoic1712-IRIS/IRIS`
+
+**Branch:** `iris/cycle-nine-a-phase-0-graduation-readiness`
+
+**Base revision:** `806cdc60668df1f1ed53ff33ac80bb2e4123afb2`
+
+**Command Center bound revision:** `f0a12b26a7271ed8cb2d2f1b08719b90c397628a`
 **Material patch digest:** `sha256:fc243446147afb6d074343d00d30dd37fa48679c7a73b0cb4d5501584e769f4a`
 
 ## Scope and boundary
