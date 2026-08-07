@@ -34,7 +34,7 @@
     {
       "repository": "stoic1712-IRIS/IRIS",
       "branch": "main",
-      "commit": "e3a21db158df831224978de5e9fb3c9e9efc11aa"
+      "commit": "06699834040f5469332c4ee16cf5cee8598d8129"
     },
     {
       "repository": "stoic1712-IRIS/iris-founder-command-center",
@@ -63,7 +63,7 @@
     "C:/Projects/STOIC-IRIS-source-library/**"
   ],
   "permitted_actions": [
-    "Consume the exact Core Cycle Ten D contract through the existing IRIS_ROOT boundary",
+    "Consume the exact Core Cycle Ten D contract at 06699834040f5469332c4ee16cf5cee8598d8129 through the existing IRIS_ROOT boundary",
     "Add authenticated same-origin CSRF-protected loopback routes",
     "Render metadata-only status and exact approval statements",
     "Verify with hermetic fixtures"
