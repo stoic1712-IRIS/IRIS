@@ -1,0 +1,91 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "cycle-nine-c-phase-zero-graduation-transport",
+  "objective": "Add the missing IRIS Core-owned, loopback-only Phase 0 graduation transport contract required to correct Cycle Nine B: strict readiness envelopes, complete initial and merge approval envelopes, body-bound authenticated requests, canonical stage progression, an idle/unavailable runtime default, and no process-local approval ledger or execution authority.",
+  "issuer": "Founder Cristofer Stoic Arellano",
+  "executor": "Codex",
+  "assigned_role": "producer",
+  "created_at": "2026-08-07T05:31:00.000Z",
+  "status": "approved",
+  "risk_class": "R2",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "Founder mandate: Codex and Claude must fix bounded problems as they arise, avoid needless delays, and finish Cycle Nine together. Ordinary exact-path implementation, verification, repair, staging, commit, non-force branch push, pull request, independent review, merge, synchronization, and cleanup are bundled; protected effects remain excluded.",
+  "completion_actions": [
+    "edit",
+    "verify",
+    "repair",
+    "stage",
+    "commit",
+    "push_branch",
+    "create_pull_request",
+    "independent_review",
+    "merge",
+    "synchronize",
+    "cleanup"
+  ],
+  "completion_exclusions": [
+    "Final Phase 0 graduation execution or any claim that Phase 0 is complete",
+    "Persistent credentials, deployment, startup registration, public or LAN exposure, spending, paid resources, or provider-resource creation",
+    "Repository administration, visibility, ruleset, branch-protection, secret, variable, release, billing, access-control, or organization changes",
+    "Force-push, history rewrite, destructive cleanup, canonical evidence deletion, or unrelated work"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "bf0ef56ffa027ceddcd4fb660b1c75998f4f5f9e"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/tasks/cycle-nine-c-phase-zero-graduation-transport.json",
+    "docs/specifications/cycle-nine-phase-zero-graduation-transport.md",
+    "packages/development/src/phase-zero-graduation-readiness.ts",
+    "packages/development/src/phase-zero-graduation-transport.ts",
+    "packages/development/src/index.ts",
+    "packages/kernel/src/graduation-service.ts",
+    "packages/kernel/src/index.ts",
+    "scripts/runtime/iris-core-read-service.mjs",
+    "tests/cycle-nine-phase-zero-graduation-transport.test.ts"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    ".claude/**",
+    "pnpm-lock.yaml",
+    "C:/Projects/STOIC-IRIS-source-library/**",
+    "C:/Projects/iris-founder-command-center-cycle-nine-b/**"
+  ],
+  "permitted_actions": [
+    "Repair only the exact allowed Core paths in the isolated Cycle Nine C worktree",
+    "Use the exact frozen lockfile with lifecycle scripts disabled to materialize already pinned dependencies",
+    "Run focused and full local verification and repair bounded failures",
+    "Publish non-force only after an independent exact-head review passes"
+  ],
+  "prohibited_actions": [
+    "Store approval authority or graduation truth in the HTTP process",
+    "Expose any execute, merge, provider-mutation, repository-write, or completion route",
+    "Accept incomplete approvals or signatures that do not bind the exact request body",
+    "Use credentials, deploy, expose public or LAN ports, spend, force-push, rewrite history, or delete canonical evidence"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run tests/cycle-nine-phase-zero-graduation-transport.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "Exact base revision and exact changed-path list",
+    "Separate read and approval scopes with HMAC binding of method, route, request ID, timestamp, audience, scope, and exact body digest",
+    "Strict full initial and merge approval envelopes derived from canonical Core schemas",
+    "Canonical stage progression rejects reordered and skipped successful chains",
+    "Runtime binds only to loopback and defaults to idle or unavailable without an authoritative Core store",
+    "No process-local approval ledger, execution route, or Phase 0 completion claim",
+    "Focused and full verification plus independent reviewer PASS"
+  ],
+  "publisher": "Codex after independent-review pass",
+  "approval_reference": "founder-completion-mandate-2026-08-06",
+  "phase0_graduation": false
+}
