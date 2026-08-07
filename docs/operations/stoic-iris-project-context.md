@@ -201,7 +201,7 @@ Read the smallest relevant set, including:
 - `docs/governance/integrated-build-workflow.md`;
 - `docs/governance/testing-and-verification-standards.md`;
 - the relevant ADR, specification, registry entries, evidence, and `.iris/coordination` task; and
-- `docs/governance/multi-agent-coordination-policy.md` only after checking whether its status is still draft or has become canonical.
+- canonical `docs/governance/multi-agent-coordination-policy.md` version 1.0.0.
 
 ## Operator Self-Check
 
