@@ -1,0 +1,81 @@
+{
+  "schema_version": "1.0.0",
+  "handoff_id": "cycle-ten-a-research-integrity",
+  "task_id": "cycle-ten-a-research-integrity",
+  "producer": "Claude",
+  "recipient": "Codex",
+  "created_at": "2026-08-07T08:30:00.000Z",
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "93baed93b937c6f359af600f19b4a533548d8f47"
+    }
+  ],
+  "result_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "iris/cycle-ten-a-research-integrity",
+      "commit": null,
+      "patch_digest": "sha256:44f20c8e52c59139a767d76cd5bf6dccac1ed7dbdd08fb3c9f9d56a8e9b8499a"
+    }
+  ],
+  "changed_paths": [
+    "packages/tool-gateway/src/research-integrity.ts",
+    "packages/tool-gateway/src/index.ts",
+    "tests/cycle-ten-research-integrity.test.ts",
+    "docs/specifications/cycle-ten-research-integrity.md",
+    "evidence/cycle-ten/research-integrity-2026-08-07.md",
+    ".iris/coordination/handoffs/cycle-ten-a-research-integrity.json"
+  ],
+  "commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm install --offline --frozen-lockfile --ignore-scripts",
+      "exit_code": 1
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm install --frozen-lockfile --ignore-scripts",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run tests/cycle-ten-research-integrity.test.ts tests/cycle-six-connected-tool-providers.test.ts tests/cycle-six-governed-tool-gateway.test.ts",
+      "exit_code": 0
+    },
+    { "repository": "stoic1712-IRIS/IRIS", "command": "pnpm format:check", "exit_code": 0 },
+    { "repository": "stoic1712-IRIS/IRIS", "command": "pnpm lint", "exit_code": 0 },
+    { "repository": "stoic1712-IRIS/IRIS", "command": "pnpm typecheck", "exit_code": 0 },
+    { "repository": "stoic1712-IRIS/IRIS", "command": "pnpm test", "exit_code": 1 },
+    { "repository": "stoic1712-IRIS/IRIS", "command": "pnpm build", "exit_code": 0 },
+    { "repository": "stoic1712-IRIS/IRIS", "command": "pnpm diagnostics", "exit_code": 0 },
+    { "repository": "stoic1712-IRIS/IRIS", "command": "pnpm verify", "exit_code": 1 }
+  ],
+  "evidence": [
+    "All six foundation-source SHA-256 digests verified against SOURCE-MANIFEST.md before and after the work; the library was read only and never staged.",
+    "Isolated Claude-owned worktree C:\\Projects\\STOIC-IRIS-cycle-ten-a on branch iris/cycle-ten-a-research-integrity, cut from 3e949479f2429037bfacea7e88eed60efbbd77aa, a direct descendant of the task base 93baed93b937c6f359af600f19b4a533548d8f47.",
+    "Acceptance command one passed with exit code 0: 36 tests across the new Cycle Ten A suite and both existing Cycle Six suites, which are unchanged.",
+    "The new suite contributes 28 tests: query normalization and budgeting, fail-closed budget exhaustion, canonical-URL deduplication, source ceiling, all six injection categories including authority-laundering and credential-exfiltration, quarantine withholding text entirely, per-origin isolation for search/browser/MCP, hidden-character stripping, source scoring and rejection, plaintext-transport penalty, supported/unsupported/quarantined-not-cited/conflicted claim verdicts, abort-signal and explicit cancellation, exact resumption without re-spending budget, gateway audit-chain integrity across a bounded research call, and the retained-text bound.",
+    "pnpm-lock.yaml is byte-identical before and after dependency materialization: sha256:c439ca276aa7fe0481489b3bf56435423eb153456ba59852126a8df2ac03b9c4.",
+    "No provider added or adopted; no service or container started; no credential read, used, or disclosed; no desktop control, screenshot capture, notification delivery, or remote access implemented.",
+    "No dependency version changed, no lockfile edited, no lifecycle script executed.",
+    "USD 0 spent, zero provider resources created, no port beyond loopback opened, no deployment, no Phase 0 graduation effect, and no claim of complete Cycle Ten capability parity.",
+    "The task record .iris/coordination/tasks/cycle-ten-a-research-integrity.json was not modified.",
+    "Cycle Six provider internals (browser-provider.ts, search-provider.ts, gateway.ts, contracts.ts) were available in allowed paths but left unchanged; isolation composes above the gateway without weakening it. Only index.ts changed, to export the new module."
+  ],
+  "limitations": [
+    "The task permits materializing the frozen lockfile offline. The offline store lacks one already-pinned tarball (@xyflow/react@12.11.2, a Wave 11 dependency), so --offline failed with ERR_PNPM_NO_OFFLINE_TARBALL. The same command without --offline was run instead. It changed no dependency version, executed no lifecycle script, and left the lockfile byte-identical. This is a documented deviation from the literal permitted action and requires Codex acceptance or rejection.",
+    "pnpm test and the aggregate pnpm verify exit 1 on one pre-existing failure unrelated to Cycle Ten: tests/cycle-eight-executable-worker-runtime.test.ts > 'denies a tracked symlink without modifying its external target' fails with EPERM: operation not permitted, symlink at its own setup. This Windows session cannot create symlinks at all (Developer Mode off, shell not elevated); an isolated fs.symlinkSync probe fails identically. That test imports no Cycle Ten code and was not modified. It lies outside this task's allowed paths and was therefore left unrepaired. All other 256 tests pass, and the format, lint, typecheck, build, and diagnostics stages each exit 0.",
+    "No live provider was exercised. All verification uses deterministic hermetic fixtures; SearXNG, Playwright, and MCP processes were not started, as the task requires.",
+    "This tranche delivers no Founder Command Center surface. Cycle Ten B and the provider-dependent tranches remain outside scope."
+  ],
+  "rollback": "Close the pull request without merging, delete the remote branch iris/cycle-ten-a-research-integrity through the ordinary non-force path, remove the isolated worktree C:\\Projects\\STOIC-IRIS-cycle-ten-a, and run git worktree prune. main is never modified, so no history rewrite is required at any point.",
+  "protected_actions_remaining": [
+    "Independent Codex review of the exact producer commit",
+    "Merge of the pull request after a review pass",
+    "Post-merge synchronization and branch and worktree cleanup",
+    "Acceptance or rejection of the documented offline-install deviation"
+  ],
+  "ready_for_review": true
+}
