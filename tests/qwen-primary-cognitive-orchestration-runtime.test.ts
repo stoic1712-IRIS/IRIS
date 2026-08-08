@@ -13,6 +13,7 @@ import {
   cognitiveHarness,
   conversationRequest,
   directEnvelope,
+  delayedPlanningHarness,
   delayedSpecialistHarness,
   exactEvidence,
   fastResponseEnvelope,
@@ -229,6 +230,22 @@ describe("Qwen primary cognitive orchestration runtime", () => {
     expect(harness.worker.calls).toHaveLength(0);
   });
 
+  it("lets Founder cancellation win while degraded Qwen 8B planning is still running", async () => {
+    const harness = delayedPlanningHarness();
+    const request = conversationRequest({ riskClass: "R0", availableModels: ["qwen3:8b"] });
+    const running = harness.runtime.start(request, policy(["conversation"]));
+    await harness.provider.started;
+
+    const cancelled = await harness.runtime.cancel(request.requestId);
+    harness.provider.resolve(directEnvelope("Late degraded response."));
+    const result = await running;
+
+    expect(cancelled.phase).toBe("cancelled");
+    expect(result.phase).toBe("cancelled");
+    expect(result.presentation).toBeNull();
+    expect((await harness.runtime.state(request.requestId))?.phase).toBe("cancelled");
+  });
+
   it("stops delegated work when the primary orchestrator or required reviewer is unavailable", async () => {
     const noPrimary = cognitiveHarness();
     expect(
@@ -267,6 +284,22 @@ describe("Qwen primary cognitive orchestration runtime", () => {
     expect(completed.phase).toBe("completed");
     expect(delegated.worker.models).toEqual(["qwen3.6:27b"]);
     expect(delegated.worker.reviewerModels).toEqual(["gpt-oss:20b"]);
+  });
+
+  it("keeps vision purpose when an image request includes a model override", async () => {
+    const harness = cognitiveHarness({ planningEnvelope: directEnvelope("Image inspected.") });
+    const result = await harness.runtime.start(
+      conversationRequest({
+        utterance: "Use qwen3.6:27b to inspect this image.",
+        hasImage: true,
+      }),
+      policy(["conversation"]),
+    );
+
+    expect(result.phase).toBe("completed");
+    expect(result.route?.purpose).toBe("vision");
+    expect(result.route?.model).toBe("qwen3.6:27b");
+    expect(result.route?.independentReviewModel).toBeNull();
   });
 
   it("fails closed instead of using unsuitable fallbacks for material work", async () => {
@@ -348,16 +381,18 @@ describe("Qwen primary cognitive orchestration runtime", () => {
     expect(restarted.provider.synthesisCalls).toBe(0);
   });
 
-  it("redacts bare tokens and private keys before durable steering", async () => {
+  it("redacts every canonical secret form before durable steering", async () => {
     const delayed = delayedSpecialistHarness();
     const running = delayed.runtime.start(codingRequest(), codingPolicy());
     await delayed.worker.started;
     const steered = await delayed.runtime.steer(
       codingRequest().requestId,
-      `Use github_pat_${"a".repeat(40)} and -----BEGIN PRIVATE KEY----- secret -----END PRIVATE KEY-----`,
+      `Use github_pat_${"a".repeat(40)}, access_token=${"b".repeat(20)}, client_secret=${"c".repeat(20)}, and -----BEGIN PRIVATE KEY----- without an end marker`,
     );
     expect(steered.steeringNotes[0]).not.toContain("github_pat_");
-    expect(steered.steeringNotes[0]).not.toContain("secret");
+    expect(steered.steeringNotes[0]).not.toContain("access_token");
+    expect(steered.steeringNotes[0]).not.toContain("client_secret");
+    expect(steered.steeringNotes[0]).not.toContain("PRIVATE KEY");
     delayed.worker.resolve(passedSpecialistArtifact("qwen3-coder:30b"));
     await running;
   });

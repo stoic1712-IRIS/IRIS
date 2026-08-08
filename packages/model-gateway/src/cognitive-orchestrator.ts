@@ -31,6 +31,7 @@ import {
   type CognitiveTurnSnapshot,
 } from "./cognitive-turn-contracts.js";
 import { CognitiveTurnError } from "./cognitive-turn-errors.js";
+import { ModelGatewayError } from "./errors.js";
 import { ModelLeaseScheduler } from "./model-lease-scheduler.js";
 import {
   routeIrisModel,
@@ -38,6 +39,7 @@ import {
   type ModelRoute,
   type ModelRoutePurpose,
 } from "./model-router.js";
+import { assertNoDetectedSecrets } from "./secret-filter.js";
 
 export interface CognitiveProviderAdapter {
   plan(
@@ -97,15 +99,16 @@ const researchIntentPattern =
 const reasoningIntentPattern =
   /\b(reason|reasoning|analy[sz]e|strategy|plan|architecture|trade[- ]?offs?|diagnose|root cause|security|risk|decide|decision|best approach|step by step|think deeply|complex)\b/iu;
 
-function materialPurpose(utterance: string): ModelRoutePurpose | null {
-  if (codingIntentPattern.test(utterance)) return "agentic-coding";
-  if (researchIntentPattern.test(utterance)) return "research-review";
-  if (reasoningIntentPattern.test(utterance)) return "deep-reasoning";
+function materialPurpose(request: CognitiveTurnRequest): ModelRoutePurpose | null {
+  if (request.hasImage) return "vision";
+  if (codingIntentPattern.test(request.utterance)) return "agentic-coding";
+  if (researchIntentPattern.test(request.utterance)) return "research-review";
+  if (reasoningIntentPattern.test(request.utterance)) return "deep-reasoning";
   return null;
 }
 
 function redactSteering(note: string): string {
-  return note
+  const redacted = note
     .replace(
       /-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z0-9 ]*PRIVATE KEY-----/gu,
       "[REDACTED_PRIVATE_KEY]",
@@ -117,6 +120,15 @@ function redactSteering(note: string): string {
     .replace(/\bBearer\s+[A-Za-z0-9._~+/-]+=*/giu, "Bearer [REDACTED]")
     .replace(/([a-z][a-z0-9+.-]*:\/\/)[^\s/@:]+:[^\s/@]+@/giu, "$1[REDACTED]@")
     .replace(/\b(?:api[_ -]?key|password|secret|token)\b\s*[:=]\s*\S+/giu, "[REDACTED_SECRET]");
+  try {
+    assertNoDetectedSecrets([{ role: "user", content: redacted }]);
+    return redacted;
+  } catch (error) {
+    if (error instanceof ModelGatewayError && error.code === "SECRET_DETECTED") {
+      return "[REDACTED_SECRET]";
+    }
+    throw error;
+  }
 }
 
 function distinctReviewer(
@@ -131,7 +143,7 @@ function distinctReviewer(
 }
 
 function enforceRoutePolicy(request: CognitiveTurnRequest, routed: ModelRoute): ModelRoute {
-  const purpose = materialPurpose(request.utterance);
+  const purpose = materialPurpose(request);
   if (purpose === null) {
     if (routed.model === "qwen3:8b" && request.riskClass !== "R0")
       throw new CognitiveTurnError("COGNITIVE_SPECIALIST_UNAVAILABLE", {
@@ -140,7 +152,12 @@ function enforceRoutePolicy(request: CognitiveTurnRequest, routed: ModelRoute): 
     return routed;
   }
   if (routed.model === "qwen3:8b" || routed.fallbackUsed) {
-    const requiredModel = purpose === "agentic-coding" ? "qwen3-coder:30b" : "gpt-oss:20b";
+    const requiredModel =
+      purpose === "agentic-coding"
+        ? "qwen3-coder:30b"
+        : purpose === "vision"
+          ? "qwen3.6:27b"
+          : "gpt-oss:20b";
     throw new CognitiveTurnError("COGNITIVE_SPECIALIST_UNAVAILABLE", {
       retryable: true,
       safeDetails: { requiredModel },
@@ -154,7 +171,9 @@ function enforceRoutePolicy(request: CognitiveTurnRequest, routed: ModelRoute): 
         ? routed.model !== "gpt-oss:20b" && request.availableModels.includes("gpt-oss:20b")
           ? "gpt-oss:20b"
           : null
-        : distinctReviewer(routed.model, request.availableModels),
+        : purpose === "deep-reasoning" || purpose === "research-review"
+          ? distinctReviewer(routed.model, request.availableModels)
+          : null,
   };
 }
 
@@ -231,7 +250,7 @@ export class CognitiveOrchestrator {
 
   async pause(requestId: string): Promise<CognitiveTurnSnapshot> {
     const current = await this.#requireState(requestId);
-    if (this.#isTerminal(current.phase)) return current;
+    if (this.#isTerminal(current)) return current;
     const paused = await this.#transition(current, "paused", null, "Founder paused this turn.");
     await this.#leases.cancel(requestId);
     return paused;
@@ -239,7 +258,7 @@ export class CognitiveOrchestrator {
 
   async cancel(requestId: string): Promise<CognitiveTurnSnapshot> {
     const current = await this.#requireState(requestId);
-    if (this.#isTerminal(current.phase)) return current;
+    if (this.#isTerminal(current)) return current;
     const cancelled = await this.#transition(
       current,
       "cancelled",
@@ -252,7 +271,7 @@ export class CognitiveOrchestrator {
 
   async steer(requestId: string, note: string): Promise<CognitiveTurnSnapshot> {
     const current = await this.#requireState(requestId);
-    if (this.#isTerminal(current.phase) || current.phase === "cancelled") return current;
+    if (this.#isTerminal(current) || current.phase === "cancelled") return current;
     const safeNote = redactSteering(note.trim()).slice(0, 1_000);
     if (safeNote.length === 0) throw new CognitiveTurnError("COGNITIVE_INVALID_TRANSITION");
     const next = cognitiveTurnSnapshotSchema.parse({
@@ -280,7 +299,7 @@ export class CognitiveOrchestrator {
     ) {
       throw new CognitiveTurnError("COGNITIVE_RESUME_BINDING_MISMATCH");
     }
-    if (this.#isTerminal(current.phase) || current.phase === "cancelled") return current;
+    if (this.#isTerminal(current) || current.phase === "cancelled") return current;
     if (current.route === null || current.delegation?.mode !== "delegated") {
       throw new CognitiveTurnError("COGNITIVE_RESUME_BINDING_MISMATCH");
     }
@@ -322,7 +341,7 @@ export class CognitiveOrchestrator {
       const current = await this.#store.load(request.requestId);
       if (current === null) throw error;
       if (
-        this.#isTerminal(current.phase) ||
+        this.#isTerminal(current) ||
         current.phase === "cancelled" ||
         current.phase === "paused"
       ) {
@@ -739,8 +758,12 @@ export class CognitiveOrchestrator {
     return cognitiveTurnSnapshotSchema.parse(current);
   }
 
-  #isTerminal(phase: CognitiveTurnPhase): boolean {
-    return phase === "completed" || phase === "cancelled" || phase === "degraded-interface";
+  #isTerminal(snapshot: CognitiveTurnSnapshot): boolean {
+    return (
+      snapshot.phase === "completed" ||
+      snapshot.phase === "cancelled" ||
+      (snapshot.phase === "degraded-interface" && snapshot.presentation !== null)
+    );
   }
 
   async #controlChangeSince(
@@ -748,11 +771,7 @@ export class CognitiveOrchestrator {
   ): Promise<CognitiveTurnSnapshot | null> {
     const latest = await this.#requireState(captured.request.requestId);
     if (latest.generation === captured.generation) return null;
-    if (
-      latest.phase === "paused" ||
-      latest.phase === "cancelled" ||
-      this.#isTerminal(latest.phase)
-    ) {
+    if (latest.phase === "paused" || latest.phase === "cancelled" || this.#isTerminal(latest)) {
       return latest;
     }
     throw new CognitiveTurnError("COGNITIVE_INVALID_TRANSITION", {

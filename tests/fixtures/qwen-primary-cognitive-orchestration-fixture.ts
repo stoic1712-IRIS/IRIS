@@ -267,6 +267,13 @@ export interface DelayedSpecialistHarness extends CognitiveHarness {
   };
 }
 
+export interface DelayedPlanningHarness extends CognitiveHarness {
+  provider: CognitiveHarness["provider"] & {
+    started: Promise<void>;
+    resolve: (envelope: CognitiveDelegationEnvelope) => void;
+  };
+}
+
 export class MemoryStore implements CognitiveTurnStore {
   readonly #snapshots = new Map<string, CognitiveTurnSnapshot>();
 
@@ -351,6 +358,11 @@ interface DelayedControl {
   readonly markStarted: () => void;
 }
 
+interface DelayedPlanningControl {
+  readonly planning: Promise<CognitiveDelegationEnvelope>;
+  readonly markStarted: () => void;
+}
+
 export function cognitiveHarness(
   options: CognitiveHarnessOptions = {},
   suppliedStore?: CognitiveTurnStore,
@@ -362,6 +374,7 @@ function createHarness(
   options: CognitiveHarnessOptions,
   suppliedStore?: CognitiveTurnStore,
   delayed?: DelayedControl,
+  delayedPlanning?: DelayedPlanningControl,
 ): CognitiveHarness {
   const providerState = { models: [] as IrisModelName[], planningCalls: 0, synthesisCalls: 0 };
   const workerState = {
@@ -385,6 +398,10 @@ function createHarness(
       void signal;
       providerState.models.push(model);
       providerState.planningCalls += 1;
+      if (delayedPlanning !== undefined) {
+        delayedPlanning.markStarted();
+        return delayedPlanning.planning;
+      }
       return Promise.resolve(options.planningEnvelope ?? codingEnvelope());
     },
     synthesize(input, model, signal) {
@@ -471,6 +488,24 @@ export function delayedSpecialistHarness(): DelayedSpecialistHarness {
     resolveArtifact(artifact);
   };
   return { ...base, worker };
+}
+
+export function delayedPlanningHarness(): DelayedPlanningHarness {
+  let markStarted!: () => void;
+  let resolveEnvelope!: (envelope: CognitiveDelegationEnvelope) => void;
+  const started = new Promise<void>((resolve) => {
+    markStarted = resolve;
+  });
+  const planning = new Promise<CognitiveDelegationEnvelope>((resolve) => {
+    resolveEnvelope = resolve;
+  });
+  const base = createHarness({}, undefined, undefined, { planning, markStarted });
+  const provider = base.provider as DelayedPlanningHarness["provider"];
+  provider.started = started;
+  provider.resolve = (envelope) => {
+    resolveEnvelope(envelope);
+  };
+  return { ...base, provider };
 }
 
 export function restartHarnessThatFailsBeforeSynthesis(): CognitiveHarness {
