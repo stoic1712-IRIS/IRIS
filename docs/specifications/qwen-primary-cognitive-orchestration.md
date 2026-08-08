@@ -1,8 +1,8 @@
 # Qwen Primary Cognitive Orchestration
 
-**Status:** Locally implemented Core contract; independent review and publication pending  
-**Version:** 1.0.0  
-**Date:** 2026-08-08  
+**Status:** Locally implemented Core contract; independent review and publication pending
+**Version:** 1.0.0
+**Date:** 2026-08-08
 **Owner:** IRIS Core
 
 ## Purpose
