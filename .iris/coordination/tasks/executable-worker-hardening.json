@@ -1,0 +1,115 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "executable-worker-hardening",
+  "objective": "Locally implement and verify deterministic executable-worker hardening across IRIS Core and the Founder Command Center: digest-bound exact replacements, atomic writes, proposal-bound baseline and normalization commands, durable redacted per-command evidence, restart-safe repair context, and idempotent two-phase cleanup that proves both Git-registration and filesystem absence without adding authority or publishing changes.",
+  "issuer": "Founder Cristofer Stoic Arellano through Codex",
+  "executor": "Codex",
+  "assigned_role": "producer",
+  "created_at": "2026-08-08T00:52:18Z",
+  "status": "approved",
+  "risk_class": "R2",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "Founder mandate: the initial local-only implementation authority was followed by explicit authorization to stage and commit both verified worktrees, publish the named Core and Founder Command Center commits by non-force push, create draft pull requests, and finish the work so the Founder can run the next tests. Complete exact-path repair and verification, independent review, merge the implementation pull requests after review passes, synchronize both local main branches, clean the disposable hardening worktrees, restart the loopback-only Founder Command Center, and smoke-test the merged local service. This does not authorize dependency changes, deployment, spending, public or LAN exposure, repository administration, destructive operations, force-push, history rewrite, credential disclosure, live executable-worker activation without its separate digest-bound approval, or final Phase 0 graduation execution.",
+  "completion_actions": [
+    "edit",
+    "verify",
+    "repair",
+    "stage",
+    "commit",
+    "push_branch",
+    "create_pull_request",
+    "independent_review",
+    "merge",
+    "synchronize",
+    "cleanup"
+  ],
+  "completion_exclusions": [
+    "Dependency installation or version changes",
+    "Live executable-worker activation without a separate exact digest-bound Founder approval",
+    "Credentials, spending, deployment, public or LAN exposure, provider resources, or repository administration",
+    "Final Phase 0 graduation execution"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "8d29c18d3e89bdc81797b1a28b7e623d905d1423"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "iris/conversational-executable-worker-activation",
+      "commit": "57af9e2a2076c0e90a53e43c0a2f173a945e84db"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/tasks/executable-worker-hardening.json",
+    "docs/operations/executable-worker-hardening-design.md",
+    "docs/operations/executable-worker-hardening-plan.md",
+    "docs/specifications/cycle-eight-executable-worker-runtime.md",
+    "packages/development/src/executable-worker-contracts.ts",
+    "packages/development/src/executable-worker-runtime.ts",
+    "packages/development/src/execution-journal.ts",
+    "packages/development/src/git-candidate-workspace-adapter.ts",
+    "scripts/development/cycle-eight-live-proof.mjs",
+    "tests/cycle-eight-executable-worker-runtime.test.ts",
+    "scripts/local-gateway.mjs",
+    "src/executable-worker-client.ts",
+    "src/views/Develop.tsx",
+    "tests/local-gateway.test.ts"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    "docs/governance/**",
+    "docs/architecture/**",
+    "docs/registries/**",
+    "evidence/**",
+    "package.json",
+    "pnpm-lock.yaml",
+    "C:/Projects/STOIC-IRIS-source-library/**"
+  ],
+  "permitted_actions": [
+    "Create and modify only the exact allowed paths in isolated local worktrees",
+    "Run repository-pinned focused and full verification commands",
+    "Repair failures within the approved deterministic design",
+    "Use existing locally materialized dependencies without network access",
+    "Stage and commit only exact allowed paths after verification",
+    "Publish the authorized branches by non-force push and complete implementation pull requests after independent review passes",
+    "Synchronize local main branches, clean the disposable hardening worktrees, and restart only the loopback Founder Command Center"
+  ],
+  "prohibited_actions": [
+    "Weaken typed approval, path, byte, credential, model, timeout, or repository boundaries",
+    "Allow complete-file model rewrites for existing files",
+    "Persist raw secret-bearing command output",
+    "Claim cleanup without Git-registration and filesystem absence evidence",
+    "Install or update dependencies",
+    "Deploy, spend, expose public or LAN ports, administer repositories or accounts, disclose credentials, force-push, rewrite history, or execute final graduation"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run tests/cycle-eight-executable-worker-runtime.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm exec vitest run tests/local-gateway.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "Failing-before-passing regression tests for mutation integrity, durable command evidence, restart recovery, and cleanup",
+    "Exact focused and full verification commands with exit codes",
+    "Changed-path and lockfile-integrity verification",
+    "No dependency, credential, network, publication, provider-resource, spending, deployment, or Phase 0 effect",
+    "Rollback and retained-worktree status"
+  ],
+  "publisher": "Codex under the subsequent explicit Founder publication and completion mandate",
+  "approval_reference": "founder-deterministic-executable-worker-hardening-2026-08-07",
+  "phase0_graduation": false
+}
