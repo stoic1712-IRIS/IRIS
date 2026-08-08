@@ -131,15 +131,15 @@ function allReady(snapshot) {
   return Object.values(snapshot).every((service) => service.ready === true);
 }
 
-function anyReady(snapshot) {
-  return Object.values(snapshot).some((service) => service.ready === true);
+function managedRuntimeReady(snapshot) {
+  return snapshot.gateway.ready === true || snapshot.voice.ready === true;
 }
 
 function runtimePhase(snapshot, state, repairing = false) {
   if (repairing) return "repairing";
   if (allReady(snapshot)) return "healthy";
-  if (!anyReady(snapshot) && state === null) return "stopped";
-  if (!anyReady(snapshot)) return "starting";
+  if (!managedRuntimeReady(snapshot) && state === null) return "stopped";
+  if (!managedRuntimeReady(snapshot)) return "starting";
   return "degraded";
 }
 
@@ -239,7 +239,7 @@ async function startWorkflow(options, overrides) {
   if (allReady(before)) {
     return { ok: true, started: false, ready: true, roots, services: before };
   }
-  if (anyReady(before)) {
+  if (managedRuntimeReady(before)) {
     throw new Error(
       "The Founder runtime is partial: one or more required local services are active while the full stack is unavailable. Stop the stale session before restarting.",
     );
