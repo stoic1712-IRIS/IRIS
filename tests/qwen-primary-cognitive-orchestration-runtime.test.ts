@@ -2,16 +2,20 @@ import { describe, expect, it } from "vitest";
 
 import {
   codingEnvelope,
+  codingPolicy,
   codingRequest,
   cognitiveHarness,
   conversationRequest,
   directEnvelope,
+  delayedSpecialistHarness,
   exactEvidence,
   passedSpecialistArtifact,
   passingReview,
   policy,
   researchEnvelope,
   researchRequest,
+  restartHarnessThatFailsBeforeSynthesis,
+  restartedHarness,
   requiredEvidenceId,
   synthesis,
 } from "./fixtures/qwen-primary-cognitive-orchestration-fixture.js";
@@ -107,5 +111,69 @@ describe("Qwen primary cognitive orchestration runtime", () => {
     expect(result.specialistArtifact?.evidence).not.toHaveLength(0);
     expect(result.presentation).toBeNull();
     expect(harness.provider.synthesisCalls).toBe(2);
+  });
+
+  it("keeps cancellation terminal when a non-cooperative specialist returns late", async () => {
+    const harness = delayedSpecialistHarness();
+    const running = harness.runtime.start(
+      codingRequest(),
+      policy(["repository.inspect", "repository.edit-bounded"]),
+    );
+    await harness.worker.started;
+    const cancelled = await harness.runtime.cancel(codingRequest().requestId);
+    harness.worker.resolve(passedSpecialistArtifact("qwen3-coder:30b"));
+    await running;
+
+    expect(cancelled.phase).toBe("cancelled");
+    expect((await harness.runtime.state(codingRequest().requestId))?.phase).toBe("cancelled");
+    expect(harness.provider.synthesisCalls).toBe(0);
+  });
+
+  it("resumes from the last durable artifact without repeating completed model calls", async () => {
+    const first = restartHarnessThatFailsBeforeSynthesis();
+    const stopped = await first.runtime.start(
+      codingRequest(),
+      policy(["repository.inspect", "repository.edit-bounded"]),
+    );
+    expect(stopped.phase).toBe("recovery-required");
+
+    const second = restartedHarness(first.store);
+    const completed = await second.runtime.resume(
+      codingRequest().requestId,
+      codingRequest(),
+      policy(["repository.inspect", "repository.edit-bounded"]),
+    );
+    expect(completed.phase).toBe("completed");
+    expect(second.worker.specialistCalls).toBe(0);
+    expect(second.worker.reviewCalls).toBe(0);
+    expect(second.provider.synthesisCalls).toBe(1);
+  });
+
+  it("persists pause and bounded steering without widening resume bindings", async () => {
+    const harness = cognitiveHarness({ planningEnvelope: directEnvelope("Hello, Founder.") });
+    const input = conversationRequest();
+    await harness.runtime.start(input, policy(["conversation"]));
+    const completed = await harness.runtime.pause(input.requestId);
+    expect(completed.phase).toBe("completed");
+
+    const delayed = delayedSpecialistHarness();
+    const running = delayed.runtime.start(codingRequest(), codingPolicy());
+    await delayed.worker.started;
+    const steered = await delayed.runtime.steer(
+      codingRequest().requestId,
+      "Focus on the exact test failure.",
+    );
+    expect(steered.steeringNotes).toEqual(["Focus on the exact test failure."]);
+    const paused = await delayed.runtime.pause(codingRequest().requestId);
+    expect(paused.phase).toBe("paused");
+    delayed.worker.resolve(passedSpecialistArtifact("qwen3-coder:30b"));
+    await running;
+    await expect(
+      delayed.runtime.resume(
+        codingRequest().requestId,
+        codingRequest({ pathScope: ["**"] }),
+        codingPolicy(),
+      ),
+    ).rejects.toThrow("COGNITIVE_RESUME_BINDING_MISMATCH");
   });
 });

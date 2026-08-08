@@ -16,6 +16,7 @@ import {
   requiredPresentationEvidence,
   validateCognitiveDelegation,
   type CognitiveDelegationEnvelope,
+  type CognitiveDelegationPolicy,
   type CognitiveFounderPresentation,
   type CognitiveReviewArtifact,
   type CognitiveReviewInput,
@@ -150,6 +151,81 @@ export class CognitiveOrchestrator {
     return this.#store.load(requestId);
   }
 
+  async pause(requestId: string): Promise<CognitiveTurnSnapshot> {
+    const current = await this.#requireState(requestId);
+    if (this.#isTerminal(current.phase)) return current;
+    const paused = await this.#transition(current, "paused", null, "Founder paused this turn.");
+    await this.#leases.cancel(requestId);
+    return paused;
+  }
+
+  async cancel(requestId: string): Promise<CognitiveTurnSnapshot> {
+    const current = await this.#requireState(requestId);
+    if (this.#isTerminal(current.phase)) return current;
+    const cancelled = await this.#transition(
+      current,
+      "cancelled",
+      null,
+      "Founder cancelled this turn.",
+    );
+    await this.#leases.cancel(requestId);
+    return cancelled;
+  }
+
+  async steer(requestId: string, note: string): Promise<CognitiveTurnSnapshot> {
+    const current = await this.#requireState(requestId);
+    if (this.#isTerminal(current.phase) || current.phase === "cancelled") return current;
+    const safeNote = note
+      .trim()
+      .slice(0, 1_000)
+      .replace(/\b(?:api[_ -]?key|password|secret|token)\b\s*[:=]\s*\S+/giu, "[REDACTED_SECRET]");
+    if (safeNote.length === 0) throw new CognitiveTurnError("COGNITIVE_INVALID_TRANSITION");
+    const next = cognitiveTurnSnapshotSchema.parse({
+      ...current,
+      generation: current.generation + 1,
+      steeringNotes: [...current.steeringNotes, safeNote].slice(-10),
+      updatedAt: this.#now(),
+    });
+    await this.#store.save(next);
+    return next;
+  }
+
+  async resume(
+    requestId: string,
+    requestInput: CognitiveTurnRequest,
+    policyInput: CognitiveDelegationPolicy,
+  ): Promise<CognitiveTurnSnapshot> {
+    const current = await this.#requireState(requestId);
+    const request = cognitiveTurnRequestSchema.parse(requestInput);
+    const policy = cognitiveDelegationPolicySchema.parse(policyInput);
+    if (
+      requestId !== request.requestId ||
+      JSON.stringify(current.request) !== JSON.stringify(request) ||
+      JSON.stringify(current.policy) !== JSON.stringify(policy)
+    ) {
+      throw new CognitiveTurnError("COGNITIVE_RESUME_BINDING_MISMATCH");
+    }
+    if (this.#isTerminal(current.phase) || current.phase === "cancelled") return current;
+    if (current.route === null || current.delegation?.mode !== "delegated") {
+      throw new CognitiveTurnError("COGNITIVE_RESUME_BINDING_MISMATCH");
+    }
+    if (current.specialistArtifact !== null && current.reviewArtifact !== null) {
+      const resuming = await this.#transition(
+        current,
+        "orchestrator-synthesizing",
+        primaryIrisOrchestratorModel,
+        "Resuming from the last durable reviewed artifact.",
+      );
+      return this.#synthesizeValidated(
+        resuming,
+        current.route,
+        current.specialistArtifact,
+        current.reviewArtifact,
+      );
+    }
+    return this.#runDelegated(current, current.route);
+  }
+
   async start(
     requestInput: unknown,
     policyInput: unknown,
@@ -160,7 +236,40 @@ export class CognitiveOrchestrator {
     if ((await this.#store.load(request.requestId)) !== null) {
       throw new CognitiveTurnError("COGNITIVE_RESUME_BINDING_MISMATCH");
     }
+    try {
+      return await this.#startBound(request, policy, signal);
+    } catch (error) {
+      const current = await this.#store.load(request.requestId);
+      if (current === null) throw error;
+      if (
+        this.#isTerminal(current.phase) ||
+        current.phase === "cancelled" ||
+        current.phase === "paused"
+      ) {
+        return current;
+      }
+      const safeFailureCode =
+        error instanceof CognitiveTurnError ? error.code : "COGNITIVE_ORCHESTRATOR_UNAVAILABLE";
+      const failed = cognitiveTurnSnapshotSchema.parse({
+        ...current,
+        safeFailureCode,
+        leaseEvents: this.#leases.events(),
+        updatedAt: this.#now(),
+      });
+      return this.#transition(
+        failed,
+        "recovery-required",
+        null,
+        "The turn stopped at a durable recovery boundary.",
+      );
+    }
+  }
 
+  async #startBound(
+    request: CognitiveTurnRequest,
+    policy: CognitiveDelegationPolicy,
+    signal?: AbortSignal,
+  ): Promise<CognitiveTurnSnapshot> {
     let snapshot = cognitiveTurnSnapshotSchema.parse({
       request,
       policy,
@@ -194,6 +303,8 @@ export class CognitiveOrchestrator {
         this.#provider.plan(request, primaryIrisOrchestratorModel, leaseSignal),
       signal,
     );
+    const planningControl = await this.#controlChangeSince(snapshot);
+    if (planningControl !== null) return planningControl;
     const route = routeIrisModel({
       utterance: request.utterance,
       availableModels: new Set(request.availableModels),
@@ -275,15 +386,16 @@ export class CognitiveOrchestrator {
       steeringNotes: snapshot.steeringNotes,
       authority: "none",
     });
-    const specialist = cognitiveSpecialistArtifactSchema.parse(
-      await this.#leases.withLease(
-        request.requestId,
-        route.model,
-        "specialist-working",
-        (_lease, leaseSignal) => this.#worker.execute(specialistInput, leaseSignal),
-        signal,
-      ),
+    const specialistOutput = await this.#leases.withLease(
+      request.requestId,
+      route.model,
+      "specialist-working",
+      (_lease, leaseSignal) => this.#worker.execute(specialistInput, leaseSignal),
+      signal,
     );
+    const specialistControl = await this.#controlChangeSince(snapshot);
+    if (specialistControl !== null) return specialistControl;
+    const specialist = cognitiveSpecialistArtifactSchema.parse(specialistOutput);
     this.#validateSpecialist(specialist, request, route);
     snapshot = cognitiveTurnSnapshotSchema.parse({
       ...snapshot,
@@ -321,15 +433,16 @@ export class CognitiveOrchestrator {
       ],
       authority: "none",
     });
-    const review = cognitiveReviewArtifactSchema.parse(
-      await this.#leases.withLease(
-        request.requestId,
-        reviewerModel,
-        "independent-review",
-        (_lease, leaseSignal) => this.#worker.review(reviewInput, leaseSignal),
-        signal,
-      ),
+    const reviewOutput = await this.#leases.withLease(
+      request.requestId,
+      reviewerModel,
+      "independent-review",
+      (_lease, leaseSignal) => this.#worker.review(reviewInput, leaseSignal),
+      signal,
     );
+    const reviewControl = await this.#controlChangeSince(snapshot);
+    if (reviewControl !== null) return reviewControl;
+    const review = cognitiveReviewArtifactSchema.parse(reviewOutput);
     this.#validateReview(review, request, specialist, reviewerModel);
     snapshot = cognitiveTurnSnapshotSchema.parse({
       ...snapshot,
@@ -343,6 +456,17 @@ export class CognitiveOrchestrator {
       primaryIrisOrchestratorModel,
       "Qwen primary synthesis started after independent review.",
     );
+    return this.#synthesizeValidated(snapshot, route, specialist, review, signal);
+  }
+
+  async #synthesizeValidated(
+    initial: CognitiveTurnSnapshot,
+    route: ModelRoute,
+    specialist: CognitiveSpecialistArtifact,
+    review: CognitiveReviewArtifact,
+    signal?: AbortSignal,
+  ): Promise<CognitiveTurnSnapshot> {
+    const request = initial.request;
     const exactEvidence = requiredPresentationEvidence(specialist, review);
     const synthesisInputBase = {
       requestId: request.requestId,
@@ -357,9 +481,10 @@ export class CognitiveOrchestrator {
         contentDigest,
       })),
       completionEligible: specialist.status === "passed" && review.verdict === "pass",
-      steeringNotes: snapshot.steeringNotes,
+      steeringNotes: initial.steeringNotes,
       authority: "none",
     } as const;
+    let snapshot = initial;
     let repairFailureCode: "COGNITIVE_EVIDENCE_MISMATCH" | "COGNITIVE_SYNTHESIS_INVALID" | null =
       null;
     for (let attempt = 1; attempt <= 2; attempt += 1) {
@@ -377,6 +502,8 @@ export class CognitiveOrchestrator {
             this.#provider.synthesize(synthesisInput, primaryIrisOrchestratorModel, leaseSignal),
           signal,
         );
+        const synthesisControl = await this.#controlChangeSince(snapshot);
+        if (synthesisControl !== null) return synthesisControl;
         presentation = assembleFounderPresentation({
           request,
           synthesis: providerOutput,
@@ -420,6 +547,36 @@ export class CognitiveOrchestrator {
       return this.#transition(snapshot, "completed", null, "Delegated cognitive turn completed.");
     }
     throw new CognitiveTurnError("COGNITIVE_SYNTHESIS_INVALID");
+  }
+
+  async #requireState(requestId: string): Promise<CognitiveTurnSnapshot> {
+    const current = await this.#store.load(requestId);
+    if (current === null) throw new CognitiveTurnError("COGNITIVE_INVALID_TRANSITION");
+    return cognitiveTurnSnapshotSchema.parse(current);
+  }
+
+  #isTerminal(phase: CognitiveTurnPhase): boolean {
+    return phase === "completed" || phase === "cancelled" || phase === "degraded-interface";
+  }
+
+  async #controlChangeSince(
+    captured: CognitiveTurnSnapshot,
+  ): Promise<CognitiveTurnSnapshot | null> {
+    const latest = await this.#requireState(captured.request.requestId);
+    if (latest.generation === captured.generation) return null;
+    if (
+      latest.phase === "paused" ||
+      latest.phase === "cancelled" ||
+      this.#isTerminal(latest.phase)
+    ) {
+      return latest;
+    }
+    throw new CognitiveTurnError("COGNITIVE_INVALID_TRANSITION", {
+      safeDetails: {
+        expectedGeneration: captured.generation,
+        actualGeneration: latest.generation,
+      },
+    });
   }
 
   #validateSpecialist(

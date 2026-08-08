@@ -282,9 +282,22 @@ function makeUuidFactory(): () => string {
   };
 }
 
+interface DelayedControl {
+  readonly specialist: Promise<CognitiveSpecialistArtifact>;
+  readonly markStarted: () => void;
+}
+
 export function cognitiveHarness(
   options: CognitiveHarnessOptions = {},
   suppliedStore?: CognitiveTurnStore,
+): CognitiveHarness {
+  return createHarness(options, suppliedStore);
+}
+
+function createHarness(
+  options: CognitiveHarnessOptions,
+  suppliedStore?: CognitiveTurnStore,
+  delayed?: DelayedControl,
 ): CognitiveHarness {
   const providerState = { models: [] as IrisModelName[], planningCalls: 0, synthesisCalls: 0 };
   const workerState = {
@@ -325,6 +338,10 @@ export function cognitiveHarness(
       workerState.calls.push("execute");
       workerState.models.push(input.route.model);
       workerState.specialistCalls += 1;
+      if (delayed !== undefined) {
+        delayed.markStarted();
+        return delayed.specialist;
+      }
       return Promise.resolve(configuredSpecialist);
     },
     review(input, signal) {
@@ -357,11 +374,19 @@ export function cognitiveHarness(
 }
 
 export function delayedSpecialistHarness(): DelayedSpecialistHarness {
-  const base = cognitiveHarness();
+  let markStarted!: () => void;
+  let resolveArtifact!: (artifact: CognitiveSpecialistArtifact) => void;
+  const started = new Promise<void>((resolve) => {
+    markStarted = resolve;
+  });
+  const specialist = new Promise<CognitiveSpecialistArtifact>((resolve) => {
+    resolveArtifact = resolve;
+  });
+  const base = createHarness({}, undefined, { specialist, markStarted });
   const worker = base.worker as DelayedSpecialistHarness["worker"];
-  worker.started = Promise.resolve();
+  worker.started = started;
   worker.resolve = (artifact) => {
-    void artifact;
+    resolveArtifact(artifact);
   };
   return { ...base, worker };
 }
