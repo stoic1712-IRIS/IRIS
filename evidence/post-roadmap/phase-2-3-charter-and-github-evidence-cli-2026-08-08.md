@@ -4,7 +4,7 @@
 **Task:** `phase-2-3-charter-and-github-evidence-cli`  
 **Core base revision:** `6367e4547d34092472c672ee93a9e1b2a8e5c80f`  
 **Branch:** `iris/phase-2-3-sovereign-capability-charter`  
-**Publication state:** Local implementation verified; publication remains pending at this evidence revision.
+**Publication state:** Local implementation and independent security review passed; publication is authorized.
 
 ## Delivered locally
 
@@ -34,11 +34,11 @@ No existing IRIS or Codex capability was removed or weakened. No community GitHu
 | --- | --- |
 | Core task-schema validation | PASS |
 | Exact-path scope check | PASS; zero violations and zero staged paths |
-| Core GitHub evidence tests | PASS; 10 of 10 |
+| Core GitHub evidence tests | PASS; 16 of 16 |
 | Core focused Prettier check | PASS |
 | Core focused ESLint check | PASS; zero warnings |
 | Personal `iris-dev` tests | PASS; 15 of 15 |
-| Repository-wide `pnpm verify` | PASS; build, lint, typecheck, 442 tests passed with 1 platform skip, and diagnostics |
+| Repository-wide `pnpm verify` | PASS; build, lint, typecheck, 448 tests passed with 1 platform skip, and diagnostics |
 | DOCX ZIP/package integrity | PASS |
 | DOCX required-text integrity | PASS |
 | Markdown-to-DOCX heading parity | PASS; 35 of 35 headings matched |
@@ -77,5 +77,10 @@ The DOCX was structurally and accessibility verified. Visual page rendering coul
 - The command surface is read-only: repository/auth/ruleset views, pull-request views/checks, workflow run views, and Git reference reads.
 - Tokens, bearer credentials, secret assignments, and credential-bearing URLs are redacted before evidence retention.
 - Failed-run logs are bounded and content-digested.
+- Pull-request URLs are bound to the selected repository and normalized to numeric identifiers before provider calls.
+- Provider, PR, check, and workflow-run payloads are schema-checked; skipped, neutral, unknown, absent, malformed, and nonzero proof states fail closed.
+- The local origin, branch, HEAD, local main, origin main, provider main, and ruleset command are all required for a passing preflight.
+- The former environment-selected executable fixture was removed; tests now inject a runner through an import-only interface.
+- Two independent review rounds completed; the final verdict was `READY` with no remaining Critical or Important findings.
 - No stage, commit, push, PR creation, merge, approval, comment, CI retry, administration, credential operation, deployment, spending, force-push, or history rewrite is implemented or authorized.
 - This task does not execute or claim completion of the separate Phase 0 Development Independence graduation gate.

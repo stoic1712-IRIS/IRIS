@@ -4,6 +4,7 @@ import { execFile } from "node:child_process";
 import { Buffer } from "node:buffer";
 import { createHash } from "node:crypto";
 import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
 
 const execute = promisify(execFile);
@@ -19,10 +20,10 @@ const repositories = {
   },
 };
 
-const githubTokenPattern = /\b(?:github_pat_[A-Za-z0-9_]{20,}|gh[opsu]_[A-Za-z0-9]{20,})\b/gu;
+const githubTokenPattern = /\b(?:github_pat_[A-Za-z0-9_]{20,}|gh[oprsu]_[A-Za-z0-9]{20,})\b/gu;
 const bearerPattern = /\bBearer\s+[A-Za-z0-9._~+/-]+=*/giu;
 const secretAssignmentPattern = /\b(token|password|secret|api[_-]?key)\s*[:=]\s*([^\s,;]+)/giu;
-const credentialUrlPattern = /(https?:\/\/)[^\s/@:]+:[^\s/@]+@/giu;
+const credentialUrlPattern = /([a-z][a-z0-9+.-]*:\/\/)[^\s/@:]+:[^\s/@]+@/giu;
 
 function help() {
   return `IRIS canonical read-only GitHub evidence helper
@@ -48,6 +49,9 @@ function parse(tokens) {
       continue;
     }
     const key = token.slice(2);
+    if (!new Set(["repo", "root", "pr", "json", "help"]).has(key))
+      throw new Error(`Unknown option --${key}.`);
+    if (Object.hasOwn(options, key)) throw new Error(`Duplicate option --${key}.`);
     if (new Set(["json", "help"]).has(key)) {
       options[key] = true;
       continue;
@@ -69,6 +73,17 @@ function redact(value) {
     .replace(credentialUrlPattern, "$1[REDACTED]@");
 }
 
+function sanitize(value, depth = 0) {
+  if (depth > 8) return "[REDACTED_DEPTH_LIMIT]";
+  if (typeof value === "string") return redact(value);
+  if (Array.isArray(value)) return value.map((entry) => sanitize(entry, depth + 1));
+  if (value && typeof value === "object")
+    return Object.fromEntries(
+      Object.entries(value).map(([key, entry]) => [key, sanitize(entry, depth + 1)]),
+    );
+  return value;
+}
+
 function digest(value) {
   return `sha256:${createHash("sha256").update(value).digest("hex")}`;
 }
@@ -79,12 +94,9 @@ function bounded(value, limit) {
   return { text: bytes.subarray(0, limit).toString("utf8"), bytes: bytes.length, truncated: true };
 }
 
-async function run(tool, args, options = {}) {
-  const fixture = process.env.IRIS_DEV_TOOL_FIXTURE;
-  const program = fixture ? process.execPath : tool;
-  const invocation = fixture ? [fixture, tool, ...args] : args;
+async function runTool(tool, args, options = {}) {
   try {
-    const result = await execute(program, invocation, {
+    const result = await execute(tool, args, {
       cwd: options.cwd,
       env: process.env,
       windowsHide: true,
@@ -100,6 +112,8 @@ async function run(tool, args, options = {}) {
     };
   }
 }
+
+let run = runTool;
 
 function parseJson(result, label) {
   if (result.code !== 0)
@@ -121,14 +135,60 @@ function requireRepository(options) {
   };
 }
 
-function requirePullRequest(options) {
-  if (
-    !options.pr ||
-    !/^(?:[1-9][0-9]*|https:\/\/github\.com\/[^/]+\/[^/]+\/pull\/[1-9][0-9]*)$/u.test(options.pr)
-  ) {
+function requirePullRequest(options, repository) {
+  if (!options.pr) {
     throw new Error("--pr must be a pull-request number or GitHub pull-request URL.");
   }
-  return options.pr;
+  if (/^[1-9][0-9]*$/u.test(options.pr)) return options.pr;
+  const match = /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/pull\/([1-9][0-9]*)\/?$/u.exec(
+    options.pr,
+  );
+  if (!match) throw new Error("--pr must be a pull-request number or GitHub pull-request URL.");
+  const slug = `${match[1]}/${match[2]}`.toLowerCase();
+  if (slug !== repository.nameWithOwner.toLowerCase())
+    throw new Error("The pull-request URL does not belong to the selected repository.");
+  return match[3];
+}
+
+const oidPattern = /^[0-9a-f]{40}$/u;
+
+function requireOid(value, label) {
+  if (typeof value !== "string" || !oidPattern.test(value))
+    throw new Error(`${label} was invalid.`);
+  return value;
+}
+
+function normalizeGithubSlug(url) {
+  const match = /(?:github\.com[/:])([^/]+)\/([^/]+?)(?:\.git)?$/iu.exec(String(url).trim());
+  return match ? `${match[1]}/${match[2]}`.toLowerCase() : null;
+}
+
+function validatePullRequest(details, repository, expectedNumber) {
+  if (!details || typeof details !== "object")
+    throw new Error("GitHub pull-request response was invalid.");
+  if (details.number !== Number(expectedNumber))
+    throw new Error("GitHub returned a different pull request.");
+  const expectedUrl = `https://github.com/${repository.nameWithOwner}/pull/${expectedNumber}`;
+  if (details.url !== expectedUrl)
+    throw new Error("GitHub returned a pull request from another repository.");
+  if (details.baseRefName !== "main") throw new Error("Pull request base must be main.");
+  requireOid(details.baseRefOid, "Pull request base revision");
+  requireOid(details.headRefOid, "Pull request head revision");
+  if (!Array.isArray(details.files)) throw new Error("Pull request files were invalid.");
+  for (const file of details.files)
+    if (!file || typeof file.path !== "string" || file.path.length === 0)
+      throw new Error("Pull request file entry was invalid.");
+}
+
+function validateChecks(checks) {
+  if (!Array.isArray(checks)) throw new Error("GitHub required-check response was not an array.");
+  const allowedBuckets = new Set(["pass", "fail", "cancel", "pending", "skipping"]);
+  for (const check of checks) {
+    if (!check || typeof check.name !== "string" || typeof check.bucket !== "string")
+      throw new Error("GitHub required-check entry was invalid.");
+    if (!allowedBuckets.has(check.bucket.toLowerCase()))
+      throw new Error(`GitHub required check ${check.name} had an unsupported bucket.`);
+  }
 }
 
 async function git(root, args) {
@@ -169,12 +229,13 @@ async function gitSnapshot(repository) {
   return {
     root: repository.root,
     branch: mustText(branchResult, "Read branch"),
-    revision: mustText(revisionResult, "Read revision"),
+    revision: requireOid(mustText(revisionResult, "Read revision"), "Working revision"),
     clean: mustText(statusResult, "Read worktree status") === "",
     originUrl: redact(mustText(originUrlResult, "Read origin URL")),
-    localMain,
-    originMain,
-    providerMain: remoteLine,
+    originSlug: normalizeGithubSlug(mustText(originUrlResult, "Read origin URL")),
+    localMain: requireOid(localMain, "Local main revision"),
+    originMain: requireOid(originMain, "Origin main revision"),
+    providerMain: requireOid(remoteLine, "Provider main revision"),
     equal: Boolean(remoteLine) && localMain === originMain && originMain === remoteLine,
   };
 }
@@ -194,11 +255,16 @@ async function preflight(options) {
   const ruleset = await gh(["ruleset", "check", "--repo", repository.nameWithOwner, "--default"]);
   const snapshot = await gitSnapshot(repository);
   const identityMatches = provider.nameWithOwner === repository.nameWithOwner;
+  const localIdentityMatches = snapshot.originSlug === repository.nameWithOwner.toLowerCase();
   const defaultBranch = provider.defaultBranchRef?.name ?? null;
   const ok =
     authenticated &&
     identityMatches &&
+    localIdentityMatches &&
     defaultBranch === "main" &&
+    ruleset.code === 0 &&
+    snapshot.branch === "main" &&
+    snapshot.revision === snapshot.localMain &&
     snapshot.clean &&
     snapshot.equal;
   return {
@@ -208,6 +274,7 @@ async function preflight(options) {
     nameWithOwner: provider.nameWithOwner ?? null,
     expectedNameWithOwner: repository.nameWithOwner,
     identityMatches,
+    localIdentityMatches,
     authenticated,
     authenticationEvidence: redact(auth.stdout || auth.stderr).trim(),
     defaultBranch,
@@ -222,7 +289,7 @@ async function preflight(options) {
 
 async function pullRequest(options) {
   const repository = requireRepository(options);
-  const pr = requirePullRequest(options);
+  const pr = requirePullRequest(options, repository);
   const view = await gh([
     "pr",
     "view",
@@ -241,6 +308,7 @@ async function pullRequest(options) {
     }
     throw error;
   }
+  validatePullRequest(details, repository, pr);
   const checksResult = await gh([
     "pr",
     "checks",
@@ -254,15 +322,17 @@ async function pullRequest(options) {
   let checks = [];
   let checksError = null;
   if (checksResult.stdout.trim() !== "") {
+    let parsedChecks;
     try {
-      const parsedChecks = JSON.parse(checksResult.stdout);
-      if (!Array.isArray(parsedChecks))
-        throw new Error("GitHub required-check response was not an array.");
-      checks = parsedChecks;
+      parsedChecks = JSON.parse(checksResult.stdout);
     } catch (error) {
       if (checksResult.code === 0)
         throw new Error("GitHub required-check response was not valid JSON.", { cause: error });
       checksError = redact(checksResult.stderr || checksResult.stdout).trim();
+    }
+    if (parsedChecks !== undefined) {
+      validateChecks(parsedChecks);
+      checks = parsedChecks;
     }
   } else if (checksResult.code !== 0) {
     checksError = redact(checksResult.stderr).trim();
@@ -273,6 +343,9 @@ async function pullRequest(options) {
   const pendingChecks = checks
     .filter((check) => String(check.bucket).toLowerCase() === "pending")
     .map((check) => check.name);
+  const skippedChecks = checks
+    .filter((check) => String(check.bucket).toLowerCase() === "skipping")
+    .map((check) => check.name);
   const changedPaths = (details.files ?? [])
     .map((file) => file.path)
     .sort((left, right) => left.localeCompare(right));
@@ -280,9 +353,13 @@ async function pullRequest(options) {
     details.state === "OPEN" &&
     !details.isDraft &&
     details.mergeable === "MERGEABLE" &&
+    String(details.reviewDecision).toUpperCase() !== "CHANGES_REQUESTED" &&
     checksError === null &&
+    checksResult.code === 0 &&
+    checks.length > 0 &&
     failedChecks.length === 0 &&
-    pendingChecks.length === 0;
+    pendingChecks.length === 0 &&
+    skippedChecks.length === 0;
   return {
     ok,
     proof: "github-pr-inspect",
@@ -295,21 +372,13 @@ async function pullRequest(options) {
     checksError,
     failedChecks,
     pendingChecks,
+    skippedChecks,
   };
 }
 
-const failureConclusions = new Set([
-  "action_required",
-  "cancelled",
-  "failure",
-  "startup_failure",
-  "stale",
-  "timed_out",
-]);
-
 async function ciDiagnosis(options) {
   const repository = requireRepository(options);
-  const pr = requirePullRequest(options);
+  const pr = requirePullRequest(options, repository);
   const view = parseJson(
     await gh([
       "pr",
@@ -322,14 +391,20 @@ async function ciDiagnosis(options) {
     ]),
     "GitHub pull-request response",
   );
+  if (
+    view.number !== Number(pr) ||
+    view.url !== `https://github.com/${repository.nameWithOwner}/pull/${pr}`
+  )
+    throw new Error("GitHub returned a pull request from another repository.");
+  requireOid(view.headRefOid, "Pull request head revision");
   const runs = parseJson(
     await gh([
       "run",
       "list",
       "--repo",
       repository.nameWithOwner,
-      "--branch",
-      view.headRefName,
+      "--commit",
+      view.headRefOid,
       "--limit",
       "50",
       "--json",
@@ -337,9 +412,23 @@ async function ciDiagnosis(options) {
     ]),
     "GitHub workflow-run response",
   );
+  if (!Array.isArray(runs)) throw new Error("GitHub workflow-run response was not an array.");
+  for (const runEntry of runs) {
+    if (
+      !runEntry ||
+      typeof runEntry.databaseId !== "number" ||
+      typeof runEntry.status !== "string" ||
+      typeof runEntry.conclusion !== "string" ||
+      typeof runEntry.headSha !== "string" ||
+      !oidPattern.test(runEntry.headSha)
+    )
+      throw new Error("GitHub workflow-run entry was invalid.");
+  }
   const exactRuns = runs.filter((runEntry) => runEntry.headSha === view.headRefOid);
-  const failedRuns = exactRuns.filter((runEntry) =>
-    failureConclusions.has(String(runEntry.conclusion).toLowerCase()),
+  const failedRuns = exactRuns.filter(
+    (runEntry) =>
+      String(runEntry.status).toLowerCase() === "completed" &&
+      String(runEntry.conclusion).toLowerCase() !== "success",
   );
   const pendingRuns = exactRuns.filter(
     (runEntry) => String(runEntry.status).toLowerCase() !== "completed",
@@ -375,7 +464,7 @@ async function ciDiagnosis(options) {
     headRefName: view.headRefName,
     headRefOid: view.headRefOid,
     exactRuns,
-    failures,
+    failures: sanitize(failures),
     pendingRuns,
   };
 }
@@ -399,7 +488,7 @@ async function handoff(options) {
 
 async function mergedVerify(options) {
   const repository = requireRepository(options);
-  const pr = requirePullRequest(options);
+  const pr = requirePullRequest(options, repository);
   const details = parseJson(
     await gh([
       "pr",
@@ -412,6 +501,13 @@ async function mergedVerify(options) {
     ]),
     "GitHub pull-request response",
   );
+  if (
+    details.number !== Number(pr) ||
+    details.url !== `https://github.com/${repository.nameWithOwner}/pull/${pr}`
+  )
+    throw new Error("GitHub returned a pull request from another repository.");
+  if (details.baseRefName !== "main") throw new Error("Pull request base must be main.");
+  requireOid(details.headRefOid, "Pull request head revision");
   const snapshot = await gitSnapshot(repository);
   const mergeCommit = details.mergeCommit?.oid ?? null;
   const equality =
@@ -438,31 +534,52 @@ async function mergedVerify(options) {
 }
 
 function print(value, json) {
+  const safeValue = sanitize(value);
   process.stdout.write(
-    `${typeof value === "string" && !json ? value : JSON.stringify(value, null, 2)}\n`,
+    `${typeof safeValue === "string" && !json ? safeValue : JSON.stringify(safeValue, null, 2)}\n`,
   );
 }
 
-async function main() {
-  const { positional, options } = parse(process.argv.slice(2));
+export async function main(argv = process.argv.slice(2), injectedRun = runTool) {
+  run = injectedRun;
+  const { positional, options } = parse(argv);
   if (options.help || positional.length === 0 || positional[0] === "help") {
     print(help(), options.json);
     return;
   }
   const [command, first, second] = positional;
+  const expectedArity = first === "pr" || first === "ci" || first === "merged" ? 3 : 2;
+  if (positional.length !== expectedArity) throw new Error("Unexpected positional argument.");
   let result;
   if (command !== "github") throw new Error(`Unknown command.\n\n${help()}`);
-  if (first === "preflight") result = await preflight(options);
-  else if (first === "pr" && second === "inspect") result = await pullRequest(options);
-  else if (first === "ci" && second === "diagnose") result = await ciDiagnosis(options);
-  else if (first === "handoff") result = await handoff(options);
-  else if (first === "merged" && second === "verify") result = await mergedVerify(options);
-  else throw new Error(`Unknown GitHub evidence command.\n\n${help()}`);
+  const requireOptions = (allowed, required) => {
+    for (const key of Object.keys(options))
+      if (!allowed.has(key)) throw new Error(`Option --${key} is not valid for this command.`);
+    for (const key of required)
+      if (!Object.hasOwn(options, key)) throw new Error(`Missing required option --${key}.`);
+  };
+  if (first === "preflight") {
+    requireOptions(new Set(["repo", "root", "json"]), ["repo"]);
+    result = await preflight(options);
+  } else if (first === "pr" && second === "inspect") {
+    requireOptions(new Set(["repo", "root", "pr", "json"]), ["repo", "pr"]);
+    result = await pullRequest(options);
+  } else if (first === "ci" && second === "diagnose") {
+    requireOptions(new Set(["repo", "root", "pr", "json"]), ["repo", "pr"]);
+    result = await ciDiagnosis(options);
+  } else if (first === "handoff") {
+    requireOptions(new Set(["repo", "root", "pr", "json"]), ["repo", "pr"]);
+    result = await handoff(options);
+  } else if (first === "merged" && second === "verify") {
+    requireOptions(new Set(["repo", "root", "pr", "json"]), ["repo", "pr"]);
+    result = await mergedVerify(options);
+  } else throw new Error(`Unknown GitHub evidence command.\n\n${help()}`);
   print(result, options.json);
   if (result.ok === false) process.exitCode = 2;
 }
 
-main().catch((error) => {
-  print({ ok: false, error: redact(error.message) }, true);
-  process.exitCode = 1;
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href)
+  main().catch((error) => {
+    print({ ok: false, error: redact(error.message) }, true);
+    process.exitCode = 1;
+  });
