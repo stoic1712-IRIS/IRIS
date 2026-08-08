@@ -1,0 +1,94 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "phase-2-3-charter-and-github-evidence-cli",
+  "objective": "Promote the Founder-approved Phase 2-3 Sovereign Capability Evolution Charter to a canonical candidate and locally implement one read-only GitHub evidence engine that both IRIS and Codex use for repository preflight, pull-request inspection, CI diagnosis, reviewer handoff, and merged-main equality proof.",
+  "issuer": "Founder Cristofer Stoic Arellano through Codex",
+  "executor": "Codex as producer, with IRIS Core owning the resulting evidence engine",
+  "assigned_role": "producer",
+  "created_at": "2026-08-08T18:00:00Z",
+  "status": "approved",
+  "risk_class": "R1",
+  "authorization_mode": "single_action",
+  "completion_mandate_text": null,
+  "completion_actions": [],
+  "completion_exclusions": [
+    "Staging, committing, pushing, pull-request creation, merging, synchronization, or cleanup without separate publication authority",
+    "GitHub write operations or repository administration",
+    "Credentials or secret disclosure",
+    "Spending, deployment, or public or LAN exposure",
+    "Destructive operations, force-push, or history rewrite",
+    "Phase 0 graduation execution or completion claim"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "6367e4547d34092472c672ee93a9e1b2a8e5c80f"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/tasks/phase-2-3-charter-and-github-evidence-cli.json",
+    "docs/governance/phase-2-3-sovereign-capability-evolution-charter.md",
+    "docs/source-material/STOIC-IRIS_Phase_2-3_Sovereign_Capability_Evolution_Charter.docx",
+    "docs/operations/stoic-iris-project-context.md",
+    "docs/superpowers/specs/2026-08-08-phase-2-3-github-evidence-cli-design.md",
+    "docs/superpowers/plans/2026-08-08-phase-2-3-github-evidence-cli.md",
+    "scripts/dev/iris-dev.mjs",
+    "tests/iris-dev-github.test.ts",
+    "package.json",
+    "evidence/post-roadmap/phase-2-3-charter-and-github-evidence-cli-2026-08-08.md",
+    "C:/Users/Admin/.codex/skills/iris-dev/SKILL.md",
+    "C:/Users/Admin/.codex/skills/iris-dev/scripts/iris-dev.mjs",
+    "C:/Users/Admin/.codex/skills/iris-dev/scripts/iris-dev.test.mjs"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    ".claude/**",
+    "pnpm-lock.yaml",
+    "C:/Projects/STOIC-IRIS-source-library/**"
+  ],
+  "permitted_actions": [
+    "Edit and verify the exact allowed paths",
+    "Run read-only Git and GitHub CLI evidence commands",
+    "Render and inspect the exact DOCX companion",
+    "Repair implementation or test failures inside the allowed paths"
+  ],
+  "prohibited_actions": [
+    "Install community GitHub CLI extensions",
+    "Execute any GitHub mutation command",
+    "Use a shell to compose provider commands",
+    "Retain unbounded or unredacted provider logs",
+    "Create independent Core and personal implementations that can silently drift",
+    "Remove or weaken an existing IRIS or Codex capability"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "node C:/Users/Admin/.codex/skills/iris-dev/scripts/iris-dev.mjs task validate .iris/coordination/tasks/phase-2-3-charter-and-github-evidence-cli.json --json"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run tests/iris-dev-github.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "node C:/Users/Admin/.codex/skills/iris-dev/scripts/iris-dev.test.mjs"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "Exact repository and personal-skill changed paths",
+    "Red-green regression evidence for Core behavior and personal delegation",
+    "Focused and full verification exit codes",
+    "DOCX render and material-parity evidence",
+    "Live read-only preflight evidence for both repositories",
+    "Security review proving no GitHub mutation or secret retention",
+    "Publication state reported separately from local implementation state"
+  ],
+  "publisher": null,
+  "approval_reference": "founder-add-approved-phase-2-3-github-evidence-2026-08-08",
+  "phase0_graduation": false
+}

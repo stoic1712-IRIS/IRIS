@@ -20,8 +20,9 @@
     "format:check": "prettier . --check",
     "diagnostics": "node scripts/diagnostics/repository.mjs",
     "blueprint:compile": "node scripts/blueprints/iris-blueprint-compile.mjs",
+    "iris-dev": "node scripts/dev/iris-dev.mjs",
     "workflow": "node scripts/workflow/iris-workflow.mjs",
-    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm diagnostics"
+    "verify": "pnpm format:check && pnpm build && pnpm lint && pnpm typecheck && pnpm test && pnpm diagnostics"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

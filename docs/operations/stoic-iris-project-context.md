@@ -231,6 +231,7 @@ Read the smallest relevant set, including:
 - `docs/governance/protected-path-and-branch-policy.md`;
 - `docs/governance/integrated-build-workflow.md`;
 - `docs/governance/testing-and-verification-standards.md`;
+- `docs/governance/phase-2-3-sovereign-capability-evolution-charter.md` whenever the objective involves Phase 2, Phase 3, model or worker parity, capability acquisition, adapters, worker creation, website reproduction, or self-improvement;
 - the relevant ADR, specification, registry entries, evidence, and `.iris/coordination` task; and
 - canonical `docs/governance/multi-agent-coordination-policy.md` version 1.0.0.
 
