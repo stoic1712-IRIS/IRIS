@@ -14,6 +14,9 @@ export type DeliveryOrdinaryCapability =
   | "repository.monitor-ci"
   | "repository.address-review"
   | "repository.verify-remote"
+  | "repository.merge-reviewed-head"
+  | "repository.synchronize"
+  | "repository.rollback-history-preserving"
   | "workspace.cleanup";
 
 export interface CompleteDeliveryAccessAuthorizer {
@@ -73,6 +76,9 @@ export const completeDeliveryStateSchema = z.enum([
   "verifying-remote",
   "cleaning",
   "ready-for-merge-approval",
+  "merging",
+  "synchronizing",
+  "completed",
   "paused",
   "recovery-ready",
   "cancelled",
@@ -124,6 +130,9 @@ export interface CompleteDeliverySession {
   remoteEqualityVerified: boolean;
   cleanupVerified: boolean;
   mergeApprovalStatement?: string;
+  mergedCommit?: string;
+  canonicalEqualityVerified?: boolean;
+  rollbackEvidenceDigest?: string;
   events: CompleteDeliveryEvent[];
   updatedAt: string;
 }
@@ -223,6 +232,26 @@ export interface CompleteDeliveryAdapter {
     signal: AbortSignal,
   ): Promise<boolean>;
   cleanup(objective: CompleteDeliveryObjective, workspaceId: string): Promise<boolean>;
+  mergeReviewedHead?(
+    objective: CompleteDeliveryObjective,
+    pullRequestNumber: number,
+    expectedHeadCommit: string,
+  ): Promise<{
+    expectedHeadCommit: string;
+    mergeCommit: string;
+    providerMainRevision: string;
+    branchProtectionHonored: boolean;
+    adminBypassUsed: boolean;
+    forceUsed: boolean;
+  }>;
+  synchronizeCanonicalMain?(
+    objective: CompleteDeliveryObjective,
+    mergeCommit: string,
+  ): Promise<{ localMainRevision: string; remoteMainRevision: string }>;
+  captureRollbackEvidence?(
+    objective: CompleteDeliveryObjective,
+    mergeCommit: string,
+  ): Promise<{ evidenceDigest: string; historyPreserving: boolean }>;
 }
 
 const requiredCapabilities: readonly DeliveryOrdinaryCapability[] = [
@@ -381,6 +410,85 @@ export class CompleteSoftwareDeliveryRuntime {
 
   session(deliveryId: string): Promise<CompleteDeliverySession | null> {
     return this.#store.load(deliveryId);
+  }
+
+  async completeUnderFounderAccess(
+    deliveryId: string,
+    expectedHeadCommit: string,
+  ): Promise<CompleteDeliverySession> {
+    const session = await this.#store.load(deliveryId);
+    if (session === null) throw new Error("DELIVERY_NOT_FOUND");
+    if (!this.#eventsVerified(session.events, deliveryId))
+      throw new Error("DELIVERY_EVENT_CHAIN_INVALID");
+    if (session.state !== "ready-for-merge-approval")
+      throw new Error("DELIVERY_NOT_READY_FOR_MERGE");
+    commitSchema.parse(expectedHeadCommit);
+    if (
+      session.candidateCommit !== expectedHeadCommit ||
+      session.pushedCommit !== expectedHeadCommit ||
+      session.pullRequest?.headCommit !== expectedHeadCommit
+    )
+      throw new Error("DELIVERY_REVIEWED_HEAD_MISMATCH");
+    if (session.ci?.conclusion !== "success") throw new Error("DELIVERY_CI_NOT_SUCCESSFUL");
+    if (!session.remoteEqualityVerified || !session.cleanupVerified)
+      throw new Error("DELIVERY_PREMERGE_EVIDENCE_INCOMPLETE");
+    if (
+      this.#adapter.mergeReviewedHead === undefined ||
+      this.#adapter.synchronizeCanonicalMain === undefined ||
+      this.#adapter.captureRollbackEvidence === undefined
+    )
+      throw new Error("DELIVERY_FOUNDER_COMPLETION_ADAPTER_UNAVAILABLE");
+    try {
+      this.#access.authorize(session.objective.accessRequestId, "repository.merge-reviewed-head");
+      await this.#transition(session, "merging", "Merging the exact reviewed and pushed head.");
+      const merged = await this.#adapter.mergeReviewedHead(
+        session.objective,
+        session.pullRequest.number,
+        expectedHeadCommit,
+      );
+      if (merged.expectedHeadCommit !== expectedHeadCommit)
+        throw new Error("DELIVERY_MERGE_HEAD_MISMATCH");
+      if (merged.adminBypassUsed || merged.forceUsed || !merged.branchProtectionHonored)
+        throw new Error("DELIVERY_BRANCH_PROTECTION_BYPASS_DENIED");
+      session.mergedCommit = commitSchema.parse(merged.mergeCommit);
+      if (merged.providerMainRevision !== session.mergedCommit)
+        throw new Error("DELIVERY_PROVIDER_MAIN_MISMATCH");
+      this.#access.authorize(session.objective.accessRequestId, "repository.synchronize");
+      await this.#transition(session, "synchronizing", "Synchronizing canonical local main.");
+      const equality = await this.#adapter.synchronizeCanonicalMain(
+        session.objective,
+        session.mergedCommit,
+      );
+      session.canonicalEqualityVerified =
+        equality.localMainRevision === session.mergedCommit &&
+        equality.remoteMainRevision === session.mergedCommit;
+      if (!session.canonicalEqualityVerified)
+        throw new Error("DELIVERY_CANONICAL_EQUALITY_FAILED");
+      this.#access.authorize(
+        session.objective.accessRequestId,
+        "repository.rollback-history-preserving",
+      );
+      const rollback = await this.#adapter.captureRollbackEvidence(
+        session.objective,
+        session.mergedCommit,
+      );
+      if (!rollback.historyPreserving)
+        throw new Error("DELIVERY_HISTORY_PRESERVING_ROLLBACK_REQUIRED");
+      session.rollbackEvidenceDigest = sha256Schema.parse(rollback.evidenceDigest);
+      await this.#transition(
+        session,
+        "completed",
+        "Exact reviewed head merged, synchronized, and rollback evidence preserved.",
+      );
+      return structuredClone(session);
+    } catch (error) {
+      await this.#transition(
+        session,
+        "recovery-ready",
+        error instanceof Error ? error.message : "DELIVERY_FOUNDER_COMPLETION_FAILED",
+      );
+      throw error;
+    }
   }
 
   async #begin(
