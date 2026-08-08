@@ -13,6 +13,7 @@
     }
   },
   "dependencies": {
+    "@stoic-iris/capabilities": "workspace:*",
     "zod": "4.4.3"
   }
 }

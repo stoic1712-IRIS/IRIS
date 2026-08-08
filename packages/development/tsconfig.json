@@ -7,5 +7,6 @@
     "outDir": "dist",
     "tsBuildInfoFile": "dist/development.tsbuildinfo"
   },
+  "references": [{ "path": "../capabilities" }],
   "include": ["src/**/*.ts"]
 }
