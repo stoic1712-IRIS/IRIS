@@ -18,6 +18,13 @@ gateway_pid=""
 source "$HOME/.nvm/nvm.sh"
 export IRIS_ROOT="$iris_root"
 
+runtime_preparer="$iris_root/scripts/runtime/prepare-founder-runtime.sh"
+if [[ ! -f "$runtime_preparer" ]]; then
+  echo "IRIS runtime build preflight was not found." >&2
+  exit 1
+fi
+bash "$runtime_preparer" "$iris_root" "$command_center_root"
+
 if [[ ! -x "$voice_python" ]]; then
   echo "IRIS voice runtime is not installed." >&2
   exit 1
