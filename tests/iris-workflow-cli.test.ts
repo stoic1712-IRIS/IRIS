@@ -400,6 +400,72 @@ describe("IRIS workflow CLI", () => {
     }
   });
 
+  it("forcefully stops only the exact verified owned Windows process tree", async () => {
+    const projectsRoot = mkdtempSync(join(tmpdir(), "iris-workflow-owned-stop-"));
+    const coreRoot = join(projectsRoot, "STOIC-IRIS");
+    const commandCenterRoot = join(projectsRoot, "iris-founder-command-center-main");
+    const taskkillArguments: string[][] = [];
+    try {
+      mkdirSync(join(coreRoot, "scripts", "runtime"), { recursive: true });
+      writeFileSync(join(coreRoot, "scripts", "runtime", "stop-iris-search.ps1"), "");
+      mkdirSync(join(commandCenterRoot, "scripts"), { recursive: true });
+      writeFileSync(join(commandCenterRoot, "scripts", "local-gateway.mjs"), "");
+
+      const result = await runWorkflow(["runtime", "stop", "--core-root", coreRoot], {
+        environment: {},
+        readRuntimeState: () => ({
+          owner: "iris-founder-runtime",
+          launcherPath: join(coreRoot, "scripts", "runtime", "start-founder-command-center.ps1"),
+          processes: [{ owner: "iris-founder-runtime", processId: 4242 }],
+        }),
+        clearRuntimeState: () => undefined,
+        runProgram: (program, arguments_) => {
+          if (program === "taskkill.exe") taskkillArguments.push(arguments_);
+          return { code: 0, stdout: "", stderr: "" };
+        },
+      });
+
+      expect(result).toMatchObject({ ok: true, stopped: true, stoppedProcessIds: [4242] });
+      expect(taskkillArguments).toEqual([["/PID", "4242", "/T", "/F"]]);
+    } finally {
+      rmSync(projectsRoot, { force: true, recursive: true });
+    }
+  });
+
+  it("preserves lifecycle state when an owned process tree cannot be stopped", async () => {
+    const projectsRoot = mkdtempSync(join(tmpdir(), "iris-workflow-stop-failure-"));
+    const coreRoot = join(projectsRoot, "STOIC-IRIS");
+    const commandCenterRoot = join(projectsRoot, "iris-founder-command-center-main");
+    let cleared = false;
+    try {
+      mkdirSync(join(coreRoot, "scripts", "runtime"), { recursive: true });
+      writeFileSync(join(coreRoot, "scripts", "runtime", "stop-iris-search.ps1"), "");
+      mkdirSync(join(commandCenterRoot, "scripts"), { recursive: true });
+      writeFileSync(join(commandCenterRoot, "scripts", "local-gateway.mjs"), "");
+
+      await expect(
+        runWorkflow(["runtime", "stop", "--core-root", coreRoot], {
+          environment: {},
+          readRuntimeState: () => ({
+            owner: "iris-founder-runtime",
+            launcherPath: join(coreRoot, "scripts", "runtime", "start-founder-command-center.ps1"),
+            processes: [{ owner: "iris-founder-runtime", processId: 4242 }],
+          }),
+          clearRuntimeState: () => {
+            cleared = true;
+          },
+          runProgram: (program) =>
+            program === "taskkill.exe"
+              ? { code: 128, stdout: "", stderr: "access denied" }
+              : { code: 0, stdout: "", stderr: "" },
+        }),
+      ).rejects.toThrow(/unable to stop the owned Founder runtime process tree/iu);
+      expect(cleared).toBe(false);
+    } finally {
+      rmSync(projectsRoot, { force: true, recursive: true });
+    }
+  });
+
   it("runs verification with package-manager network access disabled", async () => {
     const projectsRoot = mkdtempSync(join(tmpdir(), "iris-workflow-verify-"));
     const coreRoot = join(projectsRoot, "STOIC-IRIS");

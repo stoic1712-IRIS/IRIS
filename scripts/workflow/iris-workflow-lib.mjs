@@ -421,11 +421,19 @@ async function defaultStopOwnedProcess(process, state, runProgram) {
   });
   if (verified.code === 3) return false;
   if (verified.code === 7) throw new Error("Runtime process ownership no longer matches.");
-  if (verified.code !== 0) return false;
-  const stopped = await runProgram("taskkill.exe", ["/PID", String(process.processId), "/T"], {
-    timeout: 30_000,
-  });
-  return stopped.code === 0 || /not found|not running/iu.test(String(stopped.stderr));
+  if (verified.code !== 0) {
+    throw new Error("Unable to verify the owned Founder runtime process tree before stopping it.");
+  }
+  const stopped = await runProgram(
+    "taskkill.exe",
+    ["/PID", String(process.processId), "/T", "/F"],
+    { timeout: 30_000 },
+  );
+  if (stopped.code === 0) return true;
+  if (/not found|not running/iu.test(String(stopped.stderr))) return false;
+  throw new Error(
+    `Unable to stop the owned Founder runtime process tree: ${redact(stopped.stderr)}`,
+  );
 }
 
 async function stopWorkflow(options, overrides) {
