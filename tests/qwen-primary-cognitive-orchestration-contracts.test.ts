@@ -9,6 +9,14 @@ import {
   validateCognitiveDelegation,
 } from "../packages/model-gateway/src/cognitive-turn-contracts.js";
 import { cognitiveTurnErrorCodes } from "../packages/model-gateway/src/cognitive-turn-errors.js";
+import {
+  CognitiveOrchestrator as ExportedCognitiveOrchestrator,
+  CognitiveTurnError as ExportedCognitiveTurnError,
+  ModelLeaseScheduler as ExportedModelLeaseScheduler,
+  cognitiveTurnRequestSchema as exportedCognitiveTurnRequestSchema,
+  primaryIrisOrchestratorModel as exportedPrimaryIrisOrchestratorModel,
+  routeIrisModel as exportedRouteIrisModel,
+} from "../packages/model-gateway/src/index.js";
 import { routeIrisModel } from "../packages/model-gateway/src/model-router.js";
 
 const objectiveId = "objective_0198a6cf-7c74-7ae0-8f8d-92c13db44d7a";
@@ -201,5 +209,14 @@ describe("Qwen primary cognitive contracts", () => {
     expect(cognitiveTurnErrorCodes).toContain("COGNITIVE_OBJECTIVE_BINDING_MISMATCH");
     expect(cognitiveTurnErrorCodes).toContain("MODEL_LEASE_RELEASE_FAILED");
     expect(new Set(cognitiveTurnErrorCodes).size).toBe(cognitiveTurnErrorCodes.length);
+  });
+
+  it("exports the additive cognitive API without removing the existing router", () => {
+    expect(exportedPrimaryIrisOrchestratorModel).toBe("qwen3.6:27b");
+    expect(ExportedCognitiveOrchestrator).toBeTypeOf("function");
+    expect(ExportedCognitiveTurnError).toBeTypeOf("function");
+    expect(ExportedModelLeaseScheduler).toBeTypeOf("function");
+    expect(exportedCognitiveTurnRequestSchema).toBeDefined();
+    expect(exportedRouteIrisModel).toBeTypeOf("function");
   });
 });
