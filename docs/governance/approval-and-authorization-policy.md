@@ -49,6 +49,12 @@ The following actions are distinct approval types: stage, commit, push, pull-req
 
 Approval to draft does not authorize staging. Staging does not authorize committing. Committing does not authorize pushing. Pushing does not authorize merging or deployment.
 
+## Founder Full Access
+
+An authenticated Founder session may issue one visible, time-bounded, revocable Full-access grant for registered ordinary capabilities. The grant is bound to the Founder session and gateway boot, is invalid after disable, logout, gateway restart, or Windows restart, and must remain interruptible and audit-chained.
+
+Full access does not include credential disclosure, spending, deployment, public or LAN exposure, repository or account administration, force-push or history rewriting, destructive data operations, elevation, or Phase 0 graduation. Those effects remain separately protected regardless of technical availability or prior convenience.
+
 ## Proposal Requirements
 
 R2 and R3 proposals must state:

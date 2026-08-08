@@ -75,6 +75,7 @@ export const desktopControlTargetSchema = z
     ),
     windowTitle: exactText(240),
     automationRootId: exactText(160).optional(),
+    processId: z.number().int().positive().max(4_294_967_295).optional(),
   })
   .strict();
 export type DesktopControlTarget = z.infer<typeof desktopControlTargetSchema>;

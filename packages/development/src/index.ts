@@ -12,3 +12,4 @@ export * from "./sovereign-development-runtime.js";
 export * from "./self-description.js";
 export * from "./complete-software-delivery.js";
 export * from "./operator-parity-runtime.js";
+export * from "./self-repair-runtime.js";

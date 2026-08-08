@@ -1,5 +1,5 @@
 {
-  "name": "@stoic-iris/development",
+  "name": "@stoic-iris/runtime",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -13,7 +13,6 @@
     }
   },
   "dependencies": {
-    "@stoic-iris/capabilities": "workspace:*",
     "zod": "4.4.3"
   }
 }

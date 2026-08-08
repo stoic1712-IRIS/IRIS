@@ -5,8 +5,7 @@
     "types": ["node"],
     "rootDir": "src",
     "outDir": "dist",
-    "tsBuildInfoFile": "dist/development.tsbuildinfo"
+    "tsBuildInfoFile": "dist/runtime.tsbuildinfo"
   },
-  "references": [{ "path": "../capabilities" }],
   "include": ["src/**/*.ts"]
 }

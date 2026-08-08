@@ -13,14 +13,23 @@ export const ordinaryCapabilitySchema = z.enum([
   "repository.inspect",
   "repository.edit-bounded",
   "terminal.run-approved",
+  "dependencies.materialize-approved",
+  "verification.run",
+  "repair.execute-bounded",
   "repository.commit-candidate",
   "repository.push-branch",
   "repository.create-pull-request",
   "repository.monitor-ci",
   "repository.address-review",
+  "repository.merge-reviewed-head",
   "repository.verify-remote",
+  "repository.synchronize",
+  "repository.rollback-history-preserving",
   "workspace.cleanup",
+  "runtime.manage-local",
   "desktop.preview",
+  "desktop.operate-bounded",
+  "capability.acquire-approved",
   "notification.local",
 ]);
 export type OrdinaryCapability = z.infer<typeof ordinaryCapabilitySchema>;
@@ -37,17 +46,34 @@ export const protectedCapabilitySchema = z.enum([
   "phase-zero.graduate",
 ]);
 
+const founderSessionBindingSchema = z
+  .object({
+    founderSessionId: z.string().regex(/^session_[a-z0-9-]{8,100}$/u),
+    gatewayBootId: z.string().regex(/^boot_[a-z0-9-]{8,100}$/u),
+  })
+  .strict();
+
 export const founderAccessRequestSchema = z
   .object({
     requestId: z.string().regex(/^access_[a-z0-9-]{8,100}$/u),
     founderId: z.literal("Founder"),
     authenticated: z.literal(true),
-    profile: z.literal("restricted-full-access"),
+    profile: z.enum(["restricted-full-access", "founder-full-access"]),
     capabilities: z.array(ordinaryCapabilitySchema).min(1).max(32),
+    sessionBinding: founderSessionBindingSchema.optional(),
     issuedAt: timestampSchema,
     expiresAt: timestampSchema,
   })
-  .strict();
+  .strict()
+  .superRefine((request, context) => {
+    if (request.profile === "founder-full-access" && request.sessionBinding === undefined) {
+      context.addIssue({
+        code: "custom",
+        path: ["sessionBinding"],
+        message: "Founder Full access requires an authenticated session binding.",
+      });
+    }
+  });
 export type FounderAccessRequest = z.infer<typeof founderAccessRequestSchema>;
 
 export const founderAccessGrantSchema = founderAccessRequestSchema.extend({
@@ -82,12 +108,16 @@ export class FounderAccessRegistry {
   readonly #registered: ReadonlySet<OrdinaryCapability>;
   readonly #maximumDurationMs: number;
   readonly #now: () => Date;
+  readonly #founderSessionId: string | undefined;
+  readonly #gatewayBootId: string | undefined;
   readonly #grants = new Map<string, FounderAccessGrant>();
   readonly #events: FounderAccessAuditEvent[] = [];
 
   constructor(options: {
     registeredCapabilities: readonly OrdinaryCapability[];
     maximumDurationMs?: number;
+    founderSessionId?: string;
+    gatewayBootId?: string;
     now?: () => Date;
   }) {
     const registered = z
@@ -100,14 +130,22 @@ export class FounderAccessRegistry {
       .number()
       .int()
       .min(60_000)
-      .max(4 * 60 * 60 * 1_000)
-      .parse(options.maximumDurationMs ?? 60 * 60 * 1_000);
+      .max(7 * 24 * 60 * 60 * 1_000)
+      .parse(options.maximumDurationMs ?? 24 * 60 * 60 * 1_000);
+    this.#founderSessionId = options.founderSessionId;
+    this.#gatewayBootId = options.gatewayBootId;
     this.#now = options.now ?? (() => new Date());
   }
 
   issue(input: FounderAccessRequest): FounderAccessGrant {
     const request = founderAccessRequestSchema.parse(input);
     if (this.#grants.has(request.requestId)) throw new Error("FOUNDER_ACCESS_REQUEST_REPLAY");
+    if (
+      request.profile === "founder-full-access" &&
+      (request.sessionBinding?.founderSessionId !== this.#founderSessionId ||
+        request.sessionBinding?.gatewayBootId !== this.#gatewayBootId)
+    )
+      throw new Error("FOUNDER_ACCESS_SESSION_MISMATCH");
     if (!unique(request.capabilities)) throw new Error("FOUNDER_ACCESS_CAPABILITY_DUPLICATE");
     const issuedAt = Date.parse(request.issuedAt);
     const expiresAt = Date.parse(request.expiresAt);

@@ -26,6 +26,24 @@ export interface WorkflowProbeResult {
   error?: string;
 }
 
+export interface WorkflowRuntimeProcess {
+  owner: "iris-founder-runtime";
+  service?: string;
+  processId: number;
+  commandDigest?: string;
+}
+
+export interface WorkflowRuntimeState {
+  owner: "iris-founder-runtime";
+  bootId?: string;
+  phase?: string;
+  launcherPath?: string;
+  processes?: WorkflowRuntimeProcess[];
+  lastGreetingBootId?: string | null;
+  greetingReady?: boolean;
+  updatedAt?: string;
+}
+
 export interface WorkflowOverrides {
   environment?: NodeJS.ProcessEnv;
   platform?: NodeJS.Platform;
@@ -46,6 +64,13 @@ export interface WorkflowOverrides {
     arguments_: string[],
     options: { cwd: string; environment: NodeJS.ProcessEnv },
   ) => { pid?: number };
+  resolveBootId?: () => string | Promise<string>;
+  writeRuntimeState?: (state: WorkflowRuntimeState) => void | Promise<void>;
+  readRuntimeState?: () => WorkflowRuntimeState | null | Promise<WorkflowRuntimeState | null>;
+  clearRuntimeState?: () => void | Promise<void>;
+  openFounderApplication?: () => void | Promise<void>;
+  stopStartedProcess?: (processId: number) => unknown | Promise<unknown>;
+  stopOwnedProcess?: (process: WorkflowRuntimeProcess) => boolean | Promise<boolean>;
 }
 
 export type WorkflowResult = string | Record<string, unknown>;

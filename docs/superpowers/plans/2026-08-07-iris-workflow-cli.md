@@ -95,3 +95,21 @@
 - [ ] Run the personal skill validator and wrapper smoke tests.
 - [ ] Run full `pnpm verify` with the pinned offline toolchain.
 - [ ] Inspect exact changed paths and confirm no stage or publication occurred.
+
+### Task 6: Cold-start readiness hardening
+
+**Files:**
+- Modify: `scripts/workflow/iris-workflow-lib.mjs`
+- Modify: `tests/iris-workflow-cli.test.ts`
+- Modify: `docs/superpowers/specs/2026-08-07-iris-workflow-cli-design.md`
+- Modify: `docs/superpowers/plans/2026-08-07-iris-workflow-cli.md`
+
+**Interfaces:**
+- Consumes: the existing `probe`, `sleep`, and `spawnDetached` startup dependencies.
+- Produces: the existing `start` result after condition-based polling every 500 milliseconds for no more than 120 seconds.
+
+- [x] Add a failing behavior test that keeps the full stack unavailable through the former 60-poll boundary and makes it ready on the next poll.
+- [x] Run `pnpm vitest run tests/iris-workflow-cli.test.ts` and observe failure from the current 30-second polling limit.
+- [x] Replace the 60-attempt literal with named 500-millisecond and 120-second startup constants while preserving immediate success and fail-closed exhaustion behavior.
+- [x] Re-run `pnpm vitest run tests/iris-workflow-cli.test.ts` and confirm the regression passes.
+- [x] Run full `pnpm verify`, inspect the exact four changed paths, and perform a real loopback cold-start smoke test before any publication request.
