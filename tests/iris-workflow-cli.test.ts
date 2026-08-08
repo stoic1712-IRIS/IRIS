@@ -86,7 +86,13 @@ describe("IRIS workflow CLI", () => {
     const coreRoot = join(projectsRoot, "STOIC-IRIS");
     const commandCenterRoot = join(projectsRoot, "iris-founder-command-center-main");
     const launcher = join(coreRoot, "scripts", "runtime", "start-founder-command-center.ps1");
-    const launches: { program: string; arguments_: string[]; cwd: string }[] = [];
+    const launches: {
+      program: string;
+      arguments_: string[];
+      cwd: string;
+      stdoutPath?: string;
+      stderrPath?: string;
+    }[] = [];
     let gatewayProbeCount = 0;
 
     try {
@@ -106,19 +112,26 @@ describe("IRIS workflow CLI", () => {
         },
         sleep: () => undefined,
         spawnDetached: (program, arguments_, options) => {
-          launches.push({ program, arguments_, cwd: options.cwd });
+          launches.push({
+            program,
+            arguments_,
+            cwd: options.cwd,
+            stdoutPath: options.stdoutPath,
+            stderrPath: options.stderrPath,
+          });
           return { pid: 4242 };
         },
       });
 
       expect(result).toMatchObject({ ok: true, started: true, ready: true, processId: 4242 });
-      expect(launches).toEqual([
-        {
-          program: "powershell.exe",
-          arguments_: ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", launcher],
-          cwd: coreRoot,
-        },
-      ]);
+      expect(launches).toHaveLength(1);
+      expect(launches[0]).toMatchObject({
+        program: "powershell.exe",
+        arguments_: ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", launcher],
+        cwd: coreRoot,
+      });
+      expect(launches[0]?.stdoutPath?.endsWith("founder-launcher.stdout.log")).toBe(true);
+      expect(launches[0]?.stderrPath?.endsWith("founder-launcher.stderr.log")).toBe(true);
     } finally {
       rmSync(projectsRoot, { force: true, recursive: true });
     }
@@ -345,6 +358,42 @@ describe("IRIS workflow CLI", () => {
       });
       expect(result).toMatchObject({ ok: true, stopped: true, stoppedProcessIds: [4242] });
       expect(stopped).toEqual([4242]);
+      expect(cleared).toBe(true);
+    } finally {
+      rmSync(projectsRoot, { force: true, recursive: true });
+    }
+  });
+
+  it("clears stale lifecycle state when the recorded launcher no longer exists", async () => {
+    const projectsRoot = mkdtempSync(join(tmpdir(), "iris-workflow-stale-lifecycle-"));
+    const coreRoot = join(projectsRoot, "STOIC-IRIS");
+    const commandCenterRoot = join(projectsRoot, "iris-founder-command-center-main");
+    let cleared = false;
+    try {
+      mkdirSync(join(coreRoot, "scripts", "runtime"), { recursive: true });
+      writeFileSync(join(coreRoot, "scripts", "runtime", "stop-iris-search.ps1"), "");
+      mkdirSync(join(commandCenterRoot, "scripts"), { recursive: true });
+      writeFileSync(join(commandCenterRoot, "scripts", "local-gateway.mjs"), "");
+
+      const result = await runWorkflow(["runtime", "stop", "--core-root", coreRoot], {
+        environment: {},
+        readRuntimeState: () => ({
+          owner: "iris-founder-runtime",
+          launcherPath: join(coreRoot, "scripts", "runtime", "start-founder-command-center.ps1"),
+          processes: [{ owner: "iris-founder-runtime", processId: 4242 }],
+        }),
+        clearRuntimeState: () => {
+          cleared = true;
+        },
+        runProgram: (program, arguments_) => {
+          if (program === "powershell.exe" && arguments_.includes("-Command")) {
+            return { code: 3, stdout: "", stderr: "" };
+          }
+          return { code: 0, stdout: "", stderr: "" };
+        },
+      });
+
+      expect(result).toMatchObject({ ok: true, stopped: false, stoppedProcessIds: [] });
       expect(cleared).toBe(true);
     } finally {
       rmSync(projectsRoot, { force: true, recursive: true });
