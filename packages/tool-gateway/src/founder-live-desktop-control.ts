@@ -19,9 +19,7 @@ export class FounderLiveDesktopControl {
   readonly #adapter: DesktopControlAdapter;
   readonly #replayGuard: DesktopControlReplayGuard;
   readonly #now: () => Date;
-  #active:
-    | { requestId: string; controller: AbortController; generation: number }
-    | undefined;
+  #active: { requestId: string; controller: AbortController; generation: number } | undefined;
   #generation = 0;
 
   constructor(options: {
@@ -60,8 +58,12 @@ export class FounderLiveDesktopControl {
         timeoutMs: plan.maximumDurationMs,
       });
     } finally {
-      if (this.#active?.generation === generation) this.#active = undefined;
+      this.#clearCompletedGeneration(generation);
     }
+  }
+
+  #clearCompletedGeneration(generation: number): void {
+    if (this.#active?.generation === generation) this.#active = undefined;
   }
 
   stop(): boolean {

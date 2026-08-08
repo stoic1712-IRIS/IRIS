@@ -26,12 +26,10 @@ export type FounderRuntimeProcess = z.infer<typeof founderRuntimeProcessSchema>;
 export const founderRuntimeHealthSchema = z
   .object({
     service: z.enum(["gateway", "voice", "search", "ollama"]),
-    url: z
-      .url()
-      .refine((value) => {
-        const url = new URL(value);
-        return url.protocol === "http:" && url.hostname === "127.0.0.1";
-      }, "Founder runtime health URLs must be loopback HTTP."),
+    url: z.url().refine((value) => {
+      const url = new URL(value);
+      return url.protocol === "http:" && url.hostname === "127.0.0.1";
+    }, "Founder runtime health URLs must be loopback HTTP."),
     ready: z.boolean(),
     status: z.number().int().min(100).max(599).nullable(),
     checkedAt: timestampSchema,
@@ -43,21 +41,39 @@ export const founderWindowsLifecycleStateSchema = z
   .object({
     phase: founderRuntimePhaseSchema,
     bootId: z.string().regex(/^boot_[a-z0-9-]{8,100}$/u),
-    gatewayBootId: z.string().regex(/^gateway_[a-z0-9-]{8,100}$/u).optional(),
+    gatewayBootId: z
+      .string()
+      .regex(/^gateway_[a-z0-9-]{8,100}$/u)
+      .optional(),
     processes: z.array(founderRuntimeProcessSchema).max(8),
     health: z.array(founderRuntimeHealthSchema).length(4),
-    lastGreetingBootId: z.string().regex(/^boot_[a-z0-9-]{8,100}$/u).optional(),
+    lastGreetingBootId: z
+      .string()
+      .regex(/^boot_[a-z0-9-]{8,100}$/u)
+      .optional(),
     updatedAt: timestampSchema,
   })
   .strict()
   .superRefine((value, context) => {
     const services = value.health.map((entry) => entry.service);
     if (new Set(services).size !== 4)
-      context.addIssue({ code: "custom", path: ["health"], message: "Health services must be unique." });
+      context.addIssue({
+        code: "custom",
+        path: ["health"],
+        message: "Health services must be unique.",
+      });
     if (value.phase === "healthy" && value.health.some((entry) => !entry.ready))
-      context.addIssue({ code: "custom", path: ["phase"], message: "Healthy requires every service." });
+      context.addIssue({
+        code: "custom",
+        path: ["phase"],
+        message: "Healthy requires every service.",
+      });
     if (value.lastGreetingBootId !== undefined && value.lastGreetingBootId !== value.bootId)
-      context.addIssue({ code: "custom", path: ["lastGreetingBootId"], message: "Greeting must bind this boot." });
+      context.addIssue({
+        code: "custom",
+        path: ["lastGreetingBootId"],
+        message: "Greeting must bind this boot.",
+      });
   });
 export type FounderWindowsLifecycleState = z.infer<typeof founderWindowsLifecycleStateSchema>;
 

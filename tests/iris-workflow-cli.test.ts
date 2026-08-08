@@ -5,7 +5,12 @@ import { join, resolve } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
-import { resultExitCode, runWorkflow } from "../scripts/workflow/iris-workflow-lib.mjs";
+import {
+  resultExitCode,
+  runWorkflow,
+  type WorkflowRuntimeProcess,
+  type WorkflowRuntimeState,
+} from "../scripts/workflow/iris-workflow-lib.mjs";
 
 const cli = resolve("scripts/workflow/iris-workflow.mjs");
 
@@ -232,7 +237,7 @@ describe("IRIS workflow CLI", () => {
       writeFileSync(join(coreRoot, "scripts", "runtime", "stop-iris-search.ps1"), "");
       mkdirSync(join(commandCenterRoot, "scripts"), { recursive: true });
       writeFileSync(join(commandCenterRoot, "scripts", "local-gateway.mjs"), "");
-      const state = {
+      const state: WorkflowRuntimeState = {
         owner: "iris-founder-runtime",
         bootId: "boot_test-session-0001",
         processes: [{ owner: "iris-founder-runtime", processId: 4242 }],
@@ -240,14 +245,24 @@ describe("IRIS workflow CLI", () => {
       const common = {
         environment: {},
         readRuntimeState: () => state,
-        probe: (url) => ({ url, ready: url.includes(":4174/"), status: url.includes(":4174/") ? 200 : null }),
+        probe: (url: string) => ({
+          url,
+          ready: url.includes(":4174/"),
+          status: url.includes(":4174/") ? 200 : null,
+        }),
       };
-      expect(await runWorkflow(["runtime", "status", "--core-root", coreRoot], common))
-        .toMatchObject({ ok: true, phase: "degraded", bootId: state.bootId });
+      expect(
+        await runWorkflow(["runtime", "status", "--core-root", coreRoot], common),
+      ).toMatchObject({ ok: true, phase: "degraded", bootId: state.bootId });
       const result = await runWorkflow(["runtime", "stop", "--core-root", coreRoot], {
         ...common,
-        stopOwnedProcess: (process) => { stopped.push(process.processId); return true; },
-        clearRuntimeState: () => { cleared = true; },
+        stopOwnedProcess: (process: WorkflowRuntimeProcess) => {
+          stopped.push(process.processId);
+          return true;
+        },
+        clearRuntimeState: () => {
+          cleared = true;
+        },
         runProgram: () => ({ code: 0, stdout: "", stderr: "" }),
       });
       expect(result).toMatchObject({ ok: true, stopped: true, stoppedProcessIds: [4242] });

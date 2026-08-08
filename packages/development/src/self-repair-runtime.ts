@@ -271,10 +271,7 @@ export class SelfRepairRuntime {
     try {
       this.#access.authorize(session.objective.accessRequestId, "capability.acquire-approved");
       await this.#transition(session, "acquiring", "Creating a disposable acquisition workspace.");
-      const workspace = await this.#adapter.createWorkspace(
-        session.objective,
-        session.acquisition,
-      );
+      const workspace = await this.#adapter.createWorkspace(session.objective, session.acquisition);
       session.workspaceId = z.string().min(1).max(300).parse(workspace.workspaceId);
       await this.#store.save(session);
       const acquired = await this.#adapter.acquire(
@@ -311,10 +308,7 @@ export class SelfRepairRuntime {
       });
       session.resumedObjectiveDigest = session.objective.objectiveDigest;
       session.outcomeDigest = sha256Schema.parse(resumed.outcomeDigest);
-      session.cleanupVerified = await this.#adapter.cleanup(
-        session.objective,
-        session.workspaceId,
-      );
+      session.cleanupVerified = await this.#adapter.cleanup(session.objective, session.workspaceId);
       if (!session.cleanupVerified) throw new Error("SELF_REPAIR_CLEANUP_FAILED");
       await this.#transition(session, "completed", "Capability acquired and objective resumed.");
       return structuredClone(session);

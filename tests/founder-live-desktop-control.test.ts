@@ -68,7 +68,13 @@ describe("Founder live desktop control", () => {
       now: () => now,
     });
     const value = bound();
-    const receipt = await live.start("access_founder-full-0001", plan, value.preview, value.approval, value.audit);
+    const receipt = await live.start(
+      "access_founder-full-0001",
+      plan,
+      value.preview,
+      value.approval,
+      value.audit,
+    );
     expect(receipt.planDigest).toBe(value.preview.planDigest);
     expect(authorization).toEqual(["desktop.operate-bounded"]);
     expect(live.status()).toEqual({ active: false });
@@ -78,9 +84,12 @@ describe("Founder live desktop control", () => {
     let finish: (() => void) | undefined;
     const adapter: DesktopControlAdapter = {
       name: "deferred",
-      perform: () => new Promise((resolve) => {
-        finish = () => resolve({ completedAt: now.toISOString(), result: "completed" });
-      }),
+      perform: () =>
+        new Promise((resolve) => {
+          finish = () => {
+            resolve({ completedAt: now.toISOString(), result: "completed" });
+          };
+        }),
       recover: () => Promise.resolve({ recoveredAt: now.toISOString(), result: "recovered" }),
     };
     const live = new FounderLiveDesktopControl({
@@ -90,9 +99,16 @@ describe("Founder live desktop control", () => {
       now: () => now,
     });
     const first = bound();
-    const running = live.start("access_founder-full-0001", plan, first.preview, first.approval, first.audit);
-    await expect(live.start("access_founder-full-0001", plan, first.preview, first.approval, first.audit))
-      .rejects.toThrow("DESKTOP_CONTROL_EXECUTION_ALREADY_ACTIVE");
+    const running = live.start(
+      "access_founder-full-0001",
+      plan,
+      first.preview,
+      first.approval,
+      first.audit,
+    );
+    await expect(
+      live.start("access_founder-full-0001", plan, first.preview, first.approval, first.audit),
+    ).rejects.toThrow("DESKTOP_CONTROL_EXECUTION_ALREADY_ACTIVE");
     expect(live.stop()).toBe(true);
     finish?.();
     await expect(running).rejects.toThrow("DESKTOP_CONTROL_CANCELLED");
@@ -103,18 +119,26 @@ describe("Founder live desktop control", () => {
   it("fails before provider invocation when Full access is inactive", async () => {
     let calls = 0;
     const live = new FounderLiveDesktopControl({
-      access: { authorize: () => { throw new Error("FOUNDER_ACCESS_NOT_ACTIVE"); } },
+      access: {
+        authorize: () => {
+          throw new Error("FOUNDER_ACCESS_NOT_ACTIVE");
+        },
+      },
       adapter: {
         name: "fixture",
-        perform: () => { calls += 1; return Promise.resolve({ completedAt: now.toISOString(), result: "completed" }); },
+        perform: () => {
+          calls += 1;
+          return Promise.resolve({ completedAt: now.toISOString(), result: "completed" });
+        },
         recover: () => Promise.resolve({ recoveredAt: now.toISOString(), result: "recovered" }),
       },
       replayGuard: new InMemoryDesktopControlReplayGuard(),
       now: () => now,
     });
     const value = bound();
-    await expect(live.start("access_founder-full-0001", plan, value.preview, value.approval, value.audit))
-      .rejects.toThrow("FOUNDER_ACCESS_NOT_ACTIVE");
+    await expect(
+      live.start("access_founder-full-0001", plan, value.preview, value.approval, value.audit),
+    ).rejects.toThrow("FOUNDER_ACCESS_NOT_ACTIVE");
     expect(calls).toBe(0);
   });
 });

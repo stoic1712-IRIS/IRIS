@@ -16,9 +16,9 @@ const target = {
 
 function invoker(output: unknown) {
   const requests: unknown[] = [];
-  const invoke: WindowsDesktopRunnerInvoker = async (request, _signal) => {
+  const invoke: WindowsDesktopRunnerInvoker = (request) => {
     requests.push(request);
-    return JSON.stringify(output);
+    return Promise.resolve(JSON.stringify(output));
   };
   return { invoke, requests };
 }
@@ -70,14 +70,17 @@ describe("bounded Windows desktop runner", () => {
   });
 
   it("fails closed for malformed or widened provider output", async () => {
-    for (const output of ["not json", { result: "completed", completedAt: "bad" }, {
-      result: "completed",
-      completedAt: "2026-08-08T10:00:00.000Z",
-      secret: "leak",
-    }]) {
-      const fixture: WindowsDesktopRunnerInvoker = () => Promise.resolve(
-        typeof output === "string" ? output : JSON.stringify(output),
-      );
+    for (const output of [
+      "not json",
+      { result: "completed", completedAt: "bad" },
+      {
+        result: "completed",
+        completedAt: "2026-08-08T10:00:00.000Z",
+        secret: "leak",
+      },
+    ]) {
+      const fixture: WindowsDesktopRunnerInvoker = () =>
+        Promise.resolve(typeof output === "string" ? output : JSON.stringify(output));
       const runner = new WindowsDesktopRunner({ scriptPath: "C:\\runner.ps1", invoke: fixture });
       await expect(
         runner.perform(target, { kind: "focus-window" }, new AbortController().signal),
@@ -92,17 +95,18 @@ describe("bounded Windows desktop runner", () => {
       scriptPath: "C:\\runner.ps1",
       invoke: () => Promise.resolve("{}"),
     });
-    await expect(runner.perform(target, { kind: "focus-window" }, controller.signal))
-      .rejects.toThrow("DESKTOP_CONTROL_CANCELLED");
+    await expect(
+      runner.perform(target, { kind: "focus-window" }, controller.signal),
+    ).rejects.toThrow("DESKTOP_CONTROL_CANCELLED");
 
     const recovery = invoker({ recoveredAt: "2026-08-08T10:00:00.000Z", result: "recovered" });
     const recovering = new WindowsDesktopRunner({
       scriptPath: "C:\\runner.ps1",
       invoke: recovery.invoke,
     });
-    expect(
-      await recovering.recover(target, "action-failed", new AbortController().signal),
-    ).toEqual({ recoveredAt: "2026-08-08T10:00:00.000Z", result: "recovered" });
+    expect(await recovering.recover(target, "action-failed", new AbortController().signal)).toEqual(
+      { recoveredAt: "2026-08-08T10:00:00.000Z", result: "recovered" },
+    );
     expect(recovery.requests[0]).toMatchObject({ operation: "recover", reason: "action-failed" });
   });
 });

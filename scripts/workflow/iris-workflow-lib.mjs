@@ -89,7 +89,10 @@ function redact(value, maximum = 64_000) {
 async function founderRuntimeSnapshot(probe) {
   return Object.fromEntries(
     await Promise.all(
-      ["gateway", "voice", "search", "ollama"].map(async (name) => [name, await probe(serviceUrls[name])]),
+      ["gateway", "voice", "search", "ollama"].map(async (name) => [
+        name,
+        await probe(serviceUrls[name]),
+      ]),
     ),
   );
 }
@@ -222,7 +225,8 @@ async function defaultOpenFounderApplication(runProgram, environment) {
     ["-NoProfile", "-Command", "Start-Process 'http://127.0.0.1:4174/'"],
     { timeout: 20_000, environment },
   );
-  if (result.code !== 0) throw new Error("Founder application could not be opened after health verification.");
+  if (result.code !== 0)
+    throw new Error("Founder application could not be opened after health verification.");
 }
 
 async function startWorkflow(options, overrides) {
@@ -261,17 +265,30 @@ async function startWorkflow(options, overrides) {
   const runProgram = overrides.runProgram ?? defaultRunProgram;
   const bootId =
     (await overrides.resolveBootId?.()) ??
-    (environment.IRIS_WINDOWS_BOOT_ID ?? (await defaultBootId(runProgram, environment)));
+    environment.IRIS_WINDOWS_BOOT_ID ??
+    (await defaultBootId(runProgram, environment));
   const commandDigest = `sha256:${createHash("sha256")
-    .update(JSON.stringify(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", launcher]))
+    .update(
+      JSON.stringify([
+        "powershell.exe",
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        launcher,
+      ]),
+    )
     .digest("hex")}`;
-  const writeState = overrides.writeRuntimeState ?? ((value) => writeRuntimeState(environment, value));
+  const writeState =
+    overrides.writeRuntimeState ?? ((value) => writeRuntimeState(environment, value));
   await writeState({
     owner: "iris-founder-runtime",
     bootId,
     phase: "starting",
     launcherPath: launcher,
-    processes: [{ owner: "iris-founder-runtime", service: "launcher", processId: child.pid, commandDigest }],
+    processes: [
+      { owner: "iris-founder-runtime", service: "launcher", processId: child.pid, commandDigest },
+    ],
     lastGreetingBootId: null,
     updatedAt: new Date().toISOString(),
   });
@@ -286,18 +303,37 @@ async function startWorkflow(options, overrides) {
         bootId,
         phase: "healthy",
         launcherPath: launcher,
-        processes: [{ owner: "iris-founder-runtime", service: "launcher", processId: child.pid, commandDigest }],
+        processes: [
+          {
+            owner: "iris-founder-runtime",
+            service: "launcher",
+            processId: child.pid,
+            commandDigest,
+          },
+        ],
         lastGreetingBootId: null,
         greetingReady: true,
         updatedAt: new Date().toISOString(),
       });
-      await (overrides.openFounderApplication ?? (() => defaultOpenFounderApplication(runProgram, environment)))();
-      return { ok: true, started: true, ready: true, processId: child.pid, bootId, roots, services };
+      await (
+        overrides.openFounderApplication ??
+        (() => defaultOpenFounderApplication(runProgram, environment))
+      )();
+      return {
+        ok: true,
+        started: true,
+        ready: true,
+        processId: child.pid,
+        bootId,
+        roots,
+        services,
+      };
     }
   }
   const stopStarted =
     overrides.stopStartedProcess ??
-    ((processId) => runProgram("taskkill.exe", ["/PID", String(processId), "/T"], { timeout: 30_000 }));
+    ((processId) =>
+      runProgram("taskkill.exe", ["/PID", String(processId), "/T"], { timeout: 30_000 }));
   await stopStarted(child.pid);
   await (overrides.clearRuntimeState ?? (() => clearRuntimeState(environment)))();
   throw new Error(
@@ -334,33 +370,46 @@ async function defaultStopOwnedProcess(process, state, runProgram) {
   )
     throw new Error("Refusing to stop an unverified runtime process.");
   const escaped = state.launcherPath.replaceAll("'", "''");
-  const command = `$p=Get-CimInstance Win32_Process -Filter \"ProcessId=${String(process.processId)}\"; if($null -eq $p -or $p.CommandLine -notlike '*${escaped}*'){exit 7}`;
-  const verified = await runProgram("powershell.exe", ["-NoProfile", "-Command", command], { timeout: 20_000 });
+  const command = `$p=Get-CimInstance Win32_Process -Filter "ProcessId=${String(process.processId)}"; if($null -eq $p -or $p.CommandLine -notlike '*${escaped}*'){exit 7}`;
+  const verified = await runProgram("powershell.exe", ["-NoProfile", "-Command", command], {
+    timeout: 20_000,
+  });
   if (verified.code === 7) throw new Error("Runtime process ownership no longer matches.");
   if (verified.code !== 0) return false;
-  const stopped = await runProgram("taskkill.exe", ["/PID", String(process.processId), "/T"], { timeout: 30_000 });
+  const stopped = await runProgram("taskkill.exe", ["/PID", String(process.processId), "/T"], {
+    timeout: 30_000,
+  });
   return stopped.code === 0 || /not found|not running/iu.test(String(stopped.stderr));
 }
 
 async function stopWorkflow(options, overrides) {
-  const roots = await resolveWorkflowRoots({ coreRoot: options["core-root"], environment: overrides.environment });
+  const roots = await resolveWorkflowRoots({
+    coreRoot: options["core-root"],
+    environment: overrides.environment,
+  });
   const environment = overrides.environment ?? process.env;
   const readState = overrides.readRuntimeState ?? (() => readRuntimeState(environment));
   const clearState = overrides.clearRuntimeState ?? (() => clearRuntimeState(environment));
   const state = await readState();
   const runProgram = overrides.runProgram ?? defaultRunProgram;
-  const stopOwned = overrides.stopOwnedProcess ?? ((process) => defaultStopOwnedProcess(process, state, runProgram));
+  const stopOwned =
+    overrides.stopOwnedProcess ??
+    ((process) => defaultStopOwnedProcess(process, state, runProgram));
   const stopped = [];
   for (const process of [...(state?.processes ?? [])].reverse()) {
     if (await stopOwned(process)) stopped.push(process.processId);
   }
   const stopSearch = join(roots.core, "scripts", "runtime", "stop-iris-search.ps1");
   if (await pathExists(stopSearch))
-    await runProgram("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", stopSearch], {
-      cwd: roots.core,
-      environment,
-      timeout: 60_000,
-    });
+    await runProgram(
+      "powershell.exe",
+      ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", stopSearch],
+      {
+        cwd: roots.core,
+        environment,
+        timeout: 60_000,
+      },
+    );
   await clearState();
   return { ok: true, stopped: stopped.length > 0, stoppedProcessIds: stopped, roots };
 }
@@ -379,7 +428,10 @@ async function repairWorkflow(options, overrides) {
 }
 
 async function startupRegistrationWorkflow(options, overrides, install) {
-  const roots = await resolveWorkflowRoots({ coreRoot: options["core-root"], environment: overrides.environment });
+  const roots = await resolveWorkflowRoots({
+    coreRoot: options["core-root"],
+    environment: overrides.environment,
+  });
   const script = join(
     roots.core,
     "scripts",
@@ -388,14 +440,23 @@ async function startupRegistrationWorkflow(options, overrides, install) {
   );
   if (!(await pathExists(script))) throw new Error(`Founder startup script is missing: ${script}.`);
   const runProgram = overrides.runProgram ?? defaultRunProgram;
-  const arguments_ = ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script, "-IrisRepository", roots.core];
+  const arguments_ = [
+    "-NoProfile",
+    "-ExecutionPolicy",
+    "Bypass",
+    "-File",
+    script,
+    "-IrisRepository",
+    roots.core,
+  ];
   if (options["what-if"] === true) arguments_.push("-WhatIf");
   const result = await runProgram("powershell.exe", arguments_, {
     cwd: roots.core,
     environment: overrides.environment ?? process.env,
     timeout: 60_000,
   });
-  if (result.code !== 0) throw new Error(`Founder startup ${install ? "installation" : "removal"} failed.`);
+  if (result.code !== 0)
+    throw new Error(`Founder startup ${install ? "installation" : "removal"} failed.`);
   return { ok: true, installed: install, script, whatIf: options["what-if"] === true };
 }
 
@@ -771,13 +832,20 @@ export async function runWorkflow(argv, overrides = {}) {
   if (parsed.positional[0] === "status") return workflowStatus(parsed.options, overrides);
   if (parsed.positional[0] === "doctor") return doctorWorkflow(parsed.options, overrides);
   if (parsed.positional[0] === "start") return startWorkflow(parsed.options, overrides);
-  if (parsed.positional[0] === "runtime" && parsed.positional[1] === "status") return runtimeStatusWorkflow(parsed.options, overrides);
-  if (parsed.positional[0] === "runtime" && parsed.positional[1] === "start") return startWorkflow(parsed.options, overrides);
-  if (parsed.positional[0] === "runtime" && parsed.positional[1] === "stop") return stopWorkflow(parsed.options, overrides);
-  if (parsed.positional[0] === "runtime" && parsed.positional[1] === "restart") return restartWorkflow(parsed.options, overrides);
-  if (parsed.positional[0] === "runtime" && parsed.positional[1] === "repair") return repairWorkflow(parsed.options, overrides);
-  if (parsed.positional[0] === "runtime" && parsed.positional[1] === "install-startup") return startupRegistrationWorkflow(parsed.options, overrides, true);
-  if (parsed.positional[0] === "runtime" && parsed.positional[1] === "remove-startup") return startupRegistrationWorkflow(parsed.options, overrides, false);
+  if (parsed.positional[0] === "runtime" && parsed.positional[1] === "status")
+    return runtimeStatusWorkflow(parsed.options, overrides);
+  if (parsed.positional[0] === "runtime" && parsed.positional[1] === "start")
+    return startWorkflow(parsed.options, overrides);
+  if (parsed.positional[0] === "runtime" && parsed.positional[1] === "stop")
+    return stopWorkflow(parsed.options, overrides);
+  if (parsed.positional[0] === "runtime" && parsed.positional[1] === "restart")
+    return restartWorkflow(parsed.options, overrides);
+  if (parsed.positional[0] === "runtime" && parsed.positional[1] === "repair")
+    return repairWorkflow(parsed.options, overrides);
+  if (parsed.positional[0] === "runtime" && parsed.positional[1] === "install-startup")
+    return startupRegistrationWorkflow(parsed.options, overrides, true);
+  if (parsed.positional[0] === "runtime" && parsed.positional[1] === "remove-startup")
+    return startupRegistrationWorkflow(parsed.options, overrides, false);
   if (parsed.positional[0] === "verify") return verifyWorkflow(parsed.options, overrides);
   if (parsed.positional[0] === "candidate" && parsed.positional[1] === "inspect") {
     return candidateInspect(parsed.options, overrides);

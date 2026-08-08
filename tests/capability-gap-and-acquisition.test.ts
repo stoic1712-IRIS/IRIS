@@ -34,9 +34,7 @@ describe("IRIS capability-gap classification", () => {
     ["unsupported-after-research", { supportedAfterResearch: false }],
     ["protected-effect-required", { protectedEffectRequired: true }],
   ] as const)("classifies %s with evidence", (expected, override) => {
-    expect(classifyCapabilityGap({ ...baseEvidence, ...override }).type).toBe(
-      expected,
-    );
+    expect(classifyCapabilityGap({ ...baseEvidence, ...override }).type).toBe(expected);
   });
 
   it("rejects a vague gap without evidence", () => {

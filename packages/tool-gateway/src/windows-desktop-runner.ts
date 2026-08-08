@@ -60,7 +60,15 @@ function createInvoker(scriptPath: string, powershellPath: string): WindowsDeskt
       }
       const child = execFile(
         powershellPath,
-        ["-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", scriptPath],
+        [
+          "-NoLogo",
+          "-NoProfile",
+          "-NonInteractive",
+          "-ExecutionPolicy",
+          "Bypass",
+          "-File",
+          scriptPath,
+        ],
         {
           encoding: "utf8",
           windowsHide: true,
@@ -116,7 +124,8 @@ export class WindowsDesktopRunner implements WindowsUiAutomationRunner {
   }) {
     const scriptPath = z.string().min(1).max(1_000).parse(options.scriptPath);
     this.#invoke =
-      options.invoke ?? createInvoker(scriptPath, options.powershellPath ?? defaultPowerShellPath());
+      options.invoke ??
+      createInvoker(scriptPath, options.powershellPath ?? defaultPowerShellPath());
   }
 
   async perform(

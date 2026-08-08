@@ -16,7 +16,7 @@ describe("Founder Windows startup registration", () => {
     expect(source).toContain("-RunLevel Limited");
     expect(source).toContain("-MultipleInstances IgnoreNew");
     expect(source).toContain("iris-workflow.mjs");
-    expect(source).toContain('runtime start --core-root');
+    expect(source).toContain("runtime start --core-root");
     expect(source).toContain("Get-Command node.exe");
     expect(source).not.toContain("start-founder-command-center.ps1");
     expect(source).toContain("[switch]$WhatIf");
@@ -42,7 +42,12 @@ describe("Founder Windows startup registration", () => {
     const root = resolve(".");
     const calls: { program: string; args: string[] }[] = [];
     const common = {
-      environment: { IRIS_COMMAND_CENTER_ROOT: resolve("..", "iris-founder-command-center-autonomous-operations") },
+      environment: {
+        IRIS_COMMAND_CENTER_ROOT: resolve(
+          "..",
+          "iris-founder-command-center-autonomous-operations",
+        ),
+      },
       runProgram: (program: string, args: string[]) => {
         calls.push({ program, args });
         return { code: 0, stdout: "{}", stderr: "" };

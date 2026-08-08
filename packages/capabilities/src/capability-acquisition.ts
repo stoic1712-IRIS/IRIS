@@ -26,7 +26,7 @@ export const capabilityAcquisitionProposalSchema = z
       .strict(),
     cost: z
       .object({
-        amountUsd: z.number().nonnegative().finite(),
+        amountUsd: z.number().nonnegative(),
         recurrence: z.enum(["none", "one-time", "monthly", "annual"]),
       })
       .strict(),
@@ -50,22 +50,15 @@ export const capabilityAcquisitionProposalSchema = z
         message: "Acquisition proposal must expire after creation.",
       });
   });
-export type CapabilityAcquisitionProposal = z.infer<
-  typeof capabilityAcquisitionProposalSchema
->;
+export type CapabilityAcquisitionProposal = z.infer<typeof capabilityAcquisitionProposalSchema>;
 
-export const preparedCapabilityAcquisitionSchema = capabilityAcquisitionProposalSchema
-  .safeExtend({
-    digest: digestSchema,
-    requiredApprovalStatement: z.string().min(1).max(500),
-  });
-export type PreparedCapabilityAcquisition = z.infer<
-  typeof preparedCapabilityAcquisitionSchema
->;
+export const preparedCapabilityAcquisitionSchema = capabilityAcquisitionProposalSchema.safeExtend({
+  digest: digestSchema,
+  requiredApprovalStatement: z.string().min(1).max(500),
+});
+export type PreparedCapabilityAcquisition = z.infer<typeof preparedCapabilityAcquisitionSchema>;
 
-export function prepareCapabilityAcquisition(
-  input: unknown,
-): PreparedCapabilityAcquisition {
+export function prepareCapabilityAcquisition(input: unknown): PreparedCapabilityAcquisition {
   const proposal = capabilityAcquisitionProposalSchema.parse(input);
   if (proposal.cost.amountUsd > 0 || proposal.cost.recurrence !== "none")
     throw new Error("CAPABILITY_ACQUISITION_SPENDING_PROTECTED");

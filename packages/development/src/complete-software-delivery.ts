@@ -462,8 +462,7 @@ export class CompleteSoftwareDeliveryRuntime {
       session.canonicalEqualityVerified =
         equality.localMainRevision === session.mergedCommit &&
         equality.remoteMainRevision === session.mergedCommit;
-      if (!session.canonicalEqualityVerified)
-        throw new Error("DELIVERY_CANONICAL_EQUALITY_FAILED");
+      if (!session.canonicalEqualityVerified) throw new Error("DELIVERY_CANONICAL_EQUALITY_FAILED");
       this.#access.authorize(
         session.objective.accessRequestId,
         "repository.rollback-history-preserving",

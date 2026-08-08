@@ -167,8 +167,9 @@ describe("governed IRIS self-repair runtime", () => {
   it("rejects altered approval and objective widening before acquisition", async () => {
     const { runtime: repair, adapter } = runtime();
     const pending = await repair.start(objective());
-    await expect(repair.approveAcquisition(pending.objective.repairId, "approved"))
-      .rejects.toThrow("SELF_REPAIR_ACQUISITION_APPROVAL_INVALID");
+    await expect(repair.approveAcquisition(pending.objective.repairId, "approved")).rejects.toThrow(
+      "SELF_REPAIR_ACQUISITION_APPROVAL_INVALID",
+    );
     expect(adapter.calls).not.toContain("workspace");
   });
 

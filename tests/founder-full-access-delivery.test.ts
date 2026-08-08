@@ -34,21 +34,59 @@ class Adapter implements CompleteDeliveryAdapter {
   staleHead = false;
   ciConclusion: "success" | "failure" = "success";
   mergeBypass = false;
-  inspect() { return Promise.resolve({ contextDigest: `sha256:${"1".repeat(64)}` }); }
-  plan() { return Promise.resolve({ planDigest: `sha256:${"2".repeat(64)}`, workerId: "worker_coder" }); }
-  createWorkspace() { return Promise.resolve({ workspaceId: "workspace_disposable" }); }
-  implement() { return Promise.resolve({ changedPaths: ["packages/example/src/value.ts"], changedBytes: 10 }); }
-  verify() { return Promise.resolve({ passed: true, checks: [["pnpm", "verify"]] }); }
-  review() { return Promise.resolve({ reviewerId: "reviewer_independent", verdict: "pass" as const, findings: [] }); }
-  repair() { return Promise.resolve({ changedPaths: ["packages/example/src/value.ts"], changedBytes: 10 }); }
-  commit() { return Promise.resolve({ commit: candidate }); }
-  pushBranch() { return Promise.resolve({ remoteCommit: candidate }); }
-  createPullRequest() { return Promise.resolve({ number: 81, url: "https://example.invalid/pr/81", headCommit: candidate }); }
-  monitorCi() { return Promise.resolve({ conclusion: this.ciConclusion, checks: ["verify"] }); }
-  addressReview() { return Promise.resolve({ changed: false }); }
-  prepareMerge() { return Promise.resolve({ mergeable: true }); }
-  verifyRemoteEquality() { return Promise.resolve(true); }
-  cleanup() { return Promise.resolve(true); }
+  inspect() {
+    return Promise.resolve({ contextDigest: `sha256:${"1".repeat(64)}` });
+  }
+  plan() {
+    return Promise.resolve({ planDigest: `sha256:${"2".repeat(64)}`, workerId: "worker_coder" });
+  }
+  createWorkspace() {
+    return Promise.resolve({ workspaceId: "workspace_disposable" });
+  }
+  implement() {
+    return Promise.resolve({ changedPaths: ["packages/example/src/value.ts"], changedBytes: 10 });
+  }
+  verify() {
+    return Promise.resolve({ passed: true, checks: [["pnpm", "verify"]] });
+  }
+  review() {
+    return Promise.resolve({
+      reviewerId: "reviewer_independent",
+      verdict: "pass" as const,
+      findings: [],
+    });
+  }
+  repair() {
+    return Promise.resolve({ changedPaths: ["packages/example/src/value.ts"], changedBytes: 10 });
+  }
+  commit() {
+    return Promise.resolve({ commit: candidate });
+  }
+  pushBranch() {
+    return Promise.resolve({ remoteCommit: candidate });
+  }
+  createPullRequest() {
+    return Promise.resolve({
+      number: 81,
+      url: "https://example.invalid/pr/81",
+      headCommit: candidate,
+    });
+  }
+  monitorCi() {
+    return Promise.resolve({ conclusion: this.ciConclusion, checks: ["verify"] });
+  }
+  addressReview() {
+    return Promise.resolve({ changed: false });
+  }
+  prepareMerge() {
+    return Promise.resolve({ mergeable: true });
+  }
+  verifyRemoteEquality() {
+    return Promise.resolve(true);
+  }
+  cleanup() {
+    return Promise.resolve(true);
+  }
   mergeReviewedHead(_objective: CompleteDeliveryObjective, _pr: number, expected: string) {
     this.calls.push("merge");
     return Promise.resolve({
@@ -100,13 +138,15 @@ describe("Founder Full access complete delivery", () => {
     const stale = new Adapter();
     stale.staleHead = true;
     const staleRuntime = await prepared(stale, "delivery_founder-full-0002");
-    await expect(staleRuntime.completeUnderFounderAccess("delivery_founder-full-0002", candidate))
-      .rejects.toThrow("DELIVERY_MERGE_HEAD_MISMATCH");
+    await expect(
+      staleRuntime.completeUnderFounderAccess("delivery_founder-full-0002", candidate),
+    ).rejects.toThrow("DELIVERY_MERGE_HEAD_MISMATCH");
 
     const bypass = new Adapter();
     bypass.mergeBypass = true;
     const bypassRuntime = await prepared(bypass, "delivery_founder-full-0003");
-    await expect(bypassRuntime.completeUnderFounderAccess("delivery_founder-full-0003", candidate))
-      .rejects.toThrow("DELIVERY_BRANCH_PROTECTION_BYPASS_DENIED");
+    await expect(
+      bypassRuntime.completeUnderFounderAccess("delivery_founder-full-0003", candidate),
+    ).rejects.toThrow("DELIVERY_BRANCH_PROTECTION_BYPASS_DENIED");
   });
 });

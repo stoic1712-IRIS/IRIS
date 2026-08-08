@@ -66,9 +66,7 @@ describe("Founder autonomous Full access", () => {
 
     expect(grant.profile).toBe("founder-full-access");
     for (const capability of ordinary) {
-      expect(registry.authorize(grant.requestId, capability).grantDigest).toBe(
-        grant.grantDigest,
-      );
+      expect(registry.authorize(grant.requestId, capability).grantDigest).toBe(grant.grantDigest);
     }
     expect(registry.auditVerified()).toBe(true);
   });
@@ -102,7 +100,8 @@ describe("Founder autonomous Full access", () => {
   });
 
   it("requires a session binding for the autonomous profile", () => {
-    const { sessionBinding: _removed, ...unbound } = request();
+    const unbound: Partial<ReturnType<typeof request>> = request();
+    delete unbound.sessionBinding;
     expect(founderAccessRequestSchema.safeParse(unbound).success).toBe(false);
   });
 });
