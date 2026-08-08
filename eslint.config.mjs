@@ -27,6 +27,13 @@ export default tseslint.config(
     },
   },
   {
+    files: ["**/*.d.mts"],
+    ...tseslint.configs.disableTypeChecked,
+    languageOptions: {
+      ...tseslint.configs.disableTypeChecked.languageOptions,
+    },
+  },
+  {
     files: ["**/*.mjs"],
     ...tseslint.configs.disableTypeChecked,
     languageOptions: {

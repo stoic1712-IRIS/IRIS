@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import { join, resolve } from "node:path";
 
 import type {
   ModelGatewayRequest,
@@ -64,10 +66,52 @@ function request() {
 }
 
 describe("Cycle Five Founder dialogue service", () => {
+  it.runIf(process.platform === "win32" || process.env.WSL_DISTRO_NAME !== undefined)(
+    "selects the canonical main Command Center when a stale legacy checkout also exists",
+    () => {
+      const fixtureRoot = mkdtempSync(resolve(".launcher-selection-"));
+      const irisRoot = join(fixtureRoot, "STOIC-IRIS");
+      const canonical = join(fixtureRoot, "iris-founder-command-center-main");
+      const legacy = join(fixtureRoot, "iris-founder-command-center");
+      const toWindowsPath = (path: string) =>
+        process.platform === "win32"
+          ? path
+          : spawnSync("wslpath", ["-w", path], { encoding: "utf8" }).stdout.trim();
+
+      try {
+        mkdirSync(irisRoot);
+        for (const candidate of [canonical, legacy]) {
+          mkdirSync(join(candidate, "scripts"), { recursive: true });
+          writeFileSync(join(candidate, "scripts", "local-gateway.mjs"), "");
+        }
+        const result = spawnSync(
+          "powershell.exe",
+          [
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-File",
+            toWindowsPath(resolve("scripts/runtime/resolve-founder-command-center.ps1")),
+            "-IrisRepository",
+            toWindowsPath(irisRoot),
+          ],
+          { encoding: "utf8" },
+        );
+
+        expect(result.status, result.stderr).toBe(0);
+        expect(result.stdout.trim()).toBe(toWindowsPath(canonical));
+      } finally {
+        rmSync(fixtureRoot, { force: true, recursive: true });
+      }
+    },
+  );
+
   it("launches the matching Command Center worktree with an explicit IRIS root", () => {
     const launcher = readFileSync("scripts/runtime/start-founder-command-center.ps1", "utf8");
+    const resolver = readFileSync("scripts/runtime/resolve-founder-command-center.ps1", "utf8");
     const supervisor = readFileSync("scripts/runtime/start-founder-command-center.sh", "utf8");
-    expect(launcher).toContain("$worktreeSuffix");
+    expect(launcher).toContain("resolve-founder-command-center.ps1");
+    expect(resolver).toContain("$worktreeSuffix");
     expect(launcher).toContain("wslpath -a");
     expect(launcher).toContain('$Path.Replace("\\", "/")');
     expect(launcher).toContain("wslpath -a -- $normalizedPath");
