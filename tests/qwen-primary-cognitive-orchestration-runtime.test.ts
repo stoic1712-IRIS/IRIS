@@ -176,4 +176,42 @@ describe("Qwen primary cognitive orchestration runtime", () => {
       ),
     ).rejects.toThrow("COGNITIVE_RESUME_BINDING_MISMATCH");
   });
+
+  it("uses a clearly labeled Qwen 8B degraded interface only for direct R0 dialogue", async () => {
+    const harness = cognitiveHarness({ planningEnvelope: directEnvelope("Hello, Founder.") });
+    const result = await harness.runtime.start(
+      conversationRequest({ riskClass: "R0", availableModels: ["qwen3:8b"] }),
+      policy(["conversation"]),
+    );
+
+    expect(result.phase).toBe("degraded-interface");
+    expect(result.presentation?.provenance.orchestratorModel).toBe("qwen3:8b");
+    expect(result.presentation?.degraded).toBe(true);
+    expect(result.presentation?.narrative).toContain("Degraded local interface");
+    expect(harness.worker.calls).toHaveLength(0);
+  });
+
+  it("stops delegated work when the primary orchestrator or required reviewer is unavailable", async () => {
+    const noPrimary = cognitiveHarness();
+    expect(
+      (
+        await noPrimary.runtime.start(
+          codingRequest({ availableModels: ["qwen3-coder:30b", "gpt-oss:20b"] }),
+          codingPolicy(),
+        )
+      ).phase,
+    ).toBe("recovery-required");
+    expect(noPrimary.worker.calls).toHaveLength(0);
+
+    const noReviewer = cognitiveHarness();
+    expect(
+      (
+        await noReviewer.runtime.start(
+          codingRequest({ availableModels: ["qwen3.6:27b", "qwen3-coder:30b"] }),
+          codingPolicy(),
+        )
+      ).phase,
+    ).toBe("reviewer-model-unavailable");
+    expect(noReviewer.worker.reviewerModels).toHaveLength(0);
+  });
 });

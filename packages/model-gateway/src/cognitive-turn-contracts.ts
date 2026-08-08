@@ -317,7 +317,11 @@ export function validateCognitiveDelegation(
   if (policy.protectedEffectStop) fail("COGNITIVE_PROTECTED_EFFECT_STOP");
 
   if (envelope.mode === "direct") {
-    if (route.purpose !== "conversation" && route.purpose !== "vision") {
+    if (
+      route.purpose !== "conversation" &&
+      route.purpose !== "vision" &&
+      route.purpose !== "fast-response"
+    ) {
       fail("COGNITIVE_ROUTE_MISMATCH");
     }
   } else {

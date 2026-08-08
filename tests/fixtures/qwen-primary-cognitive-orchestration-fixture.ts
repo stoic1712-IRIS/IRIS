@@ -342,14 +342,25 @@ function createHarness(
         delayed.markStarted();
         return delayed.specialist;
       }
-      return Promise.resolve(configuredSpecialist);
+      return Promise.resolve(
+        options.specialist === undefined
+          ? cognitiveSpecialistArtifactSchema.parse({ ...configuredSpecialist, route: input.route })
+          : configuredSpecialist,
+      );
     },
     review(input, signal) {
       void signal;
       workerState.calls.push("review");
       workerState.reviewerModels.push(input.reviewerModel);
       workerState.reviewCalls += 1;
-      return Promise.resolve(configuredReview);
+      return Promise.resolve(
+        options.review === undefined
+          ? cognitiveReviewArtifactSchema.parse({
+              ...configuredReview,
+              reviewerModel: input.reviewerModel,
+            })
+          : configuredReview,
+      );
     },
   };
   const store = suppliedStore ?? new MemoryStore();

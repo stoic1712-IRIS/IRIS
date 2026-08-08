@@ -288,6 +288,24 @@ export class CognitiveOrchestrator {
       updatedAt: this.#now(),
     });
     snapshot = await this.#transition(snapshot, "accepted", null, "Founder request accepted.");
+    const route = routeIrisModel({
+      utterance: request.utterance,
+      availableModels: new Set(request.availableModels),
+      hasImage: request.hasImage,
+    });
+    if (!request.availableModels.includes(primaryIrisOrchestratorModel)) {
+      if (
+        request.riskClass === "R0" &&
+        request.availableModels.includes("qwen3:8b") &&
+        (route.purpose === "conversation" || route.purpose === "fast-response")
+      ) {
+        return this.#runDegradedDialogue(snapshot, route, signal);
+      }
+      throw new CognitiveTurnError("COGNITIVE_ORCHESTRATOR_UNAVAILABLE", {
+        retryable: true,
+        safeDetails: { requiredModel: primaryIrisOrchestratorModel },
+      });
+    }
     snapshot = await this.#transition(
       snapshot,
       "orchestrator-planning",
@@ -305,12 +323,10 @@ export class CognitiveOrchestrator {
     );
     const planningControl = await this.#controlChangeSince(snapshot);
     if (planningControl !== null) return planningControl;
-    const route = routeIrisModel({
-      utterance: request.utterance,
-      availableModels: new Set(request.availableModels),
-      hasImage: request.hasImage,
-    });
     const validated = validateCognitiveDelegation(planningEnvelope, request, route, policy);
+    if (route.purpose === "fast-response" && validated.envelope.mode === "direct") {
+      throw new CognitiveTurnError("COGNITIVE_ROUTE_MISMATCH");
+    }
     snapshot = cognitiveTurnSnapshotSchema.parse({
       ...snapshot,
       route,
@@ -350,6 +366,57 @@ export class CognitiveOrchestrator {
     }
 
     return this.#runDelegated(snapshot, validated.route, signal);
+  }
+
+  async #runDegradedDialogue(
+    initial: CognitiveTurnSnapshot,
+    route: ModelRoute,
+    signal?: AbortSignal,
+  ): Promise<CognitiveTurnSnapshot> {
+    const request = initial.request;
+    let snapshot = await this.#transition(
+      initial,
+      "degraded-interface",
+      "qwen3:8b",
+      "The primary orchestrator is unavailable; bounded R0 dialogue is degraded.",
+    );
+    const envelope = await this.#leases.withLease(
+      request.requestId,
+      "qwen3:8b",
+      "degraded-interface",
+      (_lease, leaseSignal) => this.#provider.plan(request, "qwen3:8b", leaseSignal),
+      signal,
+    );
+    const control = await this.#controlChangeSince(snapshot);
+    if (control !== null) return control;
+    const validated = validateCognitiveDelegation(envelope, request, route, initial.policy);
+    if (validated.envelope.mode !== "direct") {
+      throw new CognitiveTurnError("COGNITIVE_ROUTE_MISMATCH");
+    }
+    const presentation = cognitiveFounderPresentationSchema.parse({
+      requestId: request.requestId,
+      objectiveId: request.objectiveId,
+      narrative: `Degraded local interface: ${validated.envelope.narrative}`,
+      completion: "completed",
+      exactEvidence: [],
+      provenance: {
+        orchestratorModel: "qwen3:8b",
+        specialistModel: null,
+        reviewerModel: null,
+      },
+      degraded: true,
+      authority: "none",
+    });
+    snapshot = cognitiveTurnSnapshotSchema.parse({
+      ...snapshot,
+      route,
+      delegation: validated.envelope,
+      presentation,
+      leaseEvents: this.#leases.events(),
+      updatedAt: this.#now(),
+    });
+    await this.#store.save(snapshot);
+    return snapshot;
   }
 
   async #runDelegated(
@@ -410,9 +477,24 @@ export class CognitiveOrchestrator {
       "Specialist output was bound and verification evidence recorded.",
     );
 
-    const reviewerModel = route.independentReviewModel;
+    const reviewerModel =
+      route.purpose === "agentic-coding"
+        ? request.availableModels.includes("gpt-oss:20b")
+          ? "gpt-oss:20b"
+          : null
+        : route.independentReviewModel;
     if (reviewerModel === null || reviewerModel === route.model) {
-      throw new CognitiveTurnError("COGNITIVE_REVIEWER_UNAVAILABLE");
+      const unavailable = cognitiveTurnSnapshotSchema.parse({
+        ...snapshot,
+        safeFailureCode: "COGNITIVE_REVIEWER_UNAVAILABLE",
+        updatedAt: this.#now(),
+      });
+      return this.#transition(
+        unavailable,
+        "reviewer-model-unavailable",
+        null,
+        "The required distinct reviewer model is unavailable.",
+      );
     }
     snapshot = await this.#transition(
       snapshot,
