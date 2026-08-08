@@ -15,13 +15,14 @@
     "clean": "tsc -b --clean",
     "typecheck": "tsc -p tsconfig.check.json && tsc -p apps/visual-composer/tsconfig.check.json",
     "test": "vitest run",
-    "lint": "eslint eslint.config.mjs prettier.config.mjs scripts/diagnostics/repository.mjs scripts/blueprints scripts/workflow apps packages tests --max-warnings 0",
+    "lint": "eslint eslint.config.mjs prettier.config.mjs scripts/diagnostics/repository.mjs scripts/blueprints scripts/workflow scripts/dev apps packages tests --max-warnings 0",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "diagnostics": "node scripts/diagnostics/repository.mjs",
     "blueprint:compile": "node scripts/blueprints/iris-blueprint-compile.mjs",
+    "iris-dev": "node scripts/dev/iris-dev.mjs",
     "workflow": "node scripts/workflow/iris-workflow.mjs",
-    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build && pnpm diagnostics"
+    "verify": "pnpm format:check && pnpm build && pnpm lint && pnpm typecheck && pnpm test && pnpm diagnostics"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
