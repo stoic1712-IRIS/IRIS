@@ -450,7 +450,7 @@ describe("Cycle Eight executable worker contracts and runtime", () => {
     });
   });
 
-  it("fails closed when a restart journal changes the approved proposal", async () => {
+  it("fails closed when a restart journal forges the proposal, approval, and mutable binding", async () => {
     const adapter = new FixtureAdapter();
     const journals = new MemoryExecutionJournalStore();
     const runtime = new ExecutableWorkerRuntime({ adapter, journals, now: () => new Date(now) });
@@ -465,12 +465,18 @@ describe("Cycle Eight executable worker contracts and runtime", () => {
     );
     const stored = await journals.load(current.executionId);
     if (stored === null) throw new Error("Expected the interrupted journal to be durable.");
+    const forgedProposal = {
+      ...stored.proposal,
+      maximumChangedFiles: stored.proposal.maximumChangedFiles + 1,
+    };
+    const forgedApproval = approval(forgedProposal);
     await journals.save({
       ...stored,
-      proposal: {
-        ...stored.proposal,
-        maximumChangedFiles: stored.proposal.maximumChangedFiles + 1,
-      },
+      proposal: forgedProposal,
+      approval: forgedApproval,
+      approvalBindingDigest: sha256(
+        JSON.stringify({ proposal: forgedProposal, approval: forgedApproval }),
+      ),
     });
     await expect(
       runtime.resume(current.executionId, new SequencedAgent([updatePlan()])),

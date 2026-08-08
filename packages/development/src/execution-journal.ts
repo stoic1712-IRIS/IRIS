@@ -32,6 +32,7 @@ export interface ExecutableWorkerJournalEvent {
   summary: string;
   occurredAt: string;
   previousDigest?: string | undefined;
+  approvalBindingDigest?: string | undefined;
   digest: string;
 }
 
@@ -98,6 +99,7 @@ const executableWorkerJournalSchema = z
             summary: z.string().min(1).max(10_000),
             occurredAt: z.iso.datetime(),
             previousDigest: sha256Schema.optional(),
+            approvalBindingDigest: sha256Schema.optional(),
             digest: sha256Schema,
           })
           .strict(),

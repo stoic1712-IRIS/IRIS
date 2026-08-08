@@ -232,6 +232,7 @@ export class ExecutableWorkerRuntime {
           proposal: journal.proposal,
           approval: journal.approval,
         }) ||
+      journal.events[0]?.approvalBindingDigest !== journal.approvalBindingDigest ||
       !this.#approvalMatches(journal.proposal, journal.approval)
     )
       throw new Error("EXECUTABLE_WORKER_JOURNAL_APPROVAL_BINDING_INVALID");
@@ -601,6 +602,9 @@ export class ExecutableWorkerRuntime {
       state,
       summary,
       occurredAt: journal.updatedAt,
+      ...(previousDigest === undefined && journal.approvalBindingDigest !== undefined
+        ? { approvalBindingDigest: journal.approvalBindingDigest }
+        : {}),
       ...(previousDigest === undefined ? {} : { previousDigest }),
     };
     journal.events.push({ ...unsigned, digest: digest(unsigned) });
