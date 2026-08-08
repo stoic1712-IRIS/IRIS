@@ -6,9 +6,12 @@ import {
   cognitiveHarness,
   conversationRequest,
   directEnvelope,
+  exactEvidence,
   passedSpecialistArtifact,
   passingReview,
   policy,
+  researchEnvelope,
+  researchRequest,
   requiredEvidenceId,
   synthesis,
 } from "./fixtures/qwen-primary-cognitive-orchestration-fixture.js";
@@ -66,5 +69,43 @@ describe("Qwen primary cognitive orchestration runtime", () => {
     await expect(harness.runtime.start(input, policy(["conversation"]))).rejects.toThrow(
       "COGNITIVE_RESUME_BINDING_MISMATCH",
     );
+  });
+
+  it("attaches exact evidence unchanged instead of asking Qwen to reproduce it", async () => {
+    const exact = exactEvidence({
+      kind: "citation",
+      exactValue: "https://nodejs.org/en/about/previous-releases",
+      requiredInPresentation: true,
+    });
+    const harness = cognitiveHarness({
+      planningEnvelope: researchEnvelope(),
+      specialist: passedSpecialistArtifact("gpt-oss:20b", [exact]),
+      review: passingReview("qwen3.6:27b", [exact]),
+      synthesis: {
+        narrative: "The official release table supports the finding.",
+        acknowledgedEvidenceIds: [exact.evidenceId],
+        authority: "none",
+      },
+    });
+
+    const result = await harness.runtime.start(
+      researchRequest(),
+      policy(["research.search", "research.verify-source"]),
+    );
+    expect(result.presentation?.exactEvidence).toEqual([exact]);
+  });
+
+  it("allows one synthesis repair and then preserves evidence in synthesis-failed state", async () => {
+    const harness = cognitiveHarness({ synthesisSequence: [synthesis([]), synthesis([])] });
+    const result = await harness.runtime.start(
+      codingRequest(),
+      policy(["repository.inspect", "repository.edit-bounded"]),
+    );
+
+    expect(result.phase).toBe("synthesis-failed");
+    expect(result.synthesisAttempts).toBe(2);
+    expect(result.specialistArtifact?.evidence).not.toHaveLength(0);
+    expect(result.presentation).toBeNull();
+    expect(harness.provider.synthesisCalls).toBe(2);
   });
 });

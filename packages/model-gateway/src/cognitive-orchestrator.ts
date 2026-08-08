@@ -89,6 +89,44 @@ function completionFor(
   return "blocked";
 }
 
+export interface FounderPresentationAssembly {
+  readonly request: CognitiveTurnRequest;
+  readonly synthesis: unknown;
+  readonly specialist: CognitiveSpecialistArtifact;
+  readonly review: CognitiveReviewArtifact;
+  readonly degraded?: boolean;
+}
+
+export function assembleFounderPresentation(
+  assembly: FounderPresentationAssembly,
+): CognitiveFounderPresentation {
+  let synthesis: CognitiveSynthesis;
+  try {
+    synthesis = cognitiveSynthesisSchema.parse(assembly.synthesis);
+  } catch {
+    throw new CognitiveTurnError("COGNITIVE_SYNTHESIS_INVALID");
+  }
+  const exactEvidence = requiredPresentationEvidence(assembly.specialist, assembly.review);
+  const acknowledged = new Set(synthesis.acknowledgedEvidenceIds);
+  if (exactEvidence.some(({ evidenceId }) => !acknowledged.has(evidenceId))) {
+    throw new CognitiveTurnError("COGNITIVE_EVIDENCE_MISMATCH");
+  }
+  return cognitiveFounderPresentationSchema.parse({
+    requestId: assembly.request.requestId,
+    objectiveId: assembly.request.objectiveId,
+    narrative: synthesis.narrative,
+    completion: completionFor(assembly.specialist, assembly.review),
+    exactEvidence,
+    provenance: {
+      orchestratorModel: primaryIrisOrchestratorModel,
+      specialistModel: assembly.specialist.route.model,
+      reviewerModel: assembly.review.reviewerModel,
+    },
+    degraded: assembly.degraded ?? false,
+    authority: "none",
+  });
+}
+
 export class CognitiveOrchestrator {
   readonly #provider: CognitiveProviderAdapter;
   readonly #worker: CognitiveWorkerAdapter;
@@ -306,7 +344,7 @@ export class CognitiveOrchestrator {
       "Qwen primary synthesis started after independent review.",
     );
     const exactEvidence = requiredPresentationEvidence(specialist, review);
-    const synthesisInput = cognitiveSynthesisInputSchema.parse({
+    const synthesisInputBase = {
       requestId: request.requestId,
       objectiveId: request.objectiveId,
       objectiveDigest: request.objectiveDigest,
@@ -320,47 +358,68 @@ export class CognitiveOrchestrator {
       })),
       completionEligible: specialist.status === "passed" && review.verdict === "pass",
       steeringNotes: snapshot.steeringNotes,
-      repairFailureCode: null,
       authority: "none",
-    });
-    const synthesis = cognitiveSynthesisSchema.parse(
-      await this.#leases.withLease(
-        request.requestId,
-        primaryIrisOrchestratorModel,
-        "orchestrator-synthesizing",
-        (_lease, leaseSignal) =>
-          this.#provider.synthesize(synthesisInput, primaryIrisOrchestratorModel, leaseSignal),
-        signal,
-      ),
-    );
-    const missingEvidence = exactEvidence.filter(
-      ({ evidenceId }) => !synthesis.acknowledgedEvidenceIds.includes(evidenceId),
-    );
-    if (missingEvidence.length > 0) {
-      throw new CognitiveTurnError("COGNITIVE_EVIDENCE_MISMATCH");
+    } as const;
+    let repairFailureCode: "COGNITIVE_EVIDENCE_MISMATCH" | "COGNITIVE_SYNTHESIS_INVALID" | null =
+      null;
+    for (let attempt = 1; attempt <= 2; attempt += 1) {
+      const synthesisInput = cognitiveSynthesisInputSchema.parse({
+        ...synthesisInputBase,
+        repairFailureCode,
+      });
+      let presentation: CognitiveFounderPresentation;
+      try {
+        const providerOutput = await this.#leases.withLease(
+          request.requestId,
+          primaryIrisOrchestratorModel,
+          "orchestrator-synthesizing",
+          (_lease, leaseSignal) =>
+            this.#provider.synthesize(synthesisInput, primaryIrisOrchestratorModel, leaseSignal),
+          signal,
+        );
+        presentation = assembleFounderPresentation({
+          request,
+          synthesis: providerOutput,
+          specialist,
+          review,
+        });
+      } catch (error) {
+        const repairable =
+          error instanceof CognitiveTurnError &&
+          (error.code === "COGNITIVE_EVIDENCE_MISMATCH" ||
+            error.code === "COGNITIVE_SYNTHESIS_INVALID");
+        if (!repairable) throw error;
+        repairFailureCode = error.code;
+        snapshot = cognitiveTurnSnapshotSchema.parse({
+          ...snapshot,
+          synthesisAttempts: attempt,
+          leaseEvents: this.#leases.events(),
+          safeFailureCode: repairFailureCode,
+          updatedAt: this.#now(),
+        });
+        await this.#store.save(snapshot);
+        if (attempt === 2) {
+          return this.#transition(
+            snapshot,
+            "synthesis-failed",
+            null,
+            "Qwen synthesis failed its bounded repair attempt.",
+          );
+        }
+        continue;
+      }
+
+      snapshot = cognitiveTurnSnapshotSchema.parse({
+        ...snapshot,
+        synthesisAttempts: attempt,
+        presentation,
+        leaseEvents: this.#leases.events(),
+        safeFailureCode: null,
+        updatedAt: this.#now(),
+      });
+      return this.#transition(snapshot, "completed", null, "Delegated cognitive turn completed.");
     }
-    const presentation = cognitiveFounderPresentationSchema.parse({
-      requestId: request.requestId,
-      objectiveId: request.objectiveId,
-      narrative: synthesis.narrative,
-      completion: completionFor(specialist, review),
-      exactEvidence,
-      provenance: {
-        orchestratorModel: primaryIrisOrchestratorModel,
-        specialistModel: route.model,
-        reviewerModel,
-      },
-      degraded: false,
-      authority: "none",
-    });
-    snapshot = cognitiveTurnSnapshotSchema.parse({
-      ...snapshot,
-      synthesisAttempts: 1,
-      presentation,
-      leaseEvents: this.#leases.events(),
-      updatedAt: this.#now(),
-    });
-    return this.#transition(snapshot, "completed", null, "Delegated cognitive turn completed.");
+    throw new CognitiveTurnError("COGNITIVE_SYNTHESIS_INVALID");
   }
 
   #validateSpecialist(
