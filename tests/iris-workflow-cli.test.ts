@@ -82,6 +82,8 @@ describe("IRIS workflow CLI", () => {
     const commandCenterRoot = join(projectsRoot, "iris-founder-command-center-main");
     const launcher = join(coreRoot, "scripts", "runtime", "start-founder-command-center.ps1");
     const launches: { program: string; arguments_: string[]; cwd: string }[] = [];
+    const arrival: string[] = [];
+    const lifecycleStates: unknown[] = [];
     let gatewayProbeCount = 0;
 
     try {
@@ -104,9 +106,32 @@ describe("IRIS workflow CLI", () => {
           launches.push({ program, arguments_, cwd: options.cwd });
           return { pid: 4242 };
         },
+        resolveBootId: () => "boot_0123456789abcdef01234567",
+        writeRuntimeState: (state) => {
+          lifecycleStates.push(state);
+        },
+        openFounderApplication: () => {
+          arrival.push("opened");
+        },
+        speakFounderGreeting: (text) => {
+          arrival.push(`spoke:${String(text)}`);
+          return true;
+        },
       });
 
-      expect(result).toMatchObject({ ok: true, started: true, ready: true, processId: 4242 });
+      expect(result).toMatchObject({
+        ok: true,
+        started: true,
+        ready: true,
+        processId: 4242,
+        greeted: true,
+      });
+      expect(arrival).toEqual(["opened", "spoke:Hello, Founder"]);
+      expect(lifecycleStates.at(-1)).toMatchObject({
+        phase: "healthy",
+        greetingReady: false,
+        lastGreetingBootId: "boot_0123456789abcdef01234567",
+      });
       expect(launches).toEqual([
         {
           program: "powershell.exe",
@@ -114,6 +139,51 @@ describe("IRIS workflow CLI", () => {
           cwd: coreRoot,
         },
       ]);
+    } finally {
+      rmSync(projectsRoot, { force: true, recursive: true });
+    }
+  });
+
+  it("retries a pending greeting without restarting an already healthy stack", async () => {
+    const projectsRoot = mkdtempSync(join(tmpdir(), "iris-workflow-greeting-retry-"));
+    const coreRoot = join(projectsRoot, "STOIC-IRIS");
+    const commandCenterRoot = join(projectsRoot, "iris-founder-command-center-main");
+    const writes: unknown[] = [];
+    let launched = false;
+    try {
+      mkdirSync(join(commandCenterRoot, "scripts"), { recursive: true });
+      writeFileSync(join(commandCenterRoot, "scripts", "local-gateway.mjs"), "");
+      const result = await runWorkflow(["runtime", "start", "--core-root", coreRoot], {
+        environment: {},
+        platform: "win32",
+        probe: (url) => ({ url, ready: true, status: 200 }),
+        readRuntimeState: () => ({
+          owner: "iris-founder-runtime",
+          bootId: "boot_0123456789abcdef01234567",
+          phase: "healthy",
+          launcherPath: join(coreRoot, "scripts", "runtime", "start-founder-command-center.ps1"),
+          processes: [],
+          lastGreetingBootId: null,
+          greetingReady: true,
+          updatedAt: new Date().toISOString(),
+        }),
+        writeRuntimeState: (state) => {
+          writes.push(state);
+        },
+        resolveBootId: () => "boot_0123456789abcdef01234567",
+        openFounderApplication: () => undefined,
+        speakFounderGreeting: () => true,
+        spawnDetached: () => {
+          launched = true;
+          return { pid: 4242 };
+        },
+      });
+      expect(result).toMatchObject({ started: false, ready: true, greeted: true });
+      expect(launched).toBe(false);
+      expect(writes.at(-1)).toMatchObject({
+        greetingReady: false,
+        lastGreetingBootId: "boot_0123456789abcdef01234567",
+      });
     } finally {
       rmSync(projectsRoot, { force: true, recursive: true });
     }
@@ -240,14 +310,24 @@ describe("IRIS workflow CLI", () => {
       const common = {
         environment: {},
         readRuntimeState: () => state,
-        probe: (url) => ({ url, ready: url.includes(":4174/"), status: url.includes(":4174/") ? 200 : null }),
+        probe: (url: string) => ({
+          url,
+          ready: url.includes(":4174/"),
+          status: url.includes(":4174/") ? 200 : null,
+        }),
       };
-      expect(await runWorkflow(["runtime", "status", "--core-root", coreRoot], common))
-        .toMatchObject({ ok: true, phase: "degraded", bootId: state.bootId });
+      expect(
+        await runWorkflow(["runtime", "status", "--core-root", coreRoot], common),
+      ).toMatchObject({ ok: true, phase: "degraded", bootId: state.bootId });
       const result = await runWorkflow(["runtime", "stop", "--core-root", coreRoot], {
         ...common,
-        stopOwnedProcess: (process) => { stopped.push(process.processId); return true; },
-        clearRuntimeState: () => { cleared = true; },
+        stopOwnedProcess: (process: { processId: number }) => {
+          stopped.push(process.processId);
+          return true;
+        },
+        clearRuntimeState: () => {
+          cleared = true;
+        },
         runProgram: () => ({ code: 0, stdout: "", stderr: "" }),
       });
       expect(result).toMatchObject({ ok: true, stopped: true, stoppedProcessIds: [4242] });
