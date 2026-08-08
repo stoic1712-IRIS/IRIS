@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { join, resolve } from "node:path";
 
@@ -123,6 +123,51 @@ describe("Cycle Five Founder dialogue service", () => {
     expect(supervisor).toContain('kill "$gateway_pid"');
     expect(supervisor).toContain("node scripts/local-gateway.mjs &");
   });
+
+  it.runIf(process.platform !== "win32")(
+    "builds Core and the Command Center from their current sources before launch",
+    () => {
+      const fixtureRoot = mkdtempSync(join(process.cwd(), ".tmp-runtime-build-"));
+      const core = join(fixtureRoot, "core");
+      const commandCenter = join(fixtureRoot, "command-center");
+      const bin = join(fixtureRoot, "bin");
+      const buildLog = join(fixtureRoot, "build.log");
+      const fakePnpm = join(bin, "pnpm");
+      try {
+        for (const directory of [core, commandCenter, bin])
+          mkdirSync(directory, { recursive: true });
+        for (const directory of [core, commandCenter])
+          writeFileSync(join(directory, "package.json"), "{}\n", "utf8");
+        writeFileSync(
+          fakePnpm,
+          '#!/usr/bin/env bash\nprintf "%s|%s\\n" "$PWD" "$*" >> "$IRIS_BUILD_LOG"\n',
+          "utf8",
+        );
+        chmodSync(fakePnpm, 0o755);
+
+        const result = spawnSync(
+          "bash",
+          [resolve("scripts/runtime/prepare-founder-runtime.sh"), core, commandCenter],
+          {
+            encoding: "utf8",
+            env: {
+              ...process.env,
+              IRIS_BUILD_LOG: buildLog,
+              PATH: `${bin}:${process.env.PATH ?? ""}`,
+            },
+          },
+        );
+
+        expect(result.status, result.stderr).toBe(0);
+        expect(readFileSync(buildLog, "utf8").trim().split("\n")).toEqual([
+          `${core}|build`,
+          `${commandCenter}|build`,
+        ]);
+      } finally {
+        rmSync(fixtureRoot, { force: true, recursive: true });
+      }
+    },
+  );
 
   it("preserves bounded multi-turn context without execution authority", async () => {
     const runtime = new DialogueRuntime();
