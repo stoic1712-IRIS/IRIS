@@ -38,6 +38,7 @@ export interface WorkflowRuntimeState {
   bootId?: string;
   phase?: string;
   launcherPath?: string;
+  launcherLogs?: { stdoutPath: string; stderrPath: string };
   processes?: WorkflowRuntimeProcess[];
   lastGreetingBootId?: string | null;
   greetingReady?: boolean;
@@ -62,8 +63,13 @@ export interface WorkflowOverrides {
   spawnDetached?: (
     program: string,
     arguments_: string[],
-    options: { cwd: string; environment: NodeJS.ProcessEnv },
-  ) => { pid?: number };
+    options: {
+      cwd: string;
+      environment: NodeJS.ProcessEnv;
+      stdoutPath: string;
+      stderrPath: string;
+    },
+  ) => { pid?: number } | Promise<{ pid?: number }>;
   resolveBootId?: () => string | Promise<string>;
   writeRuntimeState?: (state: WorkflowRuntimeState) => void | Promise<void>;
   readRuntimeState?: () => WorkflowRuntimeState | null | Promise<WorkflowRuntimeState | null>;

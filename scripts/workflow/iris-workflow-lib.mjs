@@ -1,4 +1,4 @@
-import { execFile, spawn } from "node:child_process";
+import { execFile } from "node:child_process";
 import { Buffer } from "node:buffer";
 import { createHash } from "node:crypto";
 import { access, mkdir, readFile, rm, writeFile } from "node:fs/promises";
@@ -198,16 +198,40 @@ async function workflowStatus(options, overrides) {
   return { ok: true, roots, repositories, services };
 }
 
-function defaultSpawnDetached(program, arguments_, options) {
-  const child = spawn(program, arguments_, {
-    cwd: options.cwd,
-    detached: true,
-    env: options.environment,
-    stdio: "ignore",
-    windowsHide: true,
+function quoteWindowsArgument(value) {
+  return `"${String(value)
+    .replaceAll(/(\\*)"/gu, '$1$1\\"')
+    .replaceAll(/(\\+)$/gu, "$1$1")}"`;
+}
+
+async function defaultSpawnDetached(program, arguments_, options) {
+  const environment = {
+    ...options.environment,
+    IRIS_DETACHED_PROGRAM: program,
+    IRIS_DETACHED_ARGUMENT_LINE: arguments_.map(quoteWindowsArgument).join(" "),
+    IRIS_DETACHED_CWD: options.cwd,
+    IRIS_DETACHED_STDOUT: options.stdoutPath,
+    IRIS_DETACHED_STDERR: options.stderrPath,
+  };
+  const command = [
+    "$program=$env:IRIS_DETACHED_PROGRAM",
+    "$argumentLine=$env:IRIS_DETACHED_ARGUMENT_LINE",
+    "$workingDirectory=$env:IRIS_DETACHED_CWD",
+    "$stdoutPath=$env:IRIS_DETACHED_STDOUT",
+    "$stderrPath=$env:IRIS_DETACHED_STDERR",
+    "Remove-Item Env:IRIS_DETACHED_PROGRAM,Env:IRIS_DETACHED_ARGUMENT_LINE,Env:IRIS_DETACHED_CWD,Env:IRIS_DETACHED_STDOUT,Env:IRIS_DETACHED_STDERR -ErrorAction SilentlyContinue",
+    "$process=Start-Process -FilePath $program -ArgumentList $argumentLine -WorkingDirectory $workingDirectory -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath -WindowStyle Hidden -PassThru",
+    "[Console]::Out.Write($process.Id)",
+  ].join("; ");
+  const result = await defaultRunProgram("powershell.exe", ["-NoProfile", "-Command", command], {
+    environment,
+    timeout: 30_000,
   });
-  child.unref();
-  return { pid: child.pid };
+  const pid = Number.parseInt(result.stdout.trim(), 10);
+  if (result.code !== 0 || !Number.isInteger(pid) || pid <= 0) {
+    throw new Error(`Unable to detach the Founder launcher: ${redact(result.stderr)}`);
+  }
+  return { pid };
 }
 
 function sleep(milliseconds) {
@@ -267,14 +291,20 @@ async function startWorkflow(options, overrides) {
   if (!(await pathExists(launcher)))
     throw new Error(`Canonical Founder launcher is missing: ${launcher}.`);
   const spawnDetached = overrides.spawnDetached ?? defaultSpawnDetached;
-  const child = spawnDetached(
+  const environment = overrides.environment ?? process.env;
+  const statePath = runtimeStatePath(environment);
+  const logDirectory =
+    statePath === null ? join(roots.core, ".iris", "runtime") : dirname(statePath);
+  const stdoutPath = join(logDirectory, "founder-launcher.stdout.log");
+  const stderrPath = join(logDirectory, "founder-launcher.stderr.log");
+  await mkdir(logDirectory, { recursive: true });
+  const child = await spawnDetached(
     "powershell.exe",
     ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", launcher],
-    { cwd: roots.core, environment: overrides.environment ?? process.env },
+    { cwd: roots.core, environment, stdoutPath, stderrPath },
   );
   if (!Number.isInteger(child.pid) || child.pid <= 0)
     throw new Error("The Founder launcher did not return a process identifier.");
-  const environment = overrides.environment ?? process.env;
   const runProgram = overrides.runProgram ?? defaultRunProgram;
   const bootId =
     (await overrides.resolveBootId?.()) ??
@@ -299,6 +329,7 @@ async function startWorkflow(options, overrides) {
     bootId,
     phase: "starting",
     launcherPath: launcher,
+    launcherLogs: { stdoutPath, stderrPath },
     processes: [
       { owner: "iris-founder-runtime", service: "launcher", processId: child.pid, commandDigest },
     ],
@@ -316,6 +347,7 @@ async function startWorkflow(options, overrides) {
         bootId,
         phase: "healthy",
         launcherPath: launcher,
+        launcherLogs: { stdoutPath, stderrPath },
         processes: [
           {
             owner: "iris-founder-runtime",
@@ -350,7 +382,7 @@ async function startWorkflow(options, overrides) {
   await stopStarted(child.pid);
   await (overrides.clearRuntimeState ?? (() => clearRuntimeState(environment)))();
   throw new Error(
-    `The complete Founder runtime did not become ready after startup (process ${child.pid}).`,
+    `The complete Founder runtime did not become ready after startup (process ${child.pid}). Inspect ${stderrPath} and ${stdoutPath}.`,
   );
 }
 
@@ -383,10 +415,11 @@ async function defaultStopOwnedProcess(process, state, runProgram) {
   )
     throw new Error("Refusing to stop an unverified runtime process.");
   const escaped = state.launcherPath.replaceAll("'", "''");
-  const command = `$p=Get-CimInstance Win32_Process -Filter "ProcessId=${String(process.processId)}"; if($null -eq $p -or $p.CommandLine -notlike '*${escaped}*'){exit 7}`;
+  const command = `$p=Get-CimInstance Win32_Process -Filter "ProcessId=${String(process.processId)}"; if($null -eq $p){exit 3}; if($p.CommandLine -notlike '*${escaped}*'){exit 7}`;
   const verified = await runProgram("powershell.exe", ["-NoProfile", "-Command", command], {
     timeout: 20_000,
   });
+  if (verified.code === 3) return false;
   if (verified.code === 7) throw new Error("Runtime process ownership no longer matches.");
   if (verified.code !== 0) return false;
   const stopped = await runProgram("taskkill.exe", ["/PID", String(process.processId), "/T"], {
