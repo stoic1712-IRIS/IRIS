@@ -30,9 +30,13 @@ There is deliberately no stage, commit, push, merge, deployment, credential, spe
 
 Every command supports `--json`. Structured output contains `ok`, exact roots, bounded status, and actionable errors. Unknown commands, unsafe paths, absent dependencies, dirty cleanup targets, non-registered worktrees, inaccessible services, and incomplete startup fail closed. Health probes never expose credentials or response bodies beyond bounded status metadata.
 
+### Cold-start readiness
+
+`start` polls the complete Founder runtime every 500 milliseconds for up to 120 seconds. It returns immediately once gateway, voice, and search are all ready, but it does not report failure merely because a healthy SearXNG cold start exceeds the former 30-second window. If the complete stack is still unavailable after 120 seconds, startup continues to fail closed with the launcher process identifier preserved in the error.
+
 ## Testing
 
-Behavior tests execute the real CLI against disposable repositories and local fixture services. They prove command parsing, canonical Command Center selection, read-only status, complete-launcher delegation, offline verification environment, safe candidate cleanup refusal, and personal-wrapper delegation. The existing launcher tests remain part of the full suite.
+Behavior tests execute the real CLI against disposable repositories and local fixture services. They prove command parsing, canonical Command Center selection, read-only status, complete-launcher delegation, readiness after the former 30-second boundary, offline verification environment, safe candidate cleanup refusal, and personal-wrapper delegation. The existing launcher tests remain part of the full suite.
 
 ## Scope
 

@@ -118,6 +118,41 @@ describe("IRIS workflow CLI", () => {
     }
   });
 
+  it("waits beyond the former thirty-second boundary for a healthy cold start", async () => {
+    const projectsRoot = mkdtempSync(join(tmpdir(), "iris-workflow-slow-start-"));
+    const coreRoot = join(projectsRoot, "STOIC-IRIS");
+    const commandCenterRoot = join(projectsRoot, "iris-founder-command-center-main");
+    const launcher = join(coreRoot, "scripts", "runtime", "start-founder-command-center.ps1");
+    let gatewayProbeCount = 0;
+    let waitCount = 0;
+
+    try {
+      mkdirSync(join(coreRoot, "scripts", "runtime"), { recursive: true });
+      writeFileSync(launcher, "");
+      mkdirSync(join(commandCenterRoot, "scripts"), { recursive: true });
+      writeFileSync(join(commandCenterRoot, "scripts", "local-gateway.mjs"), "");
+
+      const result = await runWorkflow(["start", "--core-root", coreRoot], {
+        environment: {},
+        platform: "win32",
+        probe: (url) => {
+          if (url.includes(":4174/")) gatewayProbeCount += 1;
+          const ready = gatewayProbeCount > 61;
+          return { url, ready, status: ready ? 200 : null };
+        },
+        sleep: () => {
+          waitCount += 1;
+        },
+        spawnDetached: () => ({ pid: 4242 }),
+      });
+
+      expect(result).toMatchObject({ ok: true, started: true, ready: true, processId: 4242 });
+      expect(waitCount).toBe(61);
+    } finally {
+      rmSync(projectsRoot, { force: true, recursive: true });
+    }
+  });
+
   it("refuses to report success for a partially running Founder stack", async () => {
     const projectsRoot = mkdtempSync(join(tmpdir(), "iris-workflow-partial-"));
     const coreRoot = join(projectsRoot, "STOIC-IRIS");

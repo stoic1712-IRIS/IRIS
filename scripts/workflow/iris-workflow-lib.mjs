@@ -14,6 +14,11 @@ const serviceUrls = {
   search: "http://127.0.0.1:8888/",
   ollama: "http://127.0.0.1:11434/api/tags",
 };
+const founderStartupPollMilliseconds = 500;
+const founderStartupTimeoutMilliseconds = 120_000;
+const founderStartupAttempts = Math.ceil(
+  founderStartupTimeoutMilliseconds / founderStartupPollMilliseconds,
+);
 
 async function pathExists(path) {
   try {
@@ -181,8 +186,8 @@ async function startWorkflow(options, overrides) {
     throw new Error("The Founder launcher did not return a process identifier.");
   const wait = overrides.sleep ?? sleep;
   let services;
-  for (let attempt = 0; attempt < 60; attempt += 1) {
-    await wait(500);
+  for (let attempt = 0; attempt < founderStartupAttempts; attempt += 1) {
+    await wait(founderStartupPollMilliseconds);
     services = await founderRuntimeSnapshot(probe);
     if (services.gateway.ready && services.voice.ready && services.search.ready) {
       return { ok: true, started: true, ready: true, processId: child.pid, roots, services };
