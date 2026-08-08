@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "cycle-twelve-founder-certification-program",
+  "objective": "Define and conduct the seven-test Founder-operated Cycle Twelve certification program that evaluates IRIS from read-only inspection through complete governed software delivery, preserves existing capabilities, and produces truthful evidence for the later Phase 0 handoff gate without executing or claiming final graduation.",
+  "issuer": "Founder Cristofer Stoic Arellano through Codex",
+  "executor": "IRIS under Founder operation with Codex audit-only during each certification run",
+  "assigned_role": "producer",
+  "created_at": "2026-08-08T12:23:29Z",
+  "status": "approved",
+  "risk_class": "R2",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "Founder mandate: do what is required and continue the existing additive Cycles Eight through Twelve plan, run tests, repair failures, rerun tests, and publish ordinary repository work through the already authorized lifecycle. This task authorizes defining the certification program and conducting only the ordinary, bounded, explicitly approved test effects. It does not authorize credentials or secret disclosure, spending, deployment, public or LAN exposure, repository or account administration, destructive operations, force-push, history rewrite, or final Phase 0 graduation execution.",
+  "completion_actions": [
+    "research",
+    "edit",
+    "verify",
+    "repair",
+    "stage",
+    "commit",
+    "push_branch",
+    "create_pull_request",
+    "independent_review",
+    "merge",
+    "synchronize",
+    "cleanup"
+  ],
+  "completion_exclusions": [
+    "Credential or secret disclosure",
+    "Spending or paid provider resources",
+    "Deployment or public or LAN exposure",
+    "Repository or account administration",
+    "Destructive operations, force-push, or history rewrite",
+    "Final Phase 0 graduation execution or completion claim"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "647065b642cec9b503988a34839735e0dd8c3edf"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "main",
+      "commit": "5d347163e939e9ad7b523fc56f175c147354dc10"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/tasks/cycle-twelve-founder-certification-program.json",
+    "docs/operations/cycle-twelve-founder-certification-program.md"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    ".claude/**",
+    "package.json",
+    "pnpm-lock.yaml",
+    "C:/Projects/STOIC-IRIS-source-library/**"
+  ],
+  "permitted_actions": [
+    "Publish the exact certification task and program",
+    "Run read-only Tests One through Three after authenticated Founder activation",
+    "Run Tests Four through Seven only in exact disposable or bounded repositories under digest-bound approval",
+    "Observe, interrupt, score, and preserve evidence without Codex changing test outputs",
+    "Repair the platform between failed attempts, then restart the affected test from a new proposal"
+  ],
+  "prohibited_actions": [
+    "Remove, weaken, or reclassify an existing capability to make a test pass",
+    "Let Codex or Claude modify a repository during an IRIS certification run",
+    "Count a fixture-only or model-only result as a genuine development increment",
+    "Reuse a failed run as a passing run after platform repair",
+    "Execute protected effects or final Phase 0 graduation through this ordinary task"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "node C:/Users/Admin/.codex/skills/iris-dev/scripts/iris-dev.mjs task validate .iris/coordination/tasks/cycle-twelve-founder-certification-program.json --json"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec prettier --check .iris/coordination/tasks/cycle-twelve-founder-certification-program.json docs/operations/cycle-twelve-founder-certification-program.md"
+    }
+  ],
+  "required_evidence": [
+    "Exact proposal identifier and digest for every activated test",
+    "Founder authentication and approval binding without credential disclosure",
+    "Model, tool, repository, scope, command, duration, and terminal-state evidence",
+    "Independent quality and security score for every test",
+    "For genuine increments: commit, pull request, checks, rollback, cleanup, and remote-equality evidence",
+    "Consecutive-pass ledger that excludes interrupted, repaired, or unauthorized runs"
+  ],
+  "publisher": "Codex under Founder completion mandate after exact-path verification",
+  "approval_reference": "founder-continue-cycle-twelve-certification-2026-08-08",
+  "phase0_graduation": false
+}
