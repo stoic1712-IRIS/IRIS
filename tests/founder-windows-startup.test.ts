@@ -9,12 +9,15 @@ const installScript = resolve("scripts/runtime/install-founder-startup.ps1");
 const removeScript = resolve("scripts/runtime/remove-founder-startup.ps1");
 
 describe("Founder Windows startup registration", () => {
-  it("uses a non-elevated current-user logon task with one canonical launcher", () => {
+  it("uses a non-elevated current-user logon task through the canonical health-gated workflow", () => {
     const source = readFileSync(installScript, "utf8");
     expect(source).toContain("New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME");
     expect(source).toContain("-RunLevel Limited");
     expect(source).toContain("-MultipleInstances IgnoreNew");
-    expect(source).toContain("start-founder-command-center.ps1");
+    expect(source).toContain("iris-workflow.mjs");
+    expect(source).toContain('runtime start --core-root');
+    expect(source).toContain("Get-Command node.exe");
+    expect(source).not.toContain("start-founder-command-center.ps1");
     expect(source).toContain("[switch]$WhatIf");
     expect(source).not.toMatch(/password|token|secret/iu);
   });
