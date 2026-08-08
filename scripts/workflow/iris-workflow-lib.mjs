@@ -298,13 +298,6 @@ async function startWorkflow(options, overrides) {
   const stdoutPath = join(logDirectory, "founder-launcher.stdout.log");
   const stderrPath = join(logDirectory, "founder-launcher.stderr.log");
   await mkdir(logDirectory, { recursive: true });
-  const child = await spawnDetached(
-    "powershell.exe",
-    ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", launcher],
-    { cwd: roots.core, environment, stdoutPath, stderrPath },
-  );
-  if (!Number.isInteger(child.pid) || child.pid <= 0)
-    throw new Error("The Founder launcher did not return a process identifier.");
   const runProgram = overrides.runProgram ?? defaultRunProgram;
   const bootId =
     (await overrides.resolveBootId?.()) ??
@@ -324,6 +317,32 @@ async function startWorkflow(options, overrides) {
     .digest("hex")}`;
   const writeState =
     overrides.writeRuntimeState ?? ((value) => writeRuntimeState(environment, value));
+  const clearState = overrides.clearRuntimeState ?? (() => clearRuntimeState(environment));
+  await writeState({
+    owner: "iris-founder-runtime",
+    bootId,
+    phase: "starting",
+    launcherPath: launcher,
+    launcherLogs: { stdoutPath, stderrPath },
+    processes: [],
+    lastGreetingBootId: null,
+    updatedAt: new Date().toISOString(),
+  });
+  let child;
+  try {
+    child = await spawnDetached(
+      "powershell.exe",
+      ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", launcher],
+      { cwd: roots.core, environment, stdoutPath, stderrPath },
+    );
+  } catch (error) {
+    await clearState();
+    throw error;
+  }
+  if (!Number.isInteger(child.pid) || child.pid <= 0) {
+    await clearState();
+    throw new Error("The Founder launcher did not return a process identifier.");
+  }
   await writeState({
     owner: "iris-founder-runtime",
     bootId,

@@ -93,6 +93,8 @@ describe("IRIS workflow CLI", () => {
       stdoutPath?: string;
       stderrPath?: string;
     }[] = [];
+    const runtimeStates: WorkflowRuntimeState[] = [];
+    let stateAtSpawn: WorkflowRuntimeState | undefined;
     let gatewayProbeCount = 0;
 
     try {
@@ -111,7 +113,12 @@ describe("IRIS workflow CLI", () => {
           return { url, ready, status: ready ? 200 : null };
         },
         sleep: () => undefined,
+        resolveBootId: () => "boot_test-session-0001",
+        writeRuntimeState: (state) => {
+          runtimeStates.push(structuredClone(state));
+        },
         spawnDetached: (program, arguments_, options) => {
+          stateAtSpawn = runtimeStates.at(-1);
           launches.push({
             program,
             arguments_,
@@ -132,6 +139,13 @@ describe("IRIS workflow CLI", () => {
       });
       expect(launches[0]?.stdoutPath?.endsWith("founder-launcher.stdout.log")).toBe(true);
       expect(launches[0]?.stderrPath?.endsWith("founder-launcher.stderr.log")).toBe(true);
+      expect(stateAtSpawn).toMatchObject({
+        owner: "iris-founder-runtime",
+        bootId: "boot_test-session-0001",
+        phase: "starting",
+        processes: [],
+        lastGreetingBootId: null,
+      });
     } finally {
       rmSync(projectsRoot, { force: true, recursive: true });
     }
