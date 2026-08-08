@@ -4,8 +4,8 @@
 **Repository:** `stoic1712-IRIS/IRIS`
 **Branch:** `iris/qwen-primary-cognitive-orchestration`
 **Base:** `6367e4547d34092472c672ee93a9e1b2a8e5c80f`
-**Locally verified payload revision:** Pending repair commit
-**Payload patch digest:** Pending repair commit
+**Locally verified payload revision:** `22f72dedd05824991f31739946af56de60870b26`
+**Payload patch digest:** `sha256:b12af2bdcd53f8ee4a598a67ca708839a87dc480e316913003d095ede7b910bb`
 
 ## Result
 
@@ -56,8 +56,9 @@ Focused profiles, with package-manager network disabled:
 - Lease profile: 1 file, 5 tests passed, exit `0`.
 - Runtime profile: 1 file, 17 tests passed, exit `0`.
 
-Full `pnpm verify` used Node `v24.19.0` and pnpm `11.20.0` with network disabled. Formatting,
-lint, type checking, 58 test files, 460 passed tests, production build, and repository diagnostics
+Full `pnpm verify` used Node `v24.19.0` and pnpm `11.20.0` with network disabled. After
+history-preservingly synchronizing canonical `main`, formatting, lint, type checking, 59 test files,
+476 passed tests, production build, and repository diagnostics
 all exited `0`. One pre-existing platform-conditioned test was skipped on Windows: the Unix-only
 Founder runtime build-launcher test in `tests/cycle-five-founder-dialogue.test.ts`. Vite emitted its
 existing non-failing large-chunk advisory.
