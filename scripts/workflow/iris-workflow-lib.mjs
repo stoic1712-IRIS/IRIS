@@ -19,6 +19,10 @@ const founderStartupTimeoutMilliseconds = 120_000;
 const founderStartupAttempts = Math.ceil(
   founderStartupTimeoutMilliseconds / founderStartupPollMilliseconds,
 );
+const founderShutdownTimeoutMilliseconds = 30_000;
+const founderShutdownAttempts = Math.ceil(
+  founderShutdownTimeoutMilliseconds / founderStartupPollMilliseconds,
+);
 
 async function pathExists(path) {
   try {
@@ -133,6 +137,15 @@ function allReady(snapshot) {
 
 function managedRuntimeReady(snapshot) {
   return snapshot.gateway.ready === true || snapshot.voice.ready === true;
+}
+
+async function waitForManagedRuntimeStop(probe, wait) {
+  for (let attempt = 0; attempt < founderShutdownAttempts; attempt += 1) {
+    const snapshot = await founderRuntimeSnapshot(probe);
+    if (!managedRuntimeReady(snapshot)) return snapshot;
+    await wait(founderStartupPollMilliseconds);
+  }
+  throw new Error("The managed Founder runtime did not stop within the bounded shutdown window.");
 }
 
 function runtimePhase(snapshot, state, repairing = false) {
@@ -416,6 +429,7 @@ async function stopWorkflow(options, overrides) {
 
 async function restartWorkflow(options, overrides) {
   await stopWorkflow(options, overrides);
+  await waitForManagedRuntimeStop(overrides.probe ?? defaultProbe, overrides.sleep ?? sleep);
   return startWorkflow(options, overrides);
 }
 

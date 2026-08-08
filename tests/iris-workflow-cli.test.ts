@@ -260,6 +260,50 @@ describe("IRIS workflow CLI", () => {
     }
   });
 
+  it("waits for managed WSL services to quiesce before restart", async () => {
+    const projectsRoot = mkdtempSync(join(tmpdir(), "iris-workflow-restart-settle-"));
+    const coreRoot = join(projectsRoot, "STOIC-IRIS");
+    const commandCenterRoot = join(projectsRoot, "iris-founder-command-center-main");
+    let launched = false;
+    let snapshot = 0;
+    let waits = 0;
+
+    try {
+      mkdirSync(join(coreRoot, "scripts", "runtime"), { recursive: true });
+      writeFileSync(join(coreRoot, "scripts", "runtime", "start-founder-command-center.ps1"), "");
+      writeFileSync(join(coreRoot, "scripts", "runtime", "stop-iris-search.ps1"), "");
+      mkdirSync(join(commandCenterRoot, "scripts"), { recursive: true });
+      writeFileSync(join(commandCenterRoot, "scripts", "local-gateway.mjs"), "");
+
+      await expect(
+        runWorkflow(["runtime", "restart", "--core-root", coreRoot], {
+          environment: {},
+          platform: "win32",
+          readRuntimeState: () => null,
+          clearRuntimeState: () => undefined,
+          runProgram: () => ({ code: 0, stdout: "", stderr: "" }),
+          probe: (url) => {
+            if (url.includes(":4174/")) snapshot += 1;
+            const managed = url.includes(":4174/") || url.includes(":8765/");
+            const ready = launched || !managed || snapshot < 3;
+            return { url, ready, status: ready ? 200 : null };
+          },
+          sleep: () => {
+            waits += 1;
+          },
+          spawnDetached: () => {
+            launched = true;
+            return { pid: 4242 };
+          },
+        }),
+      ).resolves.toMatchObject({ ok: true, started: true, ready: true, processId: 4242 });
+      expect(waits).toBe(3);
+      expect(launched).toBe(true);
+    } finally {
+      rmSync(projectsRoot, { force: true, recursive: true });
+    }
+  });
+
   it("reports lifecycle phase and stops only recorded IRIS-owned processes", async () => {
     const projectsRoot = mkdtempSync(join(tmpdir(), "iris-workflow-lifecycle-"));
     const coreRoot = join(projectsRoot, "STOIC-IRIS");
