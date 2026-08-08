@@ -32,6 +32,7 @@ describe("IRIS workflow CLI", () => {
     expect(result.status, result.stderr).toBe(0);
     expect(result.stdout).toContain("iris-workflow doctor");
     expect(result.stdout).toContain("iris-workflow start");
+    expect(result.stdout).toContain("iris-workflow runtime status|start|stop|restart|repair");
     expect(result.stdout).toContain("iris-workflow verify");
     expect(result.stdout).toContain("iris-workflow candidate inspect");
     expect(result.stdout).toContain("iris-workflow upgrade propose");
@@ -215,6 +216,43 @@ describe("IRIS workflow CLI", () => {
         }),
       ).rejects.toThrow(/partial/iu);
       expect(launched).toBe(false);
+    } finally {
+      rmSync(projectsRoot, { force: true, recursive: true });
+    }
+  });
+
+  it("reports lifecycle phase and stops only recorded IRIS-owned processes", async () => {
+    const projectsRoot = mkdtempSync(join(tmpdir(), "iris-workflow-lifecycle-"));
+    const coreRoot = join(projectsRoot, "STOIC-IRIS");
+    const commandCenterRoot = join(projectsRoot, "iris-founder-command-center-main");
+    const stopped: number[] = [];
+    let cleared = false;
+    try {
+      mkdirSync(join(coreRoot, "scripts", "runtime"), { recursive: true });
+      writeFileSync(join(coreRoot, "scripts", "runtime", "stop-iris-search.ps1"), "");
+      mkdirSync(join(commandCenterRoot, "scripts"), { recursive: true });
+      writeFileSync(join(commandCenterRoot, "scripts", "local-gateway.mjs"), "");
+      const state = {
+        owner: "iris-founder-runtime",
+        bootId: "boot_test-session-0001",
+        processes: [{ owner: "iris-founder-runtime", processId: 4242 }],
+      };
+      const common = {
+        environment: {},
+        readRuntimeState: () => state,
+        probe: (url) => ({ url, ready: url.includes(":4174/"), status: url.includes(":4174/") ? 200 : null }),
+      };
+      expect(await runWorkflow(["runtime", "status", "--core-root", coreRoot], common))
+        .toMatchObject({ ok: true, phase: "degraded", bootId: state.bootId });
+      const result = await runWorkflow(["runtime", "stop", "--core-root", coreRoot], {
+        ...common,
+        stopOwnedProcess: (process) => { stopped.push(process.processId); return true; },
+        clearRuntimeState: () => { cleared = true; },
+        runProgram: () => ({ code: 0, stdout: "", stderr: "" }),
+      });
+      expect(result).toMatchObject({ ok: true, stopped: true, stoppedProcessIds: [4242] });
+      expect(stopped).toEqual([4242]);
+      expect(cleared).toBe(true);
     } finally {
       rmSync(projectsRoot, { force: true, recursive: true });
     }

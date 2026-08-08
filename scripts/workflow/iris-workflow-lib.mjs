@@ -1,7 +1,7 @@
 import { execFile, spawn } from "node:child_process";
 import { Buffer } from "node:buffer";
 import { createHash } from "node:crypto";
-import { access, writeFile } from "node:fs/promises";
+import { access, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
@@ -89,9 +89,55 @@ function redact(value, maximum = 64_000) {
 async function founderRuntimeSnapshot(probe) {
   return Object.fromEntries(
     await Promise.all(
-      ["gateway", "voice", "search"].map(async (name) => [name, await probe(serviceUrls[name])]),
+      ["gateway", "voice", "search", "ollama"].map(async (name) => [name, await probe(serviceUrls[name])]),
     ),
   );
+}
+
+function runtimeStatePath(environment) {
+  const localAppData = environment?.LOCALAPPDATA;
+  return typeof localAppData === "string" && localAppData.length > 0
+    ? join(localAppData, "STOIC-IRIS", "runtime", "founder-runtime.json")
+    : null;
+}
+
+async function readRuntimeState(environment) {
+  const path = runtimeStatePath(environment);
+  if (path === null) return null;
+  try {
+    const value = JSON.parse(await readFile(path, "utf8"));
+    return value?.owner === "iris-founder-runtime" ? value : null;
+  } catch {
+    return null;
+  }
+}
+
+async function writeRuntimeState(environment, value) {
+  const path = runtimeStatePath(environment);
+  if (path === null) return;
+  await mkdir(dirname(path), { recursive: true });
+  await writeFile(path, `${JSON.stringify(value, null, 2)}\n`, { encoding: "utf8" });
+}
+
+async function clearRuntimeState(environment) {
+  const path = runtimeStatePath(environment);
+  if (path !== null) await rm(path, { force: true });
+}
+
+function allReady(snapshot) {
+  return Object.values(snapshot).every((service) => service.ready === true);
+}
+
+function anyReady(snapshot) {
+  return Object.values(snapshot).some((service) => service.ready === true);
+}
+
+function runtimePhase(snapshot, state, repairing = false) {
+  if (repairing) return "repairing";
+  if (allReady(snapshot)) return "healthy";
+  if (!anyReady(snapshot) && state === null) return "stopped";
+  if (!anyReady(snapshot)) return "starting";
+  return "degraded";
 }
 
 export async function resolveWorkflowRoots(options = {}) {
@@ -152,6 +198,33 @@ function sleep(milliseconds) {
   return new Promise((resolvePromise) => globalThis.setTimeout(resolvePromise, milliseconds));
 }
 
+async function defaultBootId(runProgram, environment) {
+  if (typeof environment.LOCALAPPDATA !== "string" || environment.LOCALAPPDATA.length === 0)
+    return "boot_test-session-0001";
+  const result = await runProgram(
+    "powershell.exe",
+    [
+      "-NoProfile",
+      "-Command",
+      "(Get-CimInstance Win32_OperatingSystem).LastBootUpTime.ToUniversalTime().ToString('o')",
+    ],
+    { timeout: 20_000, environment },
+  );
+  if (result.code !== 0 || result.stdout.trim().length === 0)
+    throw new Error("Unable to bind Founder runtime to the current Windows boot.");
+  return `boot_${createHash("sha256").update(result.stdout.trim()).digest("hex").slice(0, 24)}`;
+}
+
+async function defaultOpenFounderApplication(runProgram, environment) {
+  if (typeof environment.LOCALAPPDATA !== "string" || environment.LOCALAPPDATA.length === 0) return;
+  const result = await runProgram(
+    "powershell.exe",
+    ["-NoProfile", "-Command", "Start-Process 'http://127.0.0.1:4174/'"],
+    { timeout: 20_000, environment },
+  );
+  if (result.code !== 0) throw new Error("Founder application could not be opened after health verification.");
+}
+
 async function startWorkflow(options, overrides) {
   const roots = await resolveWorkflowRoots({
     coreRoot: options["core-root"],
@@ -159,10 +232,10 @@ async function startWorkflow(options, overrides) {
   });
   const probe = overrides.probe ?? defaultProbe;
   const before = await founderRuntimeSnapshot(probe);
-  if (before.gateway.ready && before.voice.ready && before.search.ready) {
+  if (allReady(before)) {
     return { ok: true, started: false, ready: true, roots, services: before };
   }
-  if (before.gateway.ready || before.voice.ready || before.search.ready) {
+  if (anyReady(before)) {
     throw new Error(
       "The Founder runtime is partial: one or more required local services are active while the full stack is unavailable. Stop the stale session before restarting.",
     );
@@ -184,18 +257,146 @@ async function startWorkflow(options, overrides) {
   );
   if (!Number.isInteger(child.pid) || child.pid <= 0)
     throw new Error("The Founder launcher did not return a process identifier.");
+  const environment = overrides.environment ?? process.env;
+  const runProgram = overrides.runProgram ?? defaultRunProgram;
+  const bootId =
+    (await overrides.resolveBootId?.()) ??
+    (environment.IRIS_WINDOWS_BOOT_ID ?? (await defaultBootId(runProgram, environment)));
+  const commandDigest = `sha256:${createHash("sha256")
+    .update(JSON.stringify(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", launcher]))
+    .digest("hex")}`;
+  const writeState = overrides.writeRuntimeState ?? ((value) => writeRuntimeState(environment, value));
+  await writeState({
+    owner: "iris-founder-runtime",
+    bootId,
+    phase: "starting",
+    launcherPath: launcher,
+    processes: [{ owner: "iris-founder-runtime", service: "launcher", processId: child.pid, commandDigest }],
+    lastGreetingBootId: null,
+    updatedAt: new Date().toISOString(),
+  });
   const wait = overrides.sleep ?? sleep;
   let services;
   for (let attempt = 0; attempt < founderStartupAttempts; attempt += 1) {
     await wait(founderStartupPollMilliseconds);
     services = await founderRuntimeSnapshot(probe);
-    if (services.gateway.ready && services.voice.ready && services.search.ready) {
-      return { ok: true, started: true, ready: true, processId: child.pid, roots, services };
+    if (allReady(services)) {
+      await writeState({
+        owner: "iris-founder-runtime",
+        bootId,
+        phase: "healthy",
+        launcherPath: launcher,
+        processes: [{ owner: "iris-founder-runtime", service: "launcher", processId: child.pid, commandDigest }],
+        lastGreetingBootId: null,
+        greetingReady: true,
+        updatedAt: new Date().toISOString(),
+      });
+      await (overrides.openFounderApplication ?? (() => defaultOpenFounderApplication(runProgram, environment)))();
+      return { ok: true, started: true, ready: true, processId: child.pid, bootId, roots, services };
     }
   }
+  const stopStarted =
+    overrides.stopStartedProcess ??
+    ((processId) => runProgram("taskkill.exe", ["/PID", String(processId), "/T"], { timeout: 30_000 }));
+  await stopStarted(child.pid);
+  await (overrides.clearRuntimeState ?? (() => clearRuntimeState(environment)))();
   throw new Error(
     `The complete Founder runtime did not become ready after startup (process ${child.pid}).`,
   );
+}
+
+async function runtimeStatusWorkflow(options, overrides) {
+  const roots = await resolveWorkflowRoots({
+    coreRoot: options["core-root"],
+    environment: overrides.environment,
+  });
+  const probe = overrides.probe ?? defaultProbe;
+  const services = await founderRuntimeSnapshot(probe);
+  const environment = overrides.environment ?? process.env;
+  const state = await (overrides.readRuntimeState ?? (() => readRuntimeState(environment)))();
+  return {
+    ok: true,
+    phase: runtimePhase(services, state),
+    roots,
+    services,
+    ownedProcesses: Array.isArray(state?.processes) ? state.processes : [],
+    bootId: state?.bootId ?? null,
+    lastGreetingBootId: state?.lastGreetingBootId ?? null,
+  };
+}
+
+async function defaultStopOwnedProcess(process, state, runProgram) {
+  if (
+    process?.owner !== "iris-founder-runtime" ||
+    !Number.isInteger(process.processId) ||
+    process.processId <= 0 ||
+    typeof state?.launcherPath !== "string"
+  )
+    throw new Error("Refusing to stop an unverified runtime process.");
+  const escaped = state.launcherPath.replaceAll("'", "''");
+  const command = `$p=Get-CimInstance Win32_Process -Filter \"ProcessId=${String(process.processId)}\"; if($null -eq $p -or $p.CommandLine -notlike '*${escaped}*'){exit 7}`;
+  const verified = await runProgram("powershell.exe", ["-NoProfile", "-Command", command], { timeout: 20_000 });
+  if (verified.code === 7) throw new Error("Runtime process ownership no longer matches.");
+  if (verified.code !== 0) return false;
+  const stopped = await runProgram("taskkill.exe", ["/PID", String(process.processId), "/T"], { timeout: 30_000 });
+  return stopped.code === 0 || /not found|not running/iu.test(String(stopped.stderr));
+}
+
+async function stopWorkflow(options, overrides) {
+  const roots = await resolveWorkflowRoots({ coreRoot: options["core-root"], environment: overrides.environment });
+  const environment = overrides.environment ?? process.env;
+  const readState = overrides.readRuntimeState ?? (() => readRuntimeState(environment));
+  const clearState = overrides.clearRuntimeState ?? (() => clearRuntimeState(environment));
+  const state = await readState();
+  const runProgram = overrides.runProgram ?? defaultRunProgram;
+  const stopOwned = overrides.stopOwnedProcess ?? ((process) => defaultStopOwnedProcess(process, state, runProgram));
+  const stopped = [];
+  for (const process of [...(state?.processes ?? [])].reverse()) {
+    if (await stopOwned(process)) stopped.push(process.processId);
+  }
+  const stopSearch = join(roots.core, "scripts", "runtime", "stop-iris-search.ps1");
+  if (await pathExists(stopSearch))
+    await runProgram("powershell.exe", ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", stopSearch], {
+      cwd: roots.core,
+      environment,
+      timeout: 60_000,
+    });
+  await clearState();
+  return { ok: true, stopped: stopped.length > 0, stoppedProcessIds: stopped, roots };
+}
+
+async function restartWorkflow(options, overrides) {
+  await stopWorkflow(options, overrides);
+  return startWorkflow(options, overrides);
+}
+
+async function repairWorkflow(options, overrides) {
+  const status = await runtimeStatusWorkflow(options, overrides);
+  if (status.phase === "healthy") return { ...status, repaired: false };
+  if (status.phase !== "stopped") await stopWorkflow(options, overrides);
+  const started = await startWorkflow(options, overrides);
+  return { ...started, repaired: true };
+}
+
+async function startupRegistrationWorkflow(options, overrides, install) {
+  const roots = await resolveWorkflowRoots({ coreRoot: options["core-root"], environment: overrides.environment });
+  const script = join(
+    roots.core,
+    "scripts",
+    "runtime",
+    install ? "install-founder-startup.ps1" : "remove-founder-startup.ps1",
+  );
+  if (!(await pathExists(script))) throw new Error(`Founder startup script is missing: ${script}.`);
+  const runProgram = overrides.runProgram ?? defaultRunProgram;
+  const arguments_ = ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script, "-IrisRepository", roots.core];
+  if (options["what-if"] === true) arguments_.push("-WhatIf");
+  const result = await runProgram("powershell.exe", arguments_, {
+    cwd: roots.core,
+    environment: overrides.environment ?? process.env,
+    timeout: 60_000,
+  });
+  if (result.code !== 0) throw new Error(`Founder startup ${install ? "installation" : "removal"} failed.`);
+  return { ok: true, installed: install, script, whatIf: options["what-if"] === true };
 }
 
 function safeRelativePath(value) {
@@ -522,6 +723,8 @@ Usage:
   iris-workflow doctor [--json]
   iris-workflow status [--json]
   iris-workflow start [--json]
+  iris-workflow runtime status|start|stop|restart|repair [--json]
+  iris-workflow runtime install-startup|remove-startup [--what-if] [--json]
   iris-workflow verify --repo core|command-center [--profile focused|full] [--test PATH] [--json]
   iris-workflow candidate inspect --path PATH [--json]
   iris-workflow candidate clean --repo core|command-center --path PATH --confirm-exact-path PATH [--json]
@@ -542,7 +745,7 @@ export function parseArguments(tokens) {
       continue;
     }
     const key = token.slice(2);
-    if (key === "json" || key === "help") {
+    if (key === "json" || key === "help" || key === "what-if") {
       options[key] = true;
       continue;
     }
@@ -568,6 +771,13 @@ export async function runWorkflow(argv, overrides = {}) {
   if (parsed.positional[0] === "status") return workflowStatus(parsed.options, overrides);
   if (parsed.positional[0] === "doctor") return doctorWorkflow(parsed.options, overrides);
   if (parsed.positional[0] === "start") return startWorkflow(parsed.options, overrides);
+  if (parsed.positional[0] === "runtime" && parsed.positional[1] === "status") return runtimeStatusWorkflow(parsed.options, overrides);
+  if (parsed.positional[0] === "runtime" && parsed.positional[1] === "start") return startWorkflow(parsed.options, overrides);
+  if (parsed.positional[0] === "runtime" && parsed.positional[1] === "stop") return stopWorkflow(parsed.options, overrides);
+  if (parsed.positional[0] === "runtime" && parsed.positional[1] === "restart") return restartWorkflow(parsed.options, overrides);
+  if (parsed.positional[0] === "runtime" && parsed.positional[1] === "repair") return repairWorkflow(parsed.options, overrides);
+  if (parsed.positional[0] === "runtime" && parsed.positional[1] === "install-startup") return startupRegistrationWorkflow(parsed.options, overrides, true);
+  if (parsed.positional[0] === "runtime" && parsed.positional[1] === "remove-startup") return startupRegistrationWorkflow(parsed.options, overrides, false);
   if (parsed.positional[0] === "verify") return verifyWorkflow(parsed.options, overrides);
   if (parsed.positional[0] === "candidate" && parsed.positional[1] === "inspect") {
     return candidateInspect(parsed.options, overrides);
