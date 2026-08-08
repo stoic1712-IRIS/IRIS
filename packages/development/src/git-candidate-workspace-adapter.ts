@@ -35,6 +35,35 @@ function digestText(value: string): string {
   return `sha256:${createHash("sha256").update(value).digest("hex")}`;
 }
 
+function digestBytes(value: Buffer): string {
+  return `sha256:${createHash("sha256").update(value).digest("hex")}`;
+}
+
+function asBuffer(value: Buffer | string | undefined): Buffer {
+  if (Buffer.isBuffer(value)) return value;
+  return Buffer.from(value ?? "", "utf8");
+}
+
+function executeFileRaw(
+  executable: string,
+  args: string[],
+  options: { cwd: string; timeout: number; maxBuffer: number; signal: AbortSignal },
+): Promise<{ stdout: Buffer; stderr: Buffer }> {
+  return new Promise((resolvePromise, rejectPromise) => {
+    execFile(executable, args, { ...options, encoding: null }, (error, stdout, stderr) => {
+      const observed = { stdout: asBuffer(stdout), stderr: asBuffer(stderr) };
+      if (error !== null) {
+        Object.assign(error, observed);
+        rejectPromise(
+          error instanceof Error ? error : new Error("EXECUTABLE_WORKER_COMMAND_FAILED"),
+        );
+        return;
+      }
+      resolvePromise(observed);
+    });
+  });
+}
+
 const credentialPatterns = [
   /github_pat_[a-z0-9_]{20,}/giu,
   /gh[pousr]_[a-z0-9]{20,}/giu,
@@ -291,27 +320,27 @@ export class GitCandidateWorkspaceAdapter implements ExecutableWorkerAdapter {
     const executable = command[0];
     if (executable === undefined) throw new Error("EXECUTABLE_WORKER_COMMAND_EMPTY");
     let exitCode = 0;
-    let output: string;
+    let observed: { stdout: Buffer; stderr: Buffer };
     try {
-      const result = await executeFile(executable, command.slice(1), {
+      observed = await executeFileRaw(executable, command.slice(1), {
         cwd: workspace.path,
         timeout: 300_000,
         maxBuffer: 1_000_000,
         signal,
       });
-      output = `${result.stdout}${result.stderr}`;
     } catch (error) {
       const failure = error as {
         code?: number | string;
-        stdout?: string;
-        stderr?: string;
-        message?: string;
+        stdout?: Buffer | string;
+        stderr?: Buffer | string;
       };
       exitCode = typeof failure.code === "number" ? failure.code : 1;
-      output = `${failure.stdout ?? ""}${failure.stderr ?? ""}${failure.message ?? ""}`;
+      observed = { stdout: asBuffer(failure.stdout), stderr: asBuffer(failure.stderr) };
     }
-    const outputBytes = Buffer.byteLength(output);
-    const outputDigest = digestText(output);
+    const rawOutput = Buffer.concat([observed.stdout, observed.stderr]);
+    const outputBytes = rawOutput.length;
+    const outputDigest = digestBytes(rawOutput);
+    const output = rawOutput.toString("utf8");
     const redacted = redactOutput(output);
     const bounded = truncateUtf8(redacted.output, 64_000);
     return executableWorkerCheckSchema.parse({

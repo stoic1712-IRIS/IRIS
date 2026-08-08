@@ -224,8 +224,17 @@ export class ExecutableWorkerRuntime {
     if (journal === null) throw new Error("EXECUTABLE_WORKER_JOURNAL_NOT_FOUND");
     if (!verifyEventChain(journal.events))
       throw new Error("EXECUTABLE_WORKER_JOURNAL_EVENT_CHAIN_INVALID");
-    if (journal.journalVersion !== 2)
+    if (journal.journalVersion !== 3 || journal.approvalBindingDigest === undefined)
       throw new Error("EXECUTABLE_WORKER_JOURNAL_EVIDENCE_INCOMPLETE");
+    if (
+      journal.approvalBindingDigest !==
+        digest({
+          proposal: journal.proposal,
+          approval: journal.approval,
+        }) ||
+      !this.#approvalMatches(journal.proposal, journal.approval)
+    )
+      throw new Error("EXECUTABLE_WORKER_JOURNAL_APPROVAL_BINDING_INVALID");
     if (journal.state !== "recovery-ready" && journal.state !== "stopped")
       throw new Error("EXECUTABLE_WORKER_NOT_RECOVERABLE");
     if (journal.workspace === undefined)
@@ -431,11 +440,15 @@ export class ExecutableWorkerRuntime {
         throw new Error(`EXECUTABLE_WORKER_PATH_FORBIDDEN:${mutation.path}`);
       if (mutation.content !== undefined) {
         bytes += Buffer.byteLength(mutation.content);
+        if (mutation.content.includes("\0"))
+          throw new Error(`EXECUTABLE_WORKER_NUL_CONTENT_DENIED:${mutation.path}`);
         if (containsCredentialLikeText(mutation.content))
           throw new Error("EXECUTABLE_WORKER_CREDENTIAL_OUTPUT_DENIED");
       }
       for (const replacement of mutation.replacements ?? []) {
         bytes += Buffer.byteLength(replacement.newText);
+        if (replacement.newText.includes("\0"))
+          throw new Error(`EXECUTABLE_WORKER_NUL_CONTENT_DENIED:${mutation.path}`);
         if (containsCredentialLikeText(replacement.newText))
           throw new Error("EXECUTABLE_WORKER_CREDENTIAL_OUTPUT_DENIED");
       }
@@ -507,6 +520,7 @@ export class ExecutableWorkerRuntime {
       const content = await this.#adapter.readFile(workspace, path);
       if (content === null) continue;
       changedBytes += Buffer.byteLength(content);
+      if (content.includes("\0")) throw new Error(`EXECUTABLE_WORKER_NUL_CONTENT_DENIED:${path}`);
       if (containsCredentialLikeText(content))
         throw new Error(`EXECUTABLE_WORKER_CREDENTIAL_OUTPUT_DENIED:${path}`);
     }
@@ -552,10 +566,11 @@ export class ExecutableWorkerRuntime {
     approval: ExecutableWorkerApproval,
   ): ExecutableWorkerJournal {
     return {
-      journalVersion: 2,
+      journalVersion: 3,
       executionId: proposal.executionId,
       proposal,
       approval,
+      approvalBindingDigest: digest({ proposal, approval }),
       state: "preflight",
       iteration: 0,
       summary: "Executable-worker request received for capability preflight.",

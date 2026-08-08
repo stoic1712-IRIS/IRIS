@@ -30,7 +30,7 @@ const runFile = promisify(execFile);
 const baseRevision = "a".repeat(40);
 const now = "2026-08-06T12:00:00.000Z";
 
-function sha256(value: string): `sha256:${string}` {
+function sha256(value: string | Buffer): `sha256:${string}` {
   return `sha256:${createHash("sha256").update(value).digest("hex")}`;
 }
 
@@ -126,6 +126,7 @@ class FixtureAdapter implements ExecutableWorkerAdapter {
   cleanupCount = 0;
   commandResults: number[] = [];
   cleanupResults: boolean[] = [];
+  nulOnCommand: string | undefined;
 
   preflight(): Promise<ExecutableWorkerPreflight> {
     return Promise.resolve({
@@ -165,6 +166,7 @@ class FixtureAdapter implements ExecutableWorkerAdapter {
     return Promise.resolve();
   }
   run(_workspace: ExecutableWorkerWorkspace, command: string[]): Promise<ExecutableWorkerCheck> {
+    if (command[0] === this.nulOnCommand) this.files.set("src/math.ts", "normalized\0content\n");
     return Promise.resolve(check(command, this.commandResults.shift() ?? 0));
   }
   changedPaths(): Promise<string[]> {
@@ -282,6 +284,37 @@ describe("Cycle Eight executable worker contracts and runtime", () => {
     );
     expect(result.summary).toContain("EXECUTABLE_WORKER_REPLACEMENT_NOT_UNIQUE");
     expect(adapter.files.get("src/math.ts")).toBe("const value = 1;\nconst other = 1;\n");
+  });
+
+  it("denies a stale content digest before applying an otherwise unique replacement", async () => {
+    const adapter = new FixtureAdapter();
+    const current = proposal({ materializationCommands: [], baselineCommands: [] });
+    const result = await new ExecutableWorkerRuntime({
+      adapter,
+      journals: new MemoryExecutionJournalStore(),
+      now: () => new Date(now),
+    }).execute(
+      current,
+      approval(current),
+      new SequencedAgent([
+        {
+          summary: "Attempt a unique replacement against a stale source digest.",
+          mutations: [
+            {
+              path: "src/math.ts",
+              operation: "update",
+              expectedContentDigest: sha256("stale content\n"),
+              replacements: [
+                { oldText: "export const value = 1;", newText: "export const value = 2;" },
+              ],
+              rationale: "Prove optimistic concurrency rejects stale source state.",
+            },
+          ],
+        },
+      ]),
+    );
+    expect(result.summary).toContain("EXECUTABLE_WORKER_CONTENT_DIGEST_MISMATCH");
+    expect(adapter.files.get("src/math.ts")).toBe("export const value = 1;\n");
   });
 
   it("denies overlapping exact replacements without changing the file", async () => {
@@ -415,6 +448,51 @@ describe("Cycle Eight executable worker contracts and runtime", () => {
       cleanupVerified: true,
       eventChainVerified: true,
     });
+  });
+
+  it("fails closed when a restart journal changes the approved proposal", async () => {
+    const adapter = new FixtureAdapter();
+    const journals = new MemoryExecutionJournalStore();
+    const runtime = new ExecutableWorkerRuntime({ adapter, journals, now: () => new Date(now) });
+    const current = proposal();
+    const controller = new AbortController();
+    controller.abort();
+    await runtime.execute(
+      current,
+      approval(current),
+      new SequencedAgent([updatePlan()]),
+      controller.signal,
+    );
+    const stored = await journals.load(current.executionId);
+    if (stored === null) throw new Error("Expected the interrupted journal to be durable.");
+    await journals.save({
+      ...stored,
+      proposal: {
+        ...stored.proposal,
+        maximumChangedFiles: stored.proposal.maximumChangedFiles + 1,
+      },
+    });
+    await expect(
+      runtime.resume(current.executionId, new SequencedAgent([updatePlan()])),
+    ).rejects.toThrow("EXECUTABLE_WORKER_JOURNAL_APPROVAL_BINDING_INVALID");
+  });
+
+  it("rejects NUL bytes introduced by a normalization command before checkpointing", async () => {
+    const adapter = new FixtureAdapter();
+    adapter.nulOnCommand = "normalize";
+    const current = proposal({
+      materializationCommands: [],
+      baselineCommands: [],
+      normalizationCommands: [["normalize"]],
+      commands: [["verify"]],
+    });
+    const result = await new ExecutableWorkerRuntime({
+      adapter,
+      journals: new MemoryExecutionJournalStore(),
+      now: () => new Date(now),
+    }).execute(current, approval(current), new SequencedAgent([updatePlan()]));
+    expect(result).toMatchObject({ status: "recovery-ready" });
+    expect(result.summary).toContain("EXECUTABLE_WORKER_NUL_CONTENT_DENIED:src/math.ts");
   });
 
   it("persists every command result and supplies the last failed checks after restart", async () => {
@@ -593,6 +671,28 @@ describe("Cycle Eight real disposable Git workspace", () => {
       expect(result.outputRedacted).toBe(true);
       expect(result.outputTruncated).toBe(true);
       expect(Buffer.byteLength(result.output)).toBeLessThanOrEqual(64_000);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  });
+
+  it("hashes observed stdout and stderr bytes without synthetic process error text", async () => {
+    const directory = await mkdtemp(join(tmpdir(), "iris-cycle8-output-bytes-test-"));
+    try {
+      const stdout = Buffer.from([0xff, 0x00, 0x61]);
+      const stderr = Buffer.from([0xfe, 0x62]);
+      const result = await new GitCandidateWorkspaceAdapter({ canonicalPath: directory }).run(
+        { id: "workspace_output_bytes", path: directory, baseRevision, disposable: true },
+        [
+          "node",
+          "-e",
+          "process.stdout.write(Buffer.from([255,0,97]));process.stderr.write(Buffer.from([254,98]));process.exit(2)",
+        ],
+        new AbortController().signal,
+      );
+      expect(result.exitCode).toBe(2);
+      expect(result.outputDigest).toBe(sha256(Buffer.concat([stdout, stderr])));
+      expect(result.outputBytes).toBe(stdout.length + stderr.length);
     } finally {
       await rm(directory, { recursive: true, force: true });
     }

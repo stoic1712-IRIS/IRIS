@@ -32,7 +32,7 @@ Update:
 - `packages/development/src/executable-worker-runtime.ts`
 - `packages/development/src/git-candidate-workspace-adapter.ts`
 
-Implement proposal-bound baseline and normalization commands, digest-bound exact replacements, atomic writes, journal version 2 attempt evidence, redacted command persistence, restart-safe previous checks, structured cleanup evidence, root containment, bounded cleanup retries, and truthful lifecycle states.
+Implement proposal-bound baseline and normalization commands, digest-bound exact replacements, atomic writes, journal version 3 approval-binding and attempt evidence, redacted command persistence, restart-safe previous checks, structured cleanup evidence, root containment, bounded cleanup retries, and truthful lifecycle states.
 
 Update `scripts/development/cycle-eight-live-proof.mjs` only for compile-time contract compatibility; do not run a live proof without a new exact Founder approval.
 

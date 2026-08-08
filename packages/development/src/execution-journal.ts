@@ -61,10 +61,11 @@ const executableWorkerAttemptEvidenceSchema = z
 
 const executableWorkerJournalSchema = z
   .object({
-    journalVersion: z.union([z.literal(1), z.literal(2)]).default(1),
+    journalVersion: z.union([z.literal(1), z.literal(2), z.literal(3)]).default(1),
     executionId: z.string().regex(/^execution_cycle8-[a-z0-9-]{8,100}$/u),
     proposal: executableWorkerProposalSchema,
     approval: executableWorkerApprovalSchema,
+    approvalBindingDigest: sha256Schema.optional(),
     state: executableWorkerStateSchema,
     iteration: z.number().int().min(0).max(5),
     summary: z.string().min(1).max(10_000),
@@ -107,10 +108,11 @@ const executableWorkerJournalSchema = z
   .strict();
 
 export interface ExecutableWorkerJournal {
-  journalVersion: 1 | 2;
+  journalVersion: 1 | 2 | 3;
   executionId: string;
   proposal: ExecutableWorkerProposal;
   approval: ExecutableWorkerApproval;
+  approvalBindingDigest?: string | undefined;
   state: z.infer<typeof executableWorkerStateSchema>;
   iteration: number;
   summary: string;

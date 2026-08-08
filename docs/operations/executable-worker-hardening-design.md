@@ -57,9 +57,9 @@ Journal version 2 stores:
 - start and completion timestamps; and
 - structured cleanup evidence.
 
-Command evidence stores the exact command, exit code, raw-output SHA-256 digest, raw byte count, whether presentation was truncated, and a bounded redacted presentation. Credential-like text is removed before journal persistence or model reuse. Raw command output is never journaled.
+Command evidence stores the exact command, exit code, SHA-256 digest and byte count of the observed stdout bytes followed by observed stderr bytes, whether presentation was truncated, and a bounded redacted presentation. Synthetic process-error text is never added to the observed-byte digest. Credential-like text is removed before journal persistence or model reuse. Raw command output is never journaled.
 
-Resume uses the latest persisted failed checks and unchanged proposal. Version 1 journals remain loadable for inspection and cleanup, but resume fails closed because they cannot prove complete command evidence.
+Resume uses the latest persisted failed checks and unchanged proposal. Journal version 3 binds the exact proposal and approval and revalidates that binding before any resumed provider or workspace action. Earlier journals remain loadable for inspection and cleanup, but resume fails closed because they cannot prove the complete approval and command evidence.
 
 ### Verified cleanup
 
