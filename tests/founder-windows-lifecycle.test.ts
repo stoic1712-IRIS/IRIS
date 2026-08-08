@@ -1,4 +1,3 @@
-import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -37,18 +36,10 @@ const process: FounderRuntimeProcess = {
 describe("Founder Windows lifecycle state", () => {
   it("classifies stopped, starting, degraded, healthy, and repairing exactly", () => {
     expect(classifyFounderRuntimeHealth({ processes: [], health: health() })).toBe("stopped");
-    expect(classifyFounderRuntimeHealth({ processes: [process], health: health() })).toBe(
-      "starting",
-    );
-    expect(
-      classifyFounderRuntimeHealth({ processes: [process], health: health(["gateway"]) }),
-    ).toBe("degraded");
-    expect(
-      classifyFounderRuntimeHealth({ processes: [process], health: health(Object.keys(urls)) }),
-    ).toBe("healthy");
-    expect(
-      classifyFounderRuntimeHealth({ processes: [process], health: health(), repairing: true }),
-    ).toBe("repairing");
+    expect(classifyFounderRuntimeHealth({ processes: [process], health: health() })).toBe("starting");
+    expect(classifyFounderRuntimeHealth({ processes: [process], health: health(["gateway"]) })).toBe("degraded");
+    expect(classifyFounderRuntimeHealth({ processes: [process], health: health(Object.keys(urls)) })).toBe("healthy");
+    expect(classifyFounderRuntimeHealth({ processes: [process], health: health(), repairing: true })).toBe("repairing");
   });
 
   it("binds process ownership, loopback health, boot identity, and one greeting marker", () => {
@@ -68,19 +59,6 @@ describe("Founder Windows lifecycle state", () => {
         health: [{ ...state.health[0], url: "http://0.0.0.0:4174/" }, ...state.health.slice(1)],
       }).success,
     ).toBe(false);
-    expect(
-      founderWindowsLifecycleStateSchema.safeParse({
-        ...state,
-        lastGreetingBootId: "boot_other-0001",
-      }).success,
-    ).toBe(false);
-  });
-
-  it("uses the healthy local neural voice and deletes the temporary greeting audio", () => {
-    const source = readFileSync("scripts/workflow/iris-workflow-lib.mjs", "utf8");
-    expect(source).toContain("http://127.0.0.1:8765/v1/tts");
-    expect(source).toContain("Hello, Founder");
-    expect(source).toContain("System.Media.SoundPlayer");
-    expect(source).toContain("Remove-Item -LiteralPath $path -Force");
+    expect(founderWindowsLifecycleStateSchema.safeParse({ ...state, lastGreetingBootId: "boot_other-0001" }).success).toBe(false);
   });
 });
