@@ -21,5 +21,7 @@ function Convert-ToWslPath([string]$Path) {
 $irisWslPath = Convert-ToWslPath $irisRepository
 $commandCenterWslPath = Convert-ToWslPath $commandCenter
 $supervisorWslPath = "$irisWslPath/scripts/runtime/start-founder-command-center.sh"
+$runtimeStateWindowsPath = Join-Path $env:LOCALAPPDATA "STOIC-IRIS\runtime\founder-runtime.json"
+$runtimeStateWslPath = Convert-ToWslPath $runtimeStateWindowsPath
 
-wsl -d Ubuntu -- bash $supervisorWslPath $irisWslPath $commandCenterWslPath
+wsl -d Ubuntu -- env "IRIS_RUNTIME_STATE_PATH=$runtimeStateWslPath" bash $supervisorWslPath $irisWslPath $commandCenterWslPath

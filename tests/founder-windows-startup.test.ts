@@ -7,6 +7,7 @@ import { runWorkflow } from "../scripts/workflow/iris-workflow-lib.mjs";
 
 const installScript = resolve("scripts/runtime/install-founder-startup.ps1");
 const removeScript = resolve("scripts/runtime/remove-founder-startup.ps1");
+const launcherScript = resolve("scripts/runtime/start-founder-command-center.ps1");
 
 describe("Founder Windows startup registration", () => {
   it("uses a non-elevated current-user logon task through the canonical health-gated workflow", () => {
@@ -27,6 +28,14 @@ describe("Founder Windows startup registration", () => {
     expect(source).toContain('$taskName = "STOIC-IRIS Founder Runtime"');
     expect(source).toContain("Unregister-ScheduledTask -TaskName $taskName -Confirm:$false");
     expect(source).toContain("[switch]$WhatIf");
+  });
+
+  it("passes only the bounded lifecycle-state path to the Command Center", () => {
+    const source = readFileSync(launcherScript, "utf8");
+    expect(source).toContain("IRIS_RUNTIME_STATE_PATH");
+    expect(source).toContain("founder-runtime.json");
+    expect(source).toContain("Convert-ToWslPath $runtimeStateWindowsPath");
+    expect(source).not.toContain("IRIS_FOUNDER_PASSWORD");
   });
 
   it("routes install and removal through exact scripts without embedding credentials", async () => {
