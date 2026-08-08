@@ -14,6 +14,7 @@ import {
   cognitiveTurnSnapshotSchema,
   primaryIrisOrchestratorModel,
   requiredPresentationEvidence,
+  specialistArtifactContentDigest,
   validateCognitiveDelegation,
   type CognitiveDelegationEnvelope,
   type CognitiveDelegationPolicy,
@@ -31,7 +32,12 @@ import {
 } from "./cognitive-turn-contracts.js";
 import { CognitiveTurnError } from "./cognitive-turn-errors.js";
 import { ModelLeaseScheduler } from "./model-lease-scheduler.js";
-import { routeIrisModel, type IrisModelName, type ModelRoute } from "./model-router.js";
+import {
+  routeIrisModel,
+  type IrisModelName,
+  type ModelRoute,
+  type ModelRoutePurpose,
+} from "./model-router.js";
 
 export interface CognitiveProviderAdapter {
   plan(
@@ -56,7 +62,10 @@ export interface CognitiveWorkerAdapter {
 
 export interface CognitiveTurnStore {
   load(requestId: string): Promise<CognitiveTurnSnapshot | null>;
-  save(snapshot: CognitiveTurnSnapshot): Promise<void>;
+  compareAndSet(
+    snapshot: CognitiveTurnSnapshot,
+    expectedGeneration: number | null,
+  ): Promise<boolean>;
 }
 
 export interface CognitiveTransitionSink {
@@ -81,11 +90,80 @@ function sameRoute(actual: ModelRoute, expected: ModelRoute): boolean {
   return JSON.stringify(actual) === JSON.stringify(expected);
 }
 
+const codingIntentPattern =
+  /\b(code|coding|program|repository|repo|refactor|debug|bug|typescript|javascript|python|rust|function|class|api|database|sql|test suite|pull request|implementation|website|frontend|backend|compile|build error)\b/iu;
+const researchIntentPattern =
+  /\b(research|sources?|citations?|evidence|fact[- ]?check|verify|audit|review|compare|comparison|investigate)\b/iu;
+const reasoningIntentPattern =
+  /\b(reason|reasoning|analy[sz]e|strategy|plan|architecture|trade[- ]?offs?|diagnose|root cause|security|risk|decide|decision|best approach|step by step|think deeply|complex)\b/iu;
+
+function materialPurpose(utterance: string): ModelRoutePurpose | null {
+  if (codingIntentPattern.test(utterance)) return "agentic-coding";
+  if (researchIntentPattern.test(utterance)) return "research-review";
+  if (reasoningIntentPattern.test(utterance)) return "deep-reasoning";
+  return null;
+}
+
+function redactSteering(note: string): string {
+  return note
+    .replace(
+      /-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z0-9 ]*PRIVATE KEY-----/gu,
+      "[REDACTED_PRIVATE_KEY]",
+    )
+    .replace(
+      /\b(?:github_pat_[A-Za-z0-9_]{20,}|gh[oprsu]_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9_-]{20,})\b/gu,
+      "[REDACTED_SECRET]",
+    )
+    .replace(/\bBearer\s+[A-Za-z0-9._~+/-]+=*/giu, "Bearer [REDACTED]")
+    .replace(/([a-z][a-z0-9+.-]*:\/\/)[^\s/@:]+:[^\s/@]+@/giu, "$1[REDACTED]@")
+    .replace(/\b(?:api[_ -]?key|password|secret|token)\b\s*[:=]\s*\S+/giu, "[REDACTED_SECRET]");
+}
+
+function distinctReviewer(
+  specialist: IrisModelName,
+  availableModels: readonly IrisModelName[],
+): IrisModelName | null {
+  const preferred: readonly IrisModelName[] =
+    specialist === "gpt-oss:20b"
+      ? ["qwen3.6:27b", "qwen3-coder:30b"]
+      : ["gpt-oss:20b", "qwen3.6:27b"];
+  return preferred.find((model) => model !== specialist && availableModels.includes(model)) ?? null;
+}
+
+function enforceRoutePolicy(request: CognitiveTurnRequest, routed: ModelRoute): ModelRoute {
+  const purpose = materialPurpose(request.utterance);
+  if (purpose === null) {
+    if (routed.model === "qwen3:8b" && request.riskClass !== "R0")
+      throw new CognitiveTurnError("COGNITIVE_SPECIALIST_UNAVAILABLE", {
+        safeDetails: { requiredModel: "qwen3.6:27b" },
+      });
+    return routed;
+  }
+  if (routed.model === "qwen3:8b" || routed.fallbackUsed) {
+    const requiredModel = purpose === "agentic-coding" ? "qwen3-coder:30b" : "gpt-oss:20b";
+    throw new CognitiveTurnError("COGNITIVE_SPECIALIST_UNAVAILABLE", {
+      retryable: true,
+      safeDetails: { requiredModel },
+    });
+  }
+  return {
+    ...routed,
+    purpose,
+    independentReviewModel:
+      purpose === "agentic-coding"
+        ? routed.model !== "gpt-oss:20b" && request.availableModels.includes("gpt-oss:20b")
+          ? "gpt-oss:20b"
+          : null
+        : distinctReviewer(routed.model, request.availableModels),
+  };
+}
+
 function completionFor(
   specialist: CognitiveSpecialistArtifact,
-  review: CognitiveReviewArtifact,
+  review: CognitiveReviewArtifact | null,
 ): CognitiveFounderPresentation["completion"] {
-  if (specialist.status === "passed" && review.verdict === "pass") return "completed";
+  if (specialist.status === "passed" && (review === null || review.verdict === "pass"))
+    return "completed";
   if (specialist.status === "failed") return "failed";
   return "blocked";
 }
@@ -94,7 +172,7 @@ export interface FounderPresentationAssembly {
   readonly request: CognitiveTurnRequest;
   readonly synthesis: unknown;
   readonly specialist: CognitiveSpecialistArtifact;
-  readonly review: CognitiveReviewArtifact;
+  readonly review: CognitiveReviewArtifact | null;
   readonly degraded?: boolean;
 }
 
@@ -121,7 +199,7 @@ export function assembleFounderPresentation(
     provenance: {
       orchestratorModel: primaryIrisOrchestratorModel,
       specialistModel: assembly.specialist.route.model,
-      reviewerModel: assembly.review.reviewerModel,
+      reviewerModel: assembly.review?.reviewerModel ?? null,
     },
     degraded: assembly.degraded ?? false,
     authority: "none",
@@ -175,10 +253,7 @@ export class CognitiveOrchestrator {
   async steer(requestId: string, note: string): Promise<CognitiveTurnSnapshot> {
     const current = await this.#requireState(requestId);
     if (this.#isTerminal(current.phase) || current.phase === "cancelled") return current;
-    const safeNote = note
-      .trim()
-      .slice(0, 1_000)
-      .replace(/\b(?:api[_ -]?key|password|secret|token)\b\s*[:=]\s*\S+/giu, "[REDACTED_SECRET]");
+    const safeNote = redactSteering(note.trim()).slice(0, 1_000);
     if (safeNote.length === 0) throw new CognitiveTurnError("COGNITIVE_INVALID_TRANSITION");
     const next = cognitiveTurnSnapshotSchema.parse({
       ...current,
@@ -186,7 +261,7 @@ export class CognitiveOrchestrator {
       steeringNotes: [...current.steeringNotes, safeNote].slice(-10),
       updatedAt: this.#now(),
     });
-    await this.#store.save(next);
+    await this.#commit(next, current.generation);
     return next;
   }
 
@@ -209,7 +284,12 @@ export class CognitiveOrchestrator {
     if (current.route === null || current.delegation?.mode !== "delegated") {
       throw new CognitiveTurnError("COGNITIVE_RESUME_BINDING_MISMATCH");
     }
-    if (current.specialistArtifact !== null && current.reviewArtifact !== null) {
+    const reviewRequired = current.policy.requiredReviewPurposes.includes(current.route.purpose);
+    if (
+      current.specialistArtifact !== null &&
+      (current.reviewArtifact !== null || !reviewRequired)
+    ) {
+      if (current.synthesisAttempts >= 2) return current;
       const resuming = await this.#transition(
         current,
         "orchestrator-synthesizing",
@@ -288,11 +368,14 @@ export class CognitiveOrchestrator {
       updatedAt: this.#now(),
     });
     snapshot = await this.#transition(snapshot, "accepted", null, "Founder request accepted.");
-    const route = routeIrisModel({
-      utterance: request.utterance,
-      availableModels: new Set(request.availableModels),
-      hasImage: request.hasImage,
-    });
+    const route = enforceRoutePolicy(
+      request,
+      routeIrisModel({
+        utterance: request.utterance,
+        availableModels: new Set(request.availableModels),
+        hasImage: request.hasImage,
+      }),
+    );
     if (!request.availableModels.includes(primaryIrisOrchestratorModel)) {
       if (
         request.riskClass === "R0" &&
@@ -365,7 +448,12 @@ export class CognitiveOrchestrator {
       return this.#transition(snapshot, "completed", null, "Direct dialogue completed.");
     }
 
-    return this.#runDelegated(snapshot, validated.route, signal);
+    return this.#runDelegated(
+      snapshot,
+      validated.route,
+      validated.requiresIndependentReview,
+      signal,
+    );
   }
 
   async #runDegradedDialogue(
@@ -415,13 +503,18 @@ export class CognitiveOrchestrator {
       leaseEvents: this.#leases.events(),
       updatedAt: this.#now(),
     });
-    await this.#store.save(snapshot);
+    snapshot = cognitiveTurnSnapshotSchema.parse({
+      ...snapshot,
+      generation: snapshot.generation + 1,
+    });
+    await this.#commit(snapshot, snapshot.generation - 1);
     return snapshot;
   }
 
   async #runDelegated(
     initial: CognitiveTurnSnapshot,
     route: ModelRoute,
+    requiresIndependentReview = initial.policy.requiredReviewPurposes.includes(route.purpose),
     signal?: AbortSignal,
   ): Promise<CognitiveTurnSnapshot> {
     const request = initial.request;
@@ -477,12 +570,16 @@ export class CognitiveOrchestrator {
       "Specialist output was bound and verification evidence recorded.",
     );
 
-    const reviewerModel =
-      route.purpose === "agentic-coding"
-        ? request.availableModels.includes("gpt-oss:20b")
-          ? "gpt-oss:20b"
-          : null
-        : route.independentReviewModel;
+    if (!requiresIndependentReview) {
+      snapshot = await this.#transition(
+        snapshot,
+        "orchestrator-synthesizing",
+        primaryIrisOrchestratorModel,
+        "Qwen primary synthesis started after bounded specialist verification.",
+      );
+      return this.#synthesizeValidated(snapshot, route, specialist, null, signal);
+    }
+    const reviewerModel = route.independentReviewModel;
     if (reviewerModel === null || reviewerModel === route.model) {
       const unavailable = cognitiveTurnSnapshotSchema.parse({
         ...snapshot,
@@ -545,7 +642,7 @@ export class CognitiveOrchestrator {
     initial: CognitiveTurnSnapshot,
     route: ModelRoute,
     specialist: CognitiveSpecialistArtifact,
-    review: CognitiveReviewArtifact,
+    review: CognitiveReviewArtifact | null,
     signal?: AbortSignal,
   ): Promise<CognitiveTurnSnapshot> {
     const request = initial.request;
@@ -562,14 +659,15 @@ export class CognitiveOrchestrator {
         label,
         contentDigest,
       })),
-      completionEligible: specialist.status === "passed" && review.verdict === "pass",
+      completionEligible:
+        specialist.status === "passed" && (review === null || review.verdict === "pass"),
       steeringNotes: initial.steeringNotes,
       authority: "none",
     } as const;
     let snapshot = initial;
     let repairFailureCode: "COGNITIVE_EVIDENCE_MISMATCH" | "COGNITIVE_SYNTHESIS_INVALID" | null =
       null;
-    for (let attempt = 1; attempt <= 2; attempt += 1) {
+    for (let attempt = initial.synthesisAttempts + 1; attempt <= 2; attempt += 1) {
       const synthesisInput = cognitiveSynthesisInputSchema.parse({
         ...synthesisInputBase,
         repairFailureCode,
@@ -606,7 +704,11 @@ export class CognitiveOrchestrator {
           safeFailureCode: repairFailureCode,
           updatedAt: this.#now(),
         });
-        await this.#store.save(snapshot);
+        snapshot = cognitiveTurnSnapshotSchema.parse({
+          ...snapshot,
+          generation: snapshot.generation + 1,
+        });
+        await this.#commit(snapshot, snapshot.generation - 1);
         if (attempt === 2) {
           return this.#transition(
             snapshot,
@@ -676,6 +778,10 @@ export class CognitiveOrchestrator {
     if (!sameRoute(artifact.route, route)) {
       throw new CognitiveTurnError("COGNITIVE_ROUTE_MISMATCH");
     }
+    requiredPresentationEvidence(artifact, null);
+    if (artifact.artifactDigest !== specialistArtifactContentDigest(artifact)) {
+      throw new CognitiveTurnError("COGNITIVE_EVIDENCE_MISMATCH");
+    }
   }
 
   #validateReview(
@@ -695,6 +801,7 @@ export class CognitiveOrchestrator {
     if (review.reviewerModel !== reviewerModel) {
       throw new CognitiveTurnError("COGNITIVE_REVIEWER_UNAVAILABLE");
     }
+    requiredPresentationEvidence(specialist, review);
   }
 
   async #transition(
@@ -727,8 +834,21 @@ export class CognitiveOrchestrator {
       leaseEvents: this.#leases.events(),
       updatedAt: event.occurredAt,
     });
-    await this.#store.save(next);
+    const expectedGeneration =
+      snapshot.transitionEvents.length === 0 && snapshot.generation === 0
+        ? null
+        : snapshot.generation;
+    await this.#commit(next, expectedGeneration);
     await this.#transitions.publish(event);
     return next;
+  }
+
+  async #commit(snapshot: CognitiveTurnSnapshot, expectedGeneration: number | null): Promise<void> {
+    const saved = await this.#store.compareAndSet(snapshot, expectedGeneration);
+    if (!saved) {
+      throw new CognitiveTurnError("COGNITIVE_INVALID_TRANSITION", {
+        safeDetails: { expectedGeneration },
+      });
+    }
   }
 }

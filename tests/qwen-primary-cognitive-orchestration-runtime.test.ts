@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  cognitiveTurnSnapshotSchema,
+  type CognitiveTurnSnapshot,
+} from "../packages/model-gateway/src/cognitive-turn-contracts.js";
+import type { CognitiveTurnStore } from "../packages/model-gateway/src/cognitive-orchestrator.js";
+
+import {
   codingEnvelope,
   codingPolicy,
   codingRequest,
@@ -9,6 +15,9 @@ import {
   directEnvelope,
   delayedSpecialistHarness,
   exactEvidence,
+  fastResponseEnvelope,
+  fastResponseRequest,
+  MemoryStore,
   passedSpecialistArtifact,
   passingReview,
   policy,
@@ -129,6 +138,35 @@ describe("Qwen primary cognitive orchestration runtime", () => {
     expect(harness.provider.synthesisCalls).toBe(0);
   });
 
+  it("uses compare-and-set so cancellation wins a post-check transition race", async () => {
+    const base = new MemoryStore();
+    let injected = false;
+    const racingStore: CognitiveTurnStore = {
+      load: (id) => base.load(id),
+      async compareAndSet(snapshot, expectedGeneration) {
+        if (!injected && snapshot.phase === "verification-running") {
+          const current = await base.load(snapshot.request.requestId);
+          if (current === null) throw new Error("missing current snapshot");
+          const cancelled: CognitiveTurnSnapshot = cognitiveTurnSnapshotSchema.parse({
+            ...current,
+            phase: "cancelled",
+            generation: current.generation + 1,
+            updatedAt: "2026-08-08T21:39:25.124Z",
+          });
+          injected = true;
+          await base.compareAndSet(cancelled, current.generation);
+          return false;
+        }
+        return base.compareAndSet(snapshot, expectedGeneration);
+      },
+    };
+    const harness = cognitiveHarness({}, racingStore);
+    const result = await harness.runtime.start(codingRequest(), codingPolicy());
+    expect(result.phase).toBe("cancelled");
+    expect((await harness.runtime.state(codingRequest().requestId))?.phase).toBe("cancelled");
+    expect(harness.provider.synthesisCalls).toBe(0);
+  });
+
   it("resumes from the last durable artifact without repeating completed model calls", async () => {
     const first = restartHarnessThatFailsBeforeSynthesis();
     const stopped = await first.runtime.start(
@@ -213,5 +251,114 @@ describe("Qwen primary cognitive orchestration runtime", () => {
       ).phase,
     ).toBe("reviewer-model-unavailable");
     expect(noReviewer.worker.reviewerModels).toHaveLength(0);
+  });
+
+  it("keeps material purpose and review obligations when a model override is requested", async () => {
+    const direct = cognitiveHarness({ planningEnvelope: directEnvelope("Unsafe direct answer.") });
+    const request = codingRequest({
+      utterance: "Use qwen3.6:27b to refactor this TypeScript repository.",
+    });
+    const rejected = await direct.runtime.start(request, codingPolicy());
+    expect(rejected.phase).toBe("recovery-required");
+    expect(direct.worker.calls).toHaveLength(0);
+
+    const delegated = cognitiveHarness({ planningEnvelope: codingEnvelope() });
+    const completed = await delegated.runtime.start(request, codingPolicy());
+    expect(completed.phase).toBe("completed");
+    expect(delegated.worker.models).toEqual(["qwen3.6:27b"]);
+    expect(delegated.worker.reviewerModels).toEqual(["gpt-oss:20b"]);
+  });
+
+  it("fails closed instead of using unsuitable fallbacks for material work", async () => {
+    const missingCoder = cognitiveHarness();
+    const fallback = await missingCoder.runtime.start(
+      codingRequest({ availableModels: ["qwen3.6:27b", "gpt-oss:20b"] }),
+      codingPolicy(),
+    );
+    expect(fallback.phase).toBe("recovery-required");
+    expect(fallback.safeFailureCode).toBe("COGNITIVE_SPECIALIST_UNAVAILABLE");
+    expect(missingCoder.worker.calls).toHaveLength(0);
+
+    const qwenEight = cognitiveHarness();
+    const override = await qwenEight.runtime.start(
+      codingRequest({
+        utterance: "Use qwen3:8b to refactor this repository.",
+        availableModels: ["qwen3:8b", "qwen3.6:27b", "gpt-oss:20b"],
+      }),
+      codingPolicy(),
+    );
+    expect(override.phase).toBe("recovery-required");
+    expect(qwenEight.worker.calls).toHaveLength(0);
+  });
+
+  it("uses Qwen 8B only for delegated R0 fast response without invented independent review", async () => {
+    const harness = cognitiveHarness({ planningEnvelope: fastResponseEnvelope() });
+    const result = await harness.runtime.start(
+      fastResponseRequest(),
+      policy(["conversation.fast"]),
+    );
+    expect(result.phase).toBe("completed");
+    expect(result.presentation?.provenance).toEqual({
+      orchestratorModel: "qwen3.6:27b",
+      specialistModel: "qwen3:8b",
+      reviewerModel: null,
+    });
+    expect(harness.worker.reviewCalls).toBe(0);
+  });
+
+  it("refuses tampered evidence and specialist artifact digests", async () => {
+    const tamperedEvidence = exactEvidence({ contentDigest: `sha256:${"f".repeat(64)}` });
+    const evidenceHarness = cognitiveHarness({
+      specialist: passedSpecialistArtifact("qwen3-coder:30b", [tamperedEvidence]),
+    });
+    const evidenceResult = await evidenceHarness.runtime.start(codingRequest(), codingPolicy());
+    expect(evidenceResult.phase).toBe("recovery-required");
+    expect(evidenceResult.safeFailureCode).toBe("COGNITIVE_EVIDENCE_MISMATCH");
+
+    const valid = passedSpecialistArtifact("qwen3-coder:30b");
+    const artifactHarness = cognitiveHarness({
+      specialist: { ...valid, artifactDigest: `sha256:${"e".repeat(64)}` },
+    });
+    const artifactResult = await artifactHarness.runtime.start(codingRequest(), codingPolicy());
+    expect(artifactResult.phase).toBe("recovery-required");
+    expect(artifactResult.safeFailureCode).toBe("COGNITIVE_EVIDENCE_MISMATCH");
+
+    const duplicateHarness = cognitiveHarness({
+      specialist: passedSpecialistArtifact("qwen3-coder:30b", [
+        exactEvidence({ requiredInPresentation: false }),
+        exactEvidence({ exactValue: "artifact://different", requiredInPresentation: false }),
+      ]),
+    });
+    const duplicateResult = await duplicateHarness.runtime.start(codingRequest(), codingPolicy());
+    expect(duplicateResult.phase).toBe("recovery-required");
+    expect(duplicateResult.safeFailureCode).toBe("COGNITIVE_EVIDENCE_MISMATCH");
+  });
+
+  it("does not reset the synthesis repair budget on resume", async () => {
+    const first = cognitiveHarness({ synthesisSequence: [synthesis([]), synthesis([])] });
+    const failed = await first.runtime.start(codingRequest(), codingPolicy());
+    expect(failed.synthesisAttempts).toBe(2);
+    const restarted = restartedHarness(first.store);
+    const resumed = await restarted.runtime.resume(
+      codingRequest().requestId,
+      codingRequest(),
+      codingPolicy(),
+    );
+    expect(resumed.phase).toBe("synthesis-failed");
+    expect(restarted.provider.synthesisCalls).toBe(0);
+  });
+
+  it("redacts bare tokens and private keys before durable steering", async () => {
+    const delayed = delayedSpecialistHarness();
+    const running = delayed.runtime.start(codingRequest(), codingPolicy());
+    await delayed.worker.started;
+    const steered = await delayed.runtime.steer(
+      codingRequest().requestId,
+      `Use github_pat_${"a".repeat(40)} and -----BEGIN PRIVATE KEY----- secret -----END PRIVATE KEY-----`,
+    );
+    expect(steered.steeringNotes[0]).not.toContain("github_pat_");
+    expect(steered.steeringNotes[0]).not.toContain("secret");
+    delayed.worker.resolve(passedSpecialistArtifact("qwen3-coder:30b"));
+    await running;
   });
 });

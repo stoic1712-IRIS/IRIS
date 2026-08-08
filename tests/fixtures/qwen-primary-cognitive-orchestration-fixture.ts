@@ -6,7 +6,9 @@ import {
   cognitiveSynthesisSchema,
   cognitiveTurnRequestSchema,
   cognitiveTurnSnapshotSchema,
+  exactEvidenceContentDigest,
   exactEvidenceReferenceSchema,
+  specialistArtifactContentDigest,
   type CognitiveDelegationEnvelope,
   type CognitiveDelegationPolicy,
   type CognitiveReviewArtifact,
@@ -26,6 +28,7 @@ import {
 import {
   ModelLeaseScheduler,
   type ModelLease,
+  type ModelLeaseJournal,
   type ModelLifecycleAdapter,
 } from "../../packages/model-gateway/src/model-lease-scheduler.js";
 import {
@@ -37,8 +40,6 @@ const objectiveId = "objective_0198a6cf-7c74-7ae0-8f8d-92c13db44d7a";
 const requestId = "request_0198a6d0-07ca-7b32-a021-98b267ca44ef";
 const fixedTimestamp = "2026-08-08T21:39:25.124Z";
 const objectiveDigest = `sha256:${"a".repeat(64)}`;
-const artifactDigest = `sha256:${"c".repeat(64)}`;
-const evidenceDigest = `sha256:${"d".repeat(64)}`;
 const approvedModels: IrisModelName[] = [
   "qwen3:8b",
   "qwen3.6:27b",
@@ -84,6 +85,16 @@ export function researchRequest(
   return conversationRequest({
     utterance: "Research the current Node.js release and verify authoritative sources.",
     riskClass: "R1",
+    ...overrides,
+  });
+}
+
+export function fastResponseRequest(
+  overrides: Partial<CognitiveTurnRequest> = {},
+): CognitiveTurnRequest {
+  return conversationRequest({
+    utterance: "Give me a quick answer.",
+    riskClass: "R0",
     ...overrides,
   });
 }
@@ -136,22 +147,40 @@ export function researchEnvelope(): CognitiveDelegationEnvelope {
   });
 }
 
+export function fastResponseEnvelope(): CognitiveDelegationEnvelope {
+  return cognitiveDelegationEnvelopeSchema.parse({
+    mode: "delegated",
+    objectiveId,
+    objectiveDigest,
+    requestedCapabilities: ["conversation.fast"],
+    specialistPurpose: "fast-response",
+    rationale: "The objective requests a bounded fast response.",
+    authority: "none",
+  });
+}
+
 export function exactEvidence(
   overrides: Partial<ExactEvidenceReference> = {},
 ): ExactEvidenceReference {
+  const exactValue = overrides.exactValue ?? "artifact://candidate/verified";
   return exactEvidenceReferenceSchema.parse({
     evidenceId: requiredEvidenceId,
     kind: "artifact",
     label: "Verified worker artifact",
-    exactValue: "artifact://candidate/verified",
-    contentDigest: evidenceDigest,
+    exactValue,
+    contentDigest: overrides.contentDigest ?? exactEvidenceContentDigest(exactValue),
     requiredInPresentation: true,
     ...overrides,
   });
 }
 
 function specialistRoute(model: IrisModelName) {
-  const request = model === "gpt-oss:20b" ? researchRequest() : codingRequest();
+  const request =
+    model === "gpt-oss:20b"
+      ? researchRequest()
+      : model === "qwen3:8b"
+        ? fastResponseRequest()
+        : codingRequest();
   return routeIrisModel({
     utterance: request.utterance,
     availableModels: new Set(request.availableModels),
@@ -163,7 +192,7 @@ export function passedSpecialistArtifact(
   model: IrisModelName,
   evidence: ExactEvidenceReference[] = [exactEvidence()],
 ): CognitiveSpecialistArtifact {
-  return cognitiveSpecialistArtifactSchema.parse({
+  const material = {
     requestId,
     objectiveId,
     objectiveDigest,
@@ -171,9 +200,12 @@ export function passedSpecialistArtifact(
     status: "passed",
     summary: "The bounded specialist work and verification passed.",
     evidence,
-    artifactDigest,
     occurredAt: fixedTimestamp,
     authority: "none",
+  } as const;
+  return cognitiveSpecialistArtifactSchema.parse({
+    ...material,
+    artifactDigest: specialistArtifactContentDigest(material),
   });
 }
 
@@ -181,11 +213,12 @@ export function passingReview(
   model: IrisModelName,
   evidence: ExactEvidenceReference[] = [exactEvidence()],
 ): CognitiveReviewArtifact {
+  const specialistModel = model === "qwen3.6:27b" ? "gpt-oss:20b" : "qwen3-coder:30b";
   return cognitiveReviewArtifactSchema.parse({
     requestId,
     objectiveId,
     objectiveDigest,
-    specialistArtifactDigest: artifactDigest,
+    specialistArtifactDigest: passedSpecialistArtifact(specialistModel, evidence).artifactDigest,
     reviewerModel: model,
     verdict: "pass",
     findings: [],
@@ -234,7 +267,7 @@ export interface DelayedSpecialistHarness extends CognitiveHarness {
   };
 }
 
-class MemoryStore implements CognitiveTurnStore {
+export class MemoryStore implements CognitiveTurnStore {
   readonly #snapshots = new Map<string, CognitiveTurnSnapshot>();
 
   load(id: string): Promise<CognitiveTurnSnapshot | null> {
@@ -242,9 +275,15 @@ class MemoryStore implements CognitiveTurnStore {
     return Promise.resolve(value === undefined ? null : cognitiveTurnSnapshotSchema.parse(value));
   }
 
-  save(snapshot: CognitiveTurnSnapshot): Promise<void> {
+  compareAndSet(
+    snapshot: CognitiveTurnSnapshot,
+    expectedGeneration: number | null,
+  ): Promise<boolean> {
+    const current = this.#snapshots.get(snapshot.request.requestId);
+    const actualGeneration = current?.generation ?? null;
+    if (actualGeneration !== expectedGeneration) return Promise.resolve(false);
     this.#snapshots.set(snapshot.request.requestId, cognitiveTurnSnapshotSchema.parse(snapshot));
-    return Promise.resolve();
+    return Promise.resolve(true);
   }
 }
 
@@ -271,6 +310,31 @@ class RecordingLifecycle implements ModelLifecycleAdapter {
     void reason;
     this.active -= 1;
     return Promise.resolve({ releasedAt: fixedTimestamp });
+  }
+}
+
+class MemoryLeaseJournal implements ModelLeaseJournal {
+  active: ModelLease | null = null;
+
+  loadActive(): Promise<ModelLease | null> {
+    return Promise.resolve(this.active);
+  }
+
+  append(
+    event: import("../../packages/model-gateway/src/cognitive-turn-contracts.js").ModelLeaseEvent,
+  ): Promise<void> {
+    if (event.type === "acquired") {
+      this.active = {
+        requestId: event.requestId,
+        leaseId: event.leaseId,
+        model: event.model,
+        phase: event.phase,
+        acquiredAt: event.occurredAt,
+      };
+    } else if (event.type === "released") {
+      this.active = null;
+    }
+    return Promise.resolve();
   }
 }
 
@@ -344,7 +408,13 @@ function createHarness(
       }
       return Promise.resolve(
         options.specialist === undefined
-          ? cognitiveSpecialistArtifactSchema.parse({ ...configuredSpecialist, route: input.route })
+          ? (() => {
+              const routed = { ...configuredSpecialist, route: input.route };
+              return cognitiveSpecialistArtifactSchema.parse({
+                ...routed,
+                artifactDigest: specialistArtifactContentDigest(routed),
+              });
+            })()
           : configuredSpecialist,
       );
     },
@@ -357,6 +427,7 @@ function createHarness(
         options.review === undefined
           ? cognitiveReviewArtifactSchema.parse({
               ...configuredReview,
+              specialistArtifactDigest: input.specialistArtifactDigest,
               reviewerModel: input.reviewerModel,
             })
           : configuredReview,
@@ -366,7 +437,7 @@ function createHarness(
   const store = suppliedStore ?? new MemoryStore();
   const lifecycle = new RecordingLifecycle();
   const transitions: CognitiveTransitionEvent[] = [];
-  const leases = new ModelLeaseScheduler(lifecycle, () => fixedTimestamp);
+  const leases = new ModelLeaseScheduler(lifecycle, () => fixedTimestamp, new MemoryLeaseJournal());
   const runtime = new CognitiveOrchestrator({
     provider,
     worker,

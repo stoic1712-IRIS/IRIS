@@ -4,8 +4,8 @@
 **Repository:** `stoic1712-IRIS/IRIS`
 **Branch:** `iris/qwen-primary-cognitive-orchestration`
 **Base:** `6367e4547d34092472c672ee93a9e1b2a8e5c80f`
-**Locally verified payload revision:** `c60e8adced7de487d83e260e6cf4f116d59ad57b`
-**Payload patch digest:** `sha256:64bd088d1713e47612cdb7cd58ae15536e60a6ebdc9a5543c9f49d8aa162d9bb`
+**Locally verified payload revision:** Pending repair commit
+**Payload patch digest:** Pending repair commit
 
 ## Result
 
@@ -32,6 +32,16 @@ accepted, integrated into the Founder Command Center, or evidence of Phase 0 gra
   GPT-OSS is unavailable.
 - Existing router, Ollama-adapter, Founder-dialogue, goal-orchestration, and software-delivery tests
   remain compatible.
+- Failed provider release now poisons the scheduler until provider-confirmed reconciliation; active
+  lease events are durably journaled before model execution.
+- Snapshot transitions use generation compare-and-set semantics, so cancellation wins even between
+  a post-provider generation check and the next save.
+- Material purpose is derived independently from explicit model overrides; unsuitable fallback and
+  Qwen 8B material execution fail closed.
+- Core recomputes exact-value and canonical specialist-artifact digests and checks conflicting
+  duplicate identifiers across all evidence.
+- The synthesis repair budget persists across restart, and steering redacts bare provider tokens,
+  bearer values, credential URLs, and private keys before storage.
 
 ## Verification evidence
 
@@ -43,13 +53,11 @@ Focused profiles, with package-manager network disabled:
 
 - Contract profile: 1 file, 6 tests passed, exit `0`, output digest
   `sha256:bc13232b8a88b1e1a2f9e68723983963984476c9c7e89af2ad2f14f2fd920b9a`.
-- Lease profile: 1 file, 4 tests passed, exit `0`, output digest
-  `sha256:c6efc03e27c83145388948000b8bf1ef290018d7ebac83f30eb18c51ea40e66b`.
-- Runtime profile: 1 file, 10 tests passed, exit `0`, output digest
-  `sha256:a7396fa16447e555d2bef14fad147dd486f6b621d2cb5937c2a3171180064a8e`.
+- Lease profile: 1 file, 5 tests passed, exit `0`.
+- Runtime profile: 1 file, 17 tests passed, exit `0`.
 
 Full `pnpm verify` used Node `v24.19.0` and pnpm `11.20.0` with network disabled. Formatting,
-lint, type checking, 58 test files, 452 passed tests, production build, and repository diagnostics
+lint, type checking, 58 test files, 460 passed tests, production build, and repository diagnostics
 all exited `0`. One pre-existing platform-conditioned test was skipped on Windows: the Unix-only
 Founder runtime build-launcher test in `tests/cycle-five-founder-dialogue.test.ts`. Vite emitted its
 existing non-failing large-chunk advisory.

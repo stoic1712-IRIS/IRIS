@@ -1,3 +1,5 @@
+import { createHash } from "node:crypto";
+
 import { z } from "zod";
 
 import {
@@ -59,6 +61,14 @@ export const exactEvidenceReferenceSchema = z
   })
   .strict();
 export type ExactEvidenceReference = z.infer<typeof exactEvidenceReferenceSchema>;
+
+function sha256(value: string): `sha256:${string}` {
+  return `sha256:${createHash("sha256").update(value, "utf8").digest("hex")}`;
+}
+
+export function exactEvidenceContentDigest(exactValue: string): `sha256:${string}` {
+  return sha256(exactValue);
+}
 
 export const cognitiveTurnRequestSchema = z
   .object({
@@ -143,6 +153,24 @@ export const cognitiveSpecialistArtifactSchema = z
   })
   .strict();
 export type CognitiveSpecialistArtifact = z.infer<typeof cognitiveSpecialistArtifactSchema>;
+
+export function specialistArtifactContentDigest(
+  artifact: Omit<CognitiveSpecialistArtifact, "artifactDigest">,
+): `sha256:${string}` {
+  return sha256(
+    JSON.stringify({
+      requestId: artifact.requestId,
+      objectiveId: artifact.objectiveId,
+      objectiveDigest: artifact.objectiveDigest,
+      route: artifact.route,
+      status: artifact.status,
+      summary: artifact.summary,
+      evidence: artifact.evidence,
+      occurredAt: artifact.occurredAt,
+      authority: artifact.authority,
+    }),
+  );
+}
 
 export const cognitiveReviewInputSchema = z
   .object({
@@ -347,17 +375,20 @@ export function requiredPresentationEvidence(
   specialistArtifact: CognitiveSpecialistArtifact | null,
   reviewArtifact: CognitiveReviewArtifact | null,
 ): ExactEvidenceReference[] {
-  const required = [
+  const allEvidence = [
     ...(specialistArtifact?.evidence ?? []),
     ...(reviewArtifact?.evidence ?? []),
-  ].filter((evidence) => evidence.requiredInPresentation);
+  ];
   const byId = new Map<string, ExactEvidenceReference>();
-  for (const evidence of required) {
+  for (const evidence of allEvidence) {
+    if (evidence.contentDigest !== exactEvidenceContentDigest(evidence.exactValue)) {
+      fail("COGNITIVE_EVIDENCE_MISMATCH");
+    }
     const previous = byId.get(evidence.evidenceId);
     if (previous && JSON.stringify(previous) !== JSON.stringify(evidence)) {
       fail("COGNITIVE_EVIDENCE_MISMATCH");
     }
     byId.set(evidence.evidenceId, evidence);
   }
-  return [...byId.values()];
+  return [...byId.values()].filter((evidence) => evidence.requiredInPresentation);
 }

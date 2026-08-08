@@ -26,6 +26,11 @@ export interface ModelLease {
   readonly acquiredAt: string;
 }
 
+export interface ModelLeaseJournal {
+  loadActive(): Promise<ModelLease | null>;
+  append(event: ModelLeaseEvent): Promise<void>;
+}
+
 interface LeaseReservation {
   readonly requestId: string;
   readonly controller: AbortController;
@@ -36,13 +41,16 @@ type ReleaseReason = Parameters<ModelLifecycleAdapter["release"]>[1];
 export class ModelLeaseScheduler {
   readonly #lifecycle: ModelLifecycleAdapter;
   readonly #now: () => string;
+  readonly #journal: ModelLeaseJournal;
   readonly #events: ModelLeaseEvent[] = [];
   #reservation: LeaseReservation | null = null;
   #active: ModelLease | null = null;
+  #hydrated = false;
 
-  constructor(lifecycle: ModelLifecycleAdapter, now: () => string) {
+  constructor(lifecycle: ModelLifecycleAdapter, now: () => string, journal: ModelLeaseJournal) {
     this.#lifecycle = lifecycle;
     this.#now = now;
+    this.#journal = journal;
   }
 
   async withLease<Result>(
@@ -52,6 +60,7 @@ export class ModelLeaseScheduler {
     effect: (lease: ModelLease, signal: AbortSignal) => Promise<Result>,
     outerSignal?: AbortSignal,
   ): Promise<Result> {
+    await this.#hydrate();
     if (this.#reservation !== null) {
       throw new CognitiveTurnError("MODEL_LEASE_CONFLICT", {
         safeDetails: { activeRequestId: this.#reservation.requestId },
@@ -77,32 +86,43 @@ export class ModelLeaseScheduler {
         acquiredAt: acquired.acquiredAt,
       });
       this.#active = lease;
-      this.#record(lease, "acquired", null, acquired.acquiredAt);
+      await this.#record(lease, "acquired", null, acquired.acquiredAt);
+      if (
+        controller.signal.aborted &&
+        !this.#events.some((event) => event.leaseId === lease.leaseId && event.type === "cancelled")
+      ) {
+        await this.#record(lease, "cancelled", "COGNITIVE_TURN_CANCELLED");
+      }
 
       let result: Result | undefined;
       let effectError: unknown;
       let releaseReason: ReleaseReason = "completed";
-      try {
-        result = await effect(lease, controller.signal);
-        if (controller.signal.aborted) releaseReason = "cancelled";
-      } catch (error) {
-        effectError = error;
-        releaseReason = controller.signal.aborted ? "cancelled" : "failed";
+      const wasAborted = () => controller.signal.aborted;
+      if (wasAborted()) {
+        effectError = controller.signal.reason;
+        releaseReason = "cancelled";
+      } else {
+        try {
+          result = await effect(lease, controller.signal);
+          if (wasAborted()) releaseReason = "cancelled";
+        } catch (error) {
+          effectError = error;
+          releaseReason = wasAborted() ? "cancelled" : "failed";
+        }
       }
 
-      this.#record(lease, "release-requested", releaseReason);
+      await this.#record(lease, "release-requested", releaseReason);
       try {
         const released = await this.#lifecycle.release(lease, releaseReason);
-        this.#record(lease, "released", releaseReason, released.releasedAt);
+        await this.#record(lease, "released", releaseReason, released.releasedAt);
+        this.#active = null;
+        this.#reservation = null;
       } catch {
-        this.#record(lease, "release-failed", "MODEL_LEASE_RELEASE_FAILED");
+        await this.#record(lease, "release-failed", "MODEL_LEASE_RELEASE_FAILED");
         throw new CognitiveTurnError("MODEL_LEASE_RELEASE_FAILED", {
           retryable: true,
           safeDetails: { leaseId: lease.leaseId, model: lease.model },
         });
-      } finally {
-        this.#active = null;
-        this.#reservation = null;
       }
 
       if (effectError !== undefined) {
@@ -118,16 +138,35 @@ export class ModelLeaseScheduler {
     }
   }
 
-  cancel(requestId: string): Promise<void> {
+  async cancel(requestId: string): Promise<void> {
+    await this.#hydrate();
     const reservation = this.#reservation;
     if (reservation?.requestId !== requestId) return Promise.resolve();
     if (!reservation.controller.signal.aborted) {
       reservation.controller.abort(new CognitiveTurnError("COGNITIVE_TURN_CANCELLED"));
       if (this.#active !== null) {
-        this.#record(this.#active, "cancelled", "COGNITIVE_TURN_CANCELLED");
+        await this.#record(this.#active, "cancelled", "COGNITIVE_TURN_CANCELLED");
       }
     }
-    return Promise.resolve();
+  }
+
+  async reconcileRelease(reason: ReleaseReason = "failed"): Promise<void> {
+    await this.#hydrate();
+    const lease = this.#active;
+    if (lease === null) return;
+    await this.#record(lease, "release-requested", reason);
+    try {
+      const released = await this.#lifecycle.release(lease, reason);
+      await this.#record(lease, "released", reason, released.releasedAt);
+      this.#active = null;
+      this.#reservation = null;
+    } catch {
+      await this.#record(lease, "release-failed", "MODEL_LEASE_RELEASE_FAILED");
+      throw new CognitiveTurnError("MODEL_LEASE_RELEASE_FAILED", {
+        retryable: true,
+        safeDetails: { leaseId: lease.leaseId, model: lease.model },
+      });
+    }
   }
 
   activeLease(): ModelLease | null {
@@ -138,24 +177,35 @@ export class ModelLeaseScheduler {
     return Object.freeze(this.#events.map((event) => Object.freeze({ ...event })));
   }
 
-  #record(
+  async #hydrate(): Promise<void> {
+    if (this.#hydrated) return;
+    const restored = await this.#journal.loadActive();
+    if (restored !== null) {
+      const controller = new AbortController();
+      this.#active = Object.freeze({ ...restored });
+      this.#reservation = Object.freeze({ requestId: restored.requestId, controller });
+    }
+    this.#hydrated = true;
+  }
+
+  async #record(
     lease: ModelLease,
     type: ModelLeaseEvent["type"],
     reason: string | null,
     occurredAt = this.#now(),
-  ): void {
-    this.#events.push(
-      Object.freeze(
-        modelLeaseEventSchema.parse({
-          requestId: lease.requestId,
-          leaseId: lease.leaseId,
-          model: lease.model,
-          phase: lease.phase,
-          type,
-          reason,
-          occurredAt,
-        }),
-      ),
+  ): Promise<void> {
+    const event = Object.freeze(
+      modelLeaseEventSchema.parse({
+        requestId: lease.requestId,
+        leaseId: lease.leaseId,
+        model: lease.model,
+        phase: lease.phase,
+        type,
+        reason,
+        occurredAt,
+      }),
     );
+    await this.#journal.append(event);
+    this.#events.push(event);
   }
 }

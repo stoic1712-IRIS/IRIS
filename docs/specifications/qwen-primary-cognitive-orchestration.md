@@ -50,6 +50,11 @@ cancellation, release-request, release, and release-failure events. Release is a
 the next model lease. Release failure is recorded truthfully and returns a safe, retryable failure
 code; raw provider errors are not exposed.
 
+Lease acquisition and release events are appended to an injected durable journal before execution
+continues. A restored active lease poisons the scheduler until explicit provider-confirmed
+reconciliation succeeds. A failed release retains both the lease and reservation, preventing any
+subsequent model acquisition.
+
 This design supports the workstation's bounded GPU memory without changing Ollama transport or
 installing a model. Provider loading/unloading remains an injected adapter responsibility.
 
@@ -71,16 +76,23 @@ closed. Qwen receives evidence descriptors and must acknowledge required identif
 Founder presentation attaches the original validated evidence objects byte-for-byte. Qwen never
 reconstructs citations, command results, approvals, digests, reviews, or rollback values.
 
+Core recomputes every evidence digest from its exact value and recomputes each specialist artifact
+digest from a fixed canonical field order. Duplicate identifiers are checked across all evidence,
+including evidence not selected for presentation.
+
 One repair attempt is allowed only for invalid synthesis structure or missing evidence
 acknowledgement. A second failure saves `synthesis-failed`, retains the validated specialist and
-review artifacts, releases the model lease, and does not fabricate completion.
+review artifacts, releases the model lease, and does not fabricate completion. The total two-call
+budget is durable and cannot reset through resume.
 
 ## Interruption and recovery
 
 Pause and cancellation are persisted before the active lease is aborted. Provider results are
 accepted only when the durable generation still matches the captured generation, so a late
-non-cooperative worker cannot overwrite terminal cancellation. Steering retains at most ten
-secret-redacted notes and cannot widen the stored request or policy.
+non-cooperative worker cannot overwrite terminal cancellation. Store transitions use atomic
+compare-and-set writes against the captured generation. Steering retains at most ten notes, removes
+labeled secrets, bare provider tokens, bearer credentials, credential-bearing URLs, and private
+keys before persistence, and cannot widen the stored request or policy.
 
 Resume requires byte-equivalent request and policy bindings. Completed/cancelled states remain
 terminal. A durable reviewed artifact resumes at synthesis without repeating specialist or reviewer
@@ -94,6 +106,8 @@ evidence available.
 - Qwen 8B is never final judgment for coding, research, deep reasoning, review, or protected work.
 - Coding requires GPT-OSS as the distinct reviewer; absence saves `reviewer-model-unavailable`.
 - Missing models never silently weaken the requested purpose or authority boundary.
+- Explicit model overrides are normalized against independently derived material purpose; they
+  never convert coding, research, or deep reasoning into direct conversation.
 
 ## Security, authority, and compatibility
 
