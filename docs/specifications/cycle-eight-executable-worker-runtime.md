@@ -1,14 +1,14 @@
 # Cycle Eight Executable Worker Runtime
 
-**Status:** Canonical and implemented; Cycle Eight pull requests merged
+**Status:** Canonical Cycle Eight baseline; deterministic hardening candidate locally implemented and not published
 
 ## Objective
 
-Cycle Eight converts the Cycle Seven planning-only coding worker into a real, bounded local implementation worker. IRIS may inspect an exact repository revision, create one disposable Git worktree, apply model-generated full-file mutations only inside Founder-approved paths, run exact offline materialization and verification commands, repair failed checks within a fixed iteration limit, and preserve a local candidate branch and commit.
+Cycle Eight converts the Cycle Seven planning-only coding worker into a real, bounded local implementation worker. IRIS may inspect an exact repository revision, create one disposable Git worktree, create approved new files or apply digest-bound exact replacements to existing files only inside Founder-approved paths, run exact offline materialization, baseline, normalization, and verification commands, repair failed checks within a fixed iteration limit, and preserve a local candidate branch and commit.
 
 ## Exact authority
 
-Every execution proposal binds the repository, base revision, unique candidate branch, objective, readable paths, writable paths, forbidden paths, materialization commands, verification commands, file and byte limits, iteration limit, timeout, expiry, USD 0 budget, and the absence of canonical-write, external-mutation, and authority-expansion rights. The authenticated Founder must type the exact digest-bound approval statement before a workspace can be created.
+Every execution proposal binds the repository, base revision, unique candidate branch, objective, readable paths, writable paths, forbidden paths, materialization commands, baseline commands, normalization commands, verification commands, file and byte limits, iteration limit, timeout, expiry, USD 0 budget, and the absence of canonical-write, external-mutation, and authority-expansion rights. The authenticated Founder must type the exact digest-bound approval statement before a workspace can be created.
 
 Cycle Eight does not authorize direct changes to the canonical checkout or `main`, pushing, pull requests, merging, deployment, public or LAN exposure, credentials, paid services, provider resources, spending, messaging, or arbitrary network access. A successful run produces a local candidate checkpoint for later human or governed review; it does not publish that checkpoint.
 
@@ -16,19 +16,21 @@ The implementation entered canonical `main` through IRIS Core PR #46 at merge co
 
 ## Lifecycle
 
-`preflight -> preparing-workspace -> materializing -> planning -> editing -> verifying -> repairing -> checkpointing -> completed`
+`preflight -> preparing-workspace -> materializing -> verifying (baseline) -> planning -> editing -> verifying (normalization and exact checks) -> repairing -> checkpointing -> completed`
 
 Preflight proves the clean canonical worktree, exact revision, exact GitHub origin, unique candidate branch, required executables, and local coding-model availability. Dependency materialization is an exact offline frozen-lockfile operation with lifecycle scripts disabled. Verification commands are exact argument arrays and do not use a shell.
 
-Each candidate mutation is locally validated after model generation. Duplicate paths, traversal, symbolic links, forbidden paths, unapproved writes, credential-like output, too many files, and too many changed bytes fail closed. Commands may modify only the same approved paths; the runtime re-reads the final Git status and contents before checkpointing.
+Each candidate mutation is locally validated after model generation. Existing-file updates must bind the exact SHA-256 digest supplied in repository context and contain only unique, non-overlapping exact replacements; deletes bind the same digest, while creates alone may supply complete content. Duplicate paths, stale digests, ambiguous or overlapping replacements, NUL content, traversal, filesystem or Git-index symbolic links, forbidden paths, unapproved writes, credential-like output, too many files, and too many changed bytes fail closed. Writes use a same-directory temporary file and atomic rename, preserving existing mode bits. Commands may modify only the same approved paths; the runtime re-reads the final Git status and contents before checkpointing.
 
 ## Repair and recovery
 
-Failed checks are returned to the same bounded coding agent for at most three iterations. A stop, process failure, invalid mutation, failed materialization, or exhausted repair limit preserves the disposable workspace as `stopped` or `recovery-ready`. An atomic mode-0600 journal records the exact proposal, approval, workspace, state, and hash-chained events. Resume reuses the unchanged approval and remaining iteration budget. Discard is explicit and verifies worktree cleanup. A tampered journal event chain cannot resume or discard through the runtime. Gateway shutdown aborts active executions and briefly waits for their recovery state to be journaled before process exit.
+Failed checks are returned to the same bounded coding agent for at most three iterations. Journal version 2 durably records every materialization, baseline, normalization, and verification result; each record retains the exact command, exit code, raw-output digest and byte count, and only a bounded redacted presentation. Attempt records bind the plan digest, changed paths, diff digest, and timestamps. A stop, process failure, invalid mutation, failed materialization, or exhausted repair limit preserves the disposable workspace as `stopped` or `recovery-ready`. Resume reuses the unchanged approval, remaining iteration budget, and latest durable failed checks. Version 1 journals remain inspectable but cannot resume without complete evidence.
+
+Cleanup is a structured, idempotent two-phase operation. It proves the target is beneath the configured disposable root, removes or prunes Git worktree registration, removes the physical directory with bounded retries, and independently verifies both registration absence and filesystem absence. Any incomplete proof remains `recovery-ready`; discard and post-checkpoint cleanup never report success merely because one cleanup step ran. A tampered journal event chain cannot resume or discard through the runtime. Gateway shutdown aborts active executions and briefly waits for their recovery state to be journaled before process exit.
 
 ## Founder Command Center
 
-The Develop screen selects IRIS Core or the Founder Command Center, captures the exact objective and read/write paths, displays every capability-preflight result, presents the exact typed approval, starts the asynchronous execution, polls truthful progress, displays changed paths and the local candidate checkpoint, and exposes stop, resume, and discard controls. The browser session and CSRF boundary protect every mutation endpoint.
+The Develop screen selects IRIS Core or the Founder Command Center, captures the exact objective and read/write paths, displays proposal-bound baseline, normalization, and verification command counts, displays every capability-preflight result, presents the exact typed approval, starts the asynchronous execution, polls truthful progress, reconstructs durable command and cleanup evidence from the Core journal after gateway restart, displays changed paths and the local candidate checkpoint, and exposes stop, resume, and discard controls. The browser session and CSRF boundary protect every mutation endpoint.
 
 The production gateway and Core read service retain fixed loopback-only hosts and their recorded default ports. Bounded environment port overrides exist only so an isolated verification gateway and its paired Core service can run without stopping an active Founder session; invalid, privileged, or out-of-range ports fail closed.
 

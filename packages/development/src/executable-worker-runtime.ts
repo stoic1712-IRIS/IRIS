@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import {
   executableWorkerApprovalSchema,
   executableWorkerCheckSchema,
+  executableWorkerCleanupEvidenceSchema,
   executableWorkerPlanSchema,
   executableWorkerPreflightSchema,
   executableWorkerProposalDigest,
@@ -10,6 +11,7 @@ import {
   requiredExecutableWorkerApproval,
   type ExecutableWorkerApproval,
   type ExecutableWorkerCheck,
+  type ExecutableWorkerCleanupEvidence,
   type ExecutableWorkerMutation,
   type ExecutableWorkerPlan,
   type ExecutableWorkerPreflight,
@@ -17,6 +19,7 @@ import {
   type ExecutableWorkerState,
 } from "./executable-worker-contracts.js";
 import type {
+  ExecutableWorkerAttemptEvidence,
   ExecutableWorkerJournal,
   ExecutableWorkerJournalEvent,
   ExecutableWorkerWorkspace,
@@ -58,7 +61,7 @@ export interface ExecutableWorkerAdapter {
     proposal: ExecutableWorkerProposal,
     changedPaths: string[],
   ): Promise<{ commit: string; ref: string; diff: string }>;
-  cleanup(workspace: ExecutableWorkerWorkspace): Promise<boolean>;
+  cleanup(workspace: ExecutableWorkerWorkspace): Promise<ExecutableWorkerCleanupEvidence>;
 }
 
 export interface ExecutableWorkerResult {
@@ -73,6 +76,7 @@ export interface ExecutableWorkerResult {
   candidateCommit?: string;
   candidateRef?: string;
   cleanupVerified: boolean;
+  cleanup?: ExecutableWorkerCleanupEvidence;
   recoveryAvailable: boolean;
   eventChainVerified: boolean;
   events: ExecutableWorkerJournalEvent[];
@@ -88,6 +92,10 @@ const credentialPatterns = [
 
 function digest(value: unknown): string {
   return `sha256:${createHash("sha256").update(JSON.stringify(value)).digest("hex")}`;
+}
+
+function digestText(value: string): string {
+  return `sha256:${createHash("sha256").update(value).digest("hex")}`;
 }
 
 function within(path: string, roots: readonly string[]): boolean {
@@ -133,18 +141,17 @@ export class ExecutableWorkerRuntime {
     const proposal = executableWorkerProposalSchema.parse(proposalInput);
     const approval = executableWorkerApprovalSchema.parse(approvalInput);
     const journal = this.#newJournal(proposal, approval);
-    const materializationChecks: ExecutableWorkerCheck[] = [];
     if (!this.#approvalMatches(proposal, approval)) {
       await this.#transition(
         journal,
         "denied",
         "Exact Founder approval did not match the executable-worker proposal.",
       );
-      return this.#result(journal, [], "", true);
+      return this.#result(journal, "");
     }
     if (Date.parse(proposal.expiresAt) <= this.#now().getTime()) {
       await this.#transition(journal, "denied", "Executable-worker proposal expired.");
-      return this.#result(journal, [], "", true);
+      return this.#result(journal, "");
     }
 
     try {
@@ -160,7 +167,7 @@ export class ExecutableWorkerRuntime {
             .map((check) => check.capability)
             .join(", ")}`,
         );
-        return this.#result(journal, [], "", true);
+        return this.#result(journal, "");
       }
       await this.#transition(
         journal,
@@ -182,13 +189,29 @@ export class ExecutableWorkerRuntime {
           const check = executableWorkerCheckSchema.parse(
             await this.#adapter.run(journal.workspace, command, boundedSignal),
           );
-          materializationChecks.push(check);
+          journal.materializationChecks.push(check);
+          await this.#save(journal);
           if (check.exitCode !== 0) throw new Error("EXECUTABLE_WORKER_MATERIALIZATION_FAILED");
         }
       }
-      return await this.#run(journal, agent, boundedSignal, materializationChecks);
+      const baselineCommands = proposal.baselineCommands ?? [];
+      if (baselineCommands.length > 0) {
+        await this.#transition(
+          journal,
+          "verifying",
+          `Recording ${String(baselineCommands.length)} exact baseline commands before editing.`,
+        );
+        for (const command of baselineCommands) {
+          const check = executableWorkerCheckSchema.parse(
+            await this.#adapter.run(journal.workspace, command, boundedSignal),
+          );
+          journal.baselineChecks.push(check);
+          await this.#save(journal);
+        }
+      }
+      return await this.#run(journal, agent, boundedSignal);
     } catch (error) {
-      return await this.#recoverableFailure(journal, error, materializationChecks);
+      return await this.#recoverableFailure(journal, error);
     }
   }
 
@@ -201,15 +224,31 @@ export class ExecutableWorkerRuntime {
     if (journal === null) throw new Error("EXECUTABLE_WORKER_JOURNAL_NOT_FOUND");
     if (!verifyEventChain(journal.events))
       throw new Error("EXECUTABLE_WORKER_JOURNAL_EVENT_CHAIN_INVALID");
+    if (journal.journalVersion !== 2)
+      throw new Error("EXECUTABLE_WORKER_JOURNAL_EVIDENCE_INCOMPLETE");
     if (journal.state !== "recovery-ready" && journal.state !== "stopped")
       throw new Error("EXECUTABLE_WORKER_NOT_RECOVERABLE");
-    if (
-      journal.workspace === undefined ||
-      !(await this.#adapter.workspaceExists(journal.workspace))
-    )
+    if (journal.workspace === undefined)
       throw new Error("EXECUTABLE_WORKER_WORKSPACE_NOT_RECOVERABLE");
     if (Date.parse(journal.proposal.expiresAt) <= this.#now().getTime())
       throw new Error("EXECUTABLE_WORKER_PROPOSAL_EXPIRED");
+    if (journal.candidateCommit !== undefined) {
+      const cleanup = executableWorkerCleanupEvidenceSchema.parse(
+        await this.#adapter.cleanup(journal.workspace),
+      );
+      journal.cleanup = cleanup;
+      await this.#save(journal);
+      if (!cleanup.verified)
+        return this.#recoverableFailure(journal, new Error("EXECUTABLE_WORKER_CLEANUP_FAILED"));
+      await this.#transition(
+        journal,
+        "completed",
+        "Candidate checkpoint remained exact and disposable-workspace cleanup is now verified.",
+      );
+      return this.#result(journal, "");
+    }
+    if (!(await this.#adapter.workspaceExists(journal.workspace)))
+      throw new Error("EXECUTABLE_WORKER_WORKSPACE_NOT_RECOVERABLE");
     await this.#transition(
       journal,
       "repairing",
@@ -219,7 +258,7 @@ export class ExecutableWorkerRuntime {
       signal,
       AbortSignal.timeout(journal.proposal.timeoutMs),
     ]);
-    return this.#run(journal, agent, boundedSignal, []);
+    return this.#run(journal, agent, boundedSignal);
   }
 
   async discard(executionId: string): Promise<boolean> {
@@ -229,23 +268,19 @@ export class ExecutableWorkerRuntime {
       throw new Error("EXECUTABLE_WORKER_JOURNAL_EVENT_CHAIN_INVALID");
     if (journal.state !== "recovery-ready" && journal.state !== "stopped")
       throw new Error("EXECUTABLE_WORKER_NOT_DISCARDABLE");
-    if (!(await this.#adapter.workspaceExists(journal.workspace))) {
-      await this.#transition(
-        journal,
-        "stopped",
-        "Disposable workspace was already absent; cleanup is verified.",
-      );
-      return true;
-    }
-    const cleaned = await this.#adapter.cleanup(journal.workspace);
+    const cleanup = executableWorkerCleanupEvidenceSchema.parse(
+      await this.#adapter.cleanup(journal.workspace),
+    );
+    journal.cleanup = cleanup;
+    await this.#save(journal);
     await this.#transition(
       journal,
-      "stopped",
-      cleaned
+      cleanup.verified ? "stopped" : "recovery-ready",
+      cleanup.verified
         ? "Founder discarded the preserved disposable workspace."
         : "Disposable workspace cleanup could not be verified.",
     );
-    return cleaned;
+    return cleanup.verified;
   }
 
   async journal(executionId: string): Promise<ExecutableWorkerJournal | null> {
@@ -256,11 +291,10 @@ export class ExecutableWorkerRuntime {
     journal: ExecutableWorkerJournal,
     agent: ExecutableWorkerAgent,
     signal: AbortSignal,
-    priorChecks: ExecutableWorkerCheck[],
   ): Promise<ExecutableWorkerResult> {
     const workspace = journal.workspace;
     if (workspace === undefined) throw new Error("EXECUTABLE_WORKER_WORKSPACE_MISSING");
-    let checks = priorChecks;
+    let checks = this.#latestAttemptChecks(journal);
     try {
       for (
         let iteration = journal.iteration + 1;
@@ -289,6 +323,16 @@ export class ExecutableWorkerRuntime {
           ),
         );
         this.#validatePlan(journal.proposal, plan);
+        const attempt: ExecutableWorkerAttemptEvidence = {
+          iteration,
+          planDigest: digest(plan),
+          normalizationChecks: [],
+          verificationChecks: [],
+          changedPaths: [],
+          startedAt: this.#now().toISOString(),
+        };
+        journal.attempts.push(attempt);
+        await this.#save(journal);
         await this.#transition(
           journal,
           "editing",
@@ -296,20 +340,43 @@ export class ExecutableWorkerRuntime {
         );
         for (const mutation of plan.mutations) await this.#applyMutation(workspace, mutation);
         if (isAborted(signal)) return await this.#stopped(journal, checks);
+        const normalizationCommands = journal.proposal.normalizationCommands ?? [];
+        if (normalizationCommands.length > 0) {
+          await this.#transition(
+            journal,
+            "verifying",
+            `Running ${String(normalizationCommands.length)} exact normalization commands.`,
+          );
+          for (const command of normalizationCommands) {
+            const check = executableWorkerCheckSchema.parse(
+              await this.#adapter.run(workspace, command, signal),
+            );
+            attempt.normalizationChecks.push(check);
+            await this.#save(journal);
+            if (isAborted(signal)) return await this.#stopped(journal, [check]);
+          }
+          checks = [...attempt.normalizationChecks];
+          if (attempt.normalizationChecks.some((check) => check.exitCode !== 0)) {
+            await this.#completeAttempt(journal, attempt, workspace);
+            continue;
+          }
+        }
         await this.#transition(
           journal,
           "verifying",
           `Running ${String(journal.proposal.commands.length)} exact verification commands.`,
         );
-        checks = [];
         for (const command of journal.proposal.commands) {
           const check = executableWorkerCheckSchema.parse(
             await this.#adapter.run(workspace, command, signal),
           );
-          checks.push(check);
-          if (isAborted(signal)) return await this.#stopped(journal, checks);
+          attempt.verificationChecks.push(check);
+          await this.#save(journal);
+          if (isAborted(signal)) return await this.#stopped(journal, [check]);
         }
-        if (checks.every((check) => check.exitCode === 0)) {
+        checks = [...attempt.normalizationChecks, ...attempt.verificationChecks];
+        await this.#completeAttempt(journal, attempt, workspace);
+        if (attempt.verificationChecks.every((check) => check.exitCode === 0)) {
           const changedPaths = await this.#validateChangedPaths(workspace, journal.proposal);
           journal.changedPaths = changedPaths;
           await this.#transition(
@@ -325,21 +392,28 @@ export class ExecutableWorkerRuntime {
           journal.candidateCommit = checkpoint.commit;
           journal.candidateRef = checkpoint.ref;
           const diff = checkpoint.diff;
-          const cleanupVerified = await this.#adapter.cleanup(workspace);
-          if (!cleanupVerified) throw new Error("EXECUTABLE_WORKER_CLEANUP_FAILED");
+          // Persist the checkpoint identity before cleanup so a process loss in
+          // that boundary can resume cleanup without replaying the mutation.
+          await this.#save(journal);
+          const cleanup = executableWorkerCleanupEvidenceSchema.parse(
+            await this.#adapter.cleanup(workspace),
+          );
+          journal.cleanup = cleanup;
+          await this.#save(journal);
+          if (!cleanup.verified) throw new Error("EXECUTABLE_WORKER_CLEANUP_FAILED");
           await this.#transition(
             journal,
             "completed",
             "Candidate checkpoint passed every exact check and the workspace was removed.",
           );
-          return this.#result(journal, checks, diff, cleanupVerified);
+          return this.#result(journal, diff);
         }
         journal.summary = `Verification failed during iteration ${String(iteration)}.`;
         await this.#save(journal);
       }
       throw new Error("EXECUTABLE_WORKER_REPAIR_LIMIT_REACHED");
     } catch (error) {
-      return this.#recoverableFailure(journal, error, checks);
+      return this.#recoverableFailure(journal, error);
     }
   }
 
@@ -360,6 +434,11 @@ export class ExecutableWorkerRuntime {
         if (containsCredentialLikeText(mutation.content))
           throw new Error("EXECUTABLE_WORKER_CREDENTIAL_OUTPUT_DENIED");
       }
+      for (const replacement of mutation.replacements ?? []) {
+        bytes += Buffer.byteLength(replacement.newText);
+        if (containsCredentialLikeText(replacement.newText))
+          throw new Error("EXECUTABLE_WORKER_CREDENTIAL_OUTPUT_DENIED");
+      }
     }
     if (bytes > proposal.maximumChangedBytes)
       throw new Error("EXECUTABLE_WORKER_CHANGED_BYTE_LIMIT");
@@ -374,8 +453,39 @@ export class ExecutableWorkerRuntime {
       throw new Error(`EXECUTABLE_WORKER_CREATE_EXISTS:${mutation.path}`);
     if (mutation.operation !== "create" && current === null)
       throw new Error(`EXECUTABLE_WORKER_MUTATION_MISSING:${mutation.path}`);
-    if (mutation.operation === "delete") await this.#adapter.deleteFile(workspace, mutation.path);
-    else await this.#adapter.writeFile(workspace, mutation.path, mutation.content ?? "");
+    if (mutation.operation === "create") {
+      await this.#adapter.writeFile(workspace, mutation.path, mutation.content ?? "");
+      return;
+    }
+    const existing = current ?? "";
+    if (digestText(existing) !== mutation.expectedContentDigest)
+      throw new Error(`EXECUTABLE_WORKER_CONTENT_DIGEST_MISMATCH:${mutation.path}`);
+    if (mutation.operation === "delete") {
+      await this.#adapter.deleteFile(workspace, mutation.path);
+      return;
+    }
+    const ranges = (mutation.replacements ?? [])
+      .map((replacement) => {
+        const start = existing.indexOf(replacement.oldText);
+        if (start < 0 || start !== existing.lastIndexOf(replacement.oldText))
+          throw new Error(`EXECUTABLE_WORKER_REPLACEMENT_NOT_UNIQUE:${mutation.path}`);
+        return {
+          start,
+          end: start + replacement.oldText.length,
+          newText: replacement.newText,
+        };
+      })
+      .sort((left, right) => left.start - right.start);
+    for (let index = 1; index < ranges.length; index += 1) {
+      if ((ranges[index]?.start ?? 0) < (ranges[index - 1]?.end ?? 0))
+        throw new Error(`EXECUTABLE_WORKER_REPLACEMENT_OVERLAP:${mutation.path}`);
+    }
+    let next = existing;
+    for (const range of ranges.toReversed())
+      next = `${next.slice(0, range.start)}${range.newText}${next.slice(range.end)}`;
+    if (next.includes("\0"))
+      throw new Error(`EXECUTABLE_WORKER_NUL_CONTENT_DENIED:${mutation.path}`);
+    await this.#adapter.writeFile(workspace, mutation.path, next);
   }
 
   async #validateChangedPaths(
@@ -405,6 +515,27 @@ export class ExecutableWorkerRuntime {
     return changedPaths;
   }
 
+  async #completeAttempt(
+    journal: ExecutableWorkerJournal,
+    attempt: ExecutableWorkerAttemptEvidence,
+    workspace: ExecutableWorkerWorkspace,
+  ): Promise<void> {
+    attempt.changedPaths = [...new Set(await this.#adapter.changedPaths(workspace))].sort();
+    attempt.diffDigest = digestText(await this.#adapter.diff(workspace));
+    attempt.completedAt = this.#now().toISOString();
+    await this.#save(journal);
+  }
+
+  #latestAttemptChecks(journal: ExecutableWorkerJournal): ExecutableWorkerCheck[] {
+    const attempt = journal.attempts.at(-1);
+    if (attempt !== undefined) {
+      const checks = [...attempt.normalizationChecks, ...attempt.verificationChecks];
+      if (checks.length > 0) return structuredClone(checks);
+    }
+    if (journal.baselineChecks.length > 0) return structuredClone(journal.baselineChecks);
+    return structuredClone(journal.materializationChecks);
+  }
+
   #approvalMatches(
     proposal: ExecutableWorkerProposal,
     approval: ExecutableWorkerApproval,
@@ -421,6 +552,7 @@ export class ExecutableWorkerRuntime {
     approval: ExecutableWorkerApproval,
   ): ExecutableWorkerJournal {
     return {
+      journalVersion: 2,
       executionId: proposal.executionId,
       proposal,
       approval,
@@ -428,6 +560,9 @@ export class ExecutableWorkerRuntime {
       iteration: 0,
       summary: "Executable-worker request received for capability preflight.",
       changedPaths: [],
+      materializationChecks: [],
+      baselineChecks: [],
+      attempts: [],
       events: [],
       updatedAt: this.#now().toISOString(),
     };
@@ -470,26 +605,23 @@ export class ExecutableWorkerRuntime {
       "stopped",
       "Execution stopped; the disposable workspace was preserved for bounded recovery.",
     );
-    return this.#result(journal, checks, "", false);
+    return this.#result(journal, "", checks);
   }
 
   async #recoverableFailure(
     journal: ExecutableWorkerJournal,
     error: unknown,
-    checks: ExecutableWorkerCheck[],
   ): Promise<ExecutableWorkerResult> {
     const summary = error instanceof Error ? error.message : "Executable worker failed safely.";
-    const hasWorkspace =
-      journal.workspace !== undefined && (await this.#adapter.workspaceExists(journal.workspace));
-    await this.#transition(journal, hasWorkspace ? "recovery-ready" : "denied", summary);
-    return this.#result(journal, checks, "", !hasWorkspace);
+    const recoverable = journal.workspace !== undefined && journal.cleanup?.verified !== true;
+    await this.#transition(journal, recoverable ? "recovery-ready" : "denied", summary);
+    return this.#result(journal, "");
   }
 
   #result(
     journal: ExecutableWorkerJournal,
-    checks: ExecutableWorkerCheck[],
     diff: string,
-    cleanupVerified: boolean,
+    explicitChecks?: ExecutableWorkerCheck[],
   ): ExecutableWorkerResult {
     const state = journal.state;
     const status =
@@ -507,13 +639,14 @@ export class ExecutableWorkerRuntime {
       summary: journal.summary,
       iteration: journal.iteration,
       changedPaths: [...journal.changedPaths],
-      checks: structuredClone(checks),
+      checks: structuredClone(explicitChecks ?? this.#latestAttemptChecks(journal)),
       diff,
       ...(journal.candidateCommit === undefined
         ? {}
         : { candidateCommit: journal.candidateCommit }),
       ...(journal.candidateRef === undefined ? {} : { candidateRef: journal.candidateRef }),
-      cleanupVerified,
+      cleanupVerified: journal.cleanup?.verified ?? journal.workspace === undefined,
+      ...(journal.cleanup === undefined ? {} : { cleanup: structuredClone(journal.cleanup) }),
       recoveryAvailable: state === "recovery-ready" || state === "stopped",
       eventChainVerified: verifyEventChain(journal.events),
       events: structuredClone(journal.events),

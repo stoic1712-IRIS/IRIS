@@ -1,15 +1,19 @@
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 
 import { z } from "zod";
 
 import {
   executableWorkerApprovalSchema,
+  executableWorkerCheckSchema,
+  executableWorkerCleanupEvidenceSchema,
   executableWorkerProposalSchema,
   executableWorkerStateSchema,
 } from "./executable-worker-contracts.js";
 import type {
   ExecutableWorkerApproval,
+  ExecutableWorkerCheck,
+  ExecutableWorkerCleanupEvidence,
   ExecutableWorkerProposal,
 } from "./executable-worker-contracts.js";
 import { sha256Schema } from "./contracts.js";
@@ -31,8 +35,33 @@ export interface ExecutableWorkerJournalEvent {
   digest: string;
 }
 
+export interface ExecutableWorkerAttemptEvidence {
+  iteration: number;
+  planDigest: string;
+  normalizationChecks: ExecutableWorkerCheck[];
+  verificationChecks: ExecutableWorkerCheck[];
+  changedPaths: string[];
+  diffDigest?: string | undefined;
+  startedAt: string;
+  completedAt?: string | undefined;
+}
+
+const executableWorkerAttemptEvidenceSchema = z
+  .object({
+    iteration: z.number().int().positive().max(5),
+    planDigest: sha256Schema,
+    normalizationChecks: z.array(executableWorkerCheckSchema).max(5),
+    verificationChecks: z.array(executableWorkerCheckSchema).max(10),
+    changedPaths: z.array(z.string().min(1).max(500)).max(50),
+    diffDigest: sha256Schema.optional(),
+    startedAt: z.iso.datetime(),
+    completedAt: z.iso.datetime().optional(),
+  })
+  .strict();
+
 const executableWorkerJournalSchema = z
   .object({
+    journalVersion: z.union([z.literal(1), z.literal(2)]).default(1),
     executionId: z.string().regex(/^execution_cycle8-[a-z0-9-]{8,100}$/u),
     proposal: executableWorkerProposalSchema,
     approval: executableWorkerApprovalSchema,
@@ -49,6 +78,10 @@ const executableWorkerJournalSchema = z
       .strict()
       .optional(),
     changedPaths: z.array(z.string().min(1).max(500)).max(50),
+    materializationChecks: z.array(executableWorkerCheckSchema).max(3).default([]),
+    baselineChecks: z.array(executableWorkerCheckSchema).max(10).default([]),
+    attempts: z.array(executableWorkerAttemptEvidenceSchema).max(5).default([]),
+    cleanup: executableWorkerCleanupEvidenceSchema.optional(),
     candidateCommit: z
       .string()
       .regex(/^[a-f0-9]{40}$/u)
@@ -74,6 +107,7 @@ const executableWorkerJournalSchema = z
   .strict();
 
 export interface ExecutableWorkerJournal {
+  journalVersion: 1 | 2;
   executionId: string;
   proposal: ExecutableWorkerProposal;
   approval: ExecutableWorkerApproval;
@@ -82,6 +116,10 @@ export interface ExecutableWorkerJournal {
   summary: string;
   workspace?: ExecutableWorkerWorkspace | undefined;
   changedPaths: string[];
+  materializationChecks: ExecutableWorkerCheck[];
+  baselineChecks: ExecutableWorkerCheck[];
+  attempts: ExecutableWorkerAttemptEvidence[];
+  cleanup?: ExecutableWorkerCleanupEvidence | undefined;
   candidateCommit?: string | undefined;
   candidateRef?: string | undefined;
   events: ExecutableWorkerJournalEvent[];
@@ -116,14 +154,19 @@ export class FileExecutionJournalStore implements ExecutionJournalStore {
   }
 
   async save(journal: ExecutableWorkerJournal): Promise<void> {
+    const validated = executableWorkerJournalSchema.parse(journal);
     const target = this.#target(journal.executionId);
     const temporary = `${target}.${String(process.pid)}.tmp`;
     await mkdir(dirname(target), { recursive: true });
-    await writeFile(temporary, `${JSON.stringify(journal, null, 2)}\n`, {
-      encoding: "utf8",
-      mode: 0o600,
-    });
-    await rename(temporary, target);
+    try {
+      await writeFile(temporary, `${JSON.stringify(validated, null, 2)}\n`, {
+        encoding: "utf8",
+        mode: 0o600,
+      });
+      await rename(temporary, target);
+    } finally {
+      await rm(temporary, { force: true }).catch(() => undefined);
+    }
   }
 
   async load(executionId: string): Promise<ExecutableWorkerJournal | null> {

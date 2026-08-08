@@ -1,14 +1,28 @@
 import { execFile } from "node:child_process";
-import { createHash } from "node:crypto";
-import { access, lstat, mkdir, mkdtemp, readFile, rm, unlink, writeFile } from "node:fs/promises";
+import { createHash, randomUUID } from "node:crypto";
+import {
+  access,
+  chmod,
+  lstat,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rename,
+  rm,
+  stat,
+  unlink,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve, sep } from "node:path";
+import { basename, dirname, join, resolve, sep } from "node:path";
 import { promisify } from "node:util";
 
 import {
   executableWorkerCheckSchema,
+  executableWorkerCleanupEvidenceSchema,
   executableWorkerPreflightSchema,
   type ExecutableWorkerCheck,
+  type ExecutableWorkerCleanupEvidence,
   type ExecutableWorkerPreflight,
   type ExecutableWorkerProposal,
 } from "./executable-worker-contracts.js";
@@ -19,6 +33,20 @@ const executeFile = promisify(execFile);
 
 function digestText(value: string): string {
   return `sha256:${createHash("sha256").update(value).digest("hex")}`;
+}
+
+const credentialPatterns = [
+  /github_pat_[a-z0-9_]{20,}/giu,
+  /gh[pousr]_[a-z0-9]{20,}/giu,
+  /-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----/gu,
+  /\bAKIA[0-9A-Z]{16}\b/gu,
+  /\bxox[baprs]-[a-z0-9-]+/giu,
+];
+
+function redactOutput(value: string): { output: string; redacted: boolean } {
+  let output = value;
+  for (const pattern of credentialPatterns) output = output.replace(pattern, "[REDACTED]");
+  return { output, redacted: output !== value };
 }
 
 function within(path: string, roots: readonly string[]): boolean {
@@ -63,17 +91,20 @@ export class GitCandidateWorkspaceAdapter implements ExecutableWorkerAdapter {
   readonly #canonicalPath: string;
   readonly #gitExecutable: string;
   readonly #maximumContextBytes: number;
+  readonly #renameFile: (source: string, target: string) => Promise<void>;
   readonly #workspaceRoot: string;
 
   constructor(options: {
     canonicalPath: string;
     gitExecutable?: string;
     maximumContextBytes?: number;
+    renameFile?: (source: string, target: string) => Promise<void>;
     workspaceRoot?: string;
   }) {
     this.#canonicalPath = resolve(options.canonicalPath);
     this.#gitExecutable = options.gitExecutable ?? "git";
     this.#maximumContextBytes = options.maximumContextBytes ?? 256 * 1024;
+    this.#renameFile = options.renameFile ?? rename;
     this.#workspaceRoot = resolve(options.workspaceRoot ?? tmpdir());
   }
 
@@ -119,7 +150,12 @@ export class GitCandidateWorkspaceAdapter implements ExecutableWorkerAdapter {
         ? `Candidate branch ${proposal.branch} already exists.`
         : `Candidate branch ${proposal.branch} is available.`,
     });
-    for (const command of [...proposal.materializationCommands, ...proposal.commands]) {
+    for (const command of [
+      ...proposal.materializationCommands,
+      ...(proposal.baselineCommands ?? []),
+      ...(proposal.normalizationCommands ?? []),
+      ...proposal.commands,
+    ]) {
       const executable = command[0];
       if (executable === undefined) continue;
       const available = await this.#executableAvailable(executable);
@@ -183,7 +219,9 @@ export class GitCandidateWorkspaceAdapter implements ExecutableWorkerAdapter {
       if (bytes >= this.#maximumContextBytes) break;
       try {
         const content = await readFile(await this.#resolveSafe(workspace, path), "utf8");
-        append(`\n--- ${path} ---\n${content}`);
+        append(
+          `\n--- ${path} ${digestText(content)} bytes:${String(Buffer.byteLength(content))} ---\n${content}`,
+        );
       } catch {
         append(`\n--- ${path} ---\n[BINARY OR UNREADABLE]`);
       }
@@ -225,7 +263,20 @@ export class GitCandidateWorkspaceAdapter implements ExecutableWorkerAdapter {
   ): Promise<void> {
     const target = await this.#resolveSafe(workspace, path);
     await mkdir(dirname(target), { recursive: true });
-    await writeFile(target, content, "utf8");
+    const temporary = join(dirname(target), `.${basename(target)}.${randomUUID()}.tmp`);
+    let mode = 0o644;
+    try {
+      mode = (await stat(target)).mode & 0o777;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    }
+    try {
+      await writeFile(temporary, content, { encoding: "utf8", mode: 0o600 });
+      await chmod(temporary, mode);
+      await this.#renameFile(temporary, target);
+    } finally {
+      await rm(temporary, { force: true }).catch(() => undefined);
+    }
   }
 
   async deleteFile(workspace: ExecutableWorkerWorkspace, path: string): Promise<void> {
@@ -245,7 +296,7 @@ export class GitCandidateWorkspaceAdapter implements ExecutableWorkerAdapter {
       const result = await executeFile(executable, command.slice(1), {
         cwd: workspace.path,
         timeout: 300_000,
-        maxBuffer: 64_000,
+        maxBuffer: 1_000_000,
         signal,
       });
       output = `${result.stdout}${result.stderr}`;
@@ -259,12 +310,18 @@ export class GitCandidateWorkspaceAdapter implements ExecutableWorkerAdapter {
       exitCode = typeof failure.code === "number" ? failure.code : 1;
       output = `${failure.stdout ?? ""}${failure.stderr ?? ""}${failure.message ?? ""}`;
     }
-    output = output.slice(0, 64_000);
+    const outputBytes = Buffer.byteLength(output);
+    const outputDigest = digestText(output);
+    const redacted = redactOutput(output);
+    const bounded = truncateUtf8(redacted.output, 64_000);
     return executableWorkerCheckSchema.parse({
       command,
       exitCode,
-      output,
-      outputDigest: digestText(output),
+      output: bounded,
+      outputDigest,
+      outputBytes,
+      outputTruncated: Buffer.byteLength(redacted.output) > Buffer.byteLength(bounded),
+      outputRedacted: redacted.redacted,
     });
   }
 
@@ -298,15 +355,89 @@ export class GitCandidateWorkspaceAdapter implements ExecutableWorkerAdapter {
     return { commit, ref: `refs/heads/${proposal.branch}`, diff };
   }
 
-  async cleanup(workspace: ExecutableWorkerWorkspace): Promise<boolean> {
-    try {
-      await this.#git(["worktree", "remove", "--force", workspace.path], this.#canonicalPath);
-      await this.#git(["worktree", "prune"], this.#canonicalPath);
-      await rm(workspace.path, { recursive: true, force: true });
-      return !(await this.workspaceExists(workspace));
-    } catch {
-      return false;
+  async cleanup(workspace: ExecutableWorkerWorkspace): Promise<ExecutableWorkerCleanupEvidence> {
+    const attempts: ExecutableWorkerCleanupEvidence["attempts"] = [];
+    const resolvedPath = resolve(workspace.path);
+    const workspaceRootVerified =
+      resolvedPath.startsWith(`${this.#workspaceRoot}${sep}`) &&
+      basename(resolvedPath).startsWith("iris-executable-worker-");
+    attempts.push({
+      step: "scope",
+      attempt: 1,
+      ok: workspaceRootVerified,
+      ...(workspaceRootVerified ? {} : { code: "EXECUTABLE_WORKER_CLEANUP_SCOPE_DENIED" }),
+    });
+    if (!workspaceRootVerified)
+      return executableWorkerCleanupEvidenceSchema.parse({
+        workspaceRootVerified,
+        gitRegistrationAbsent: false,
+        filesystemAbsent: false,
+        verified: false,
+        attempts,
+        completedAt: new Date().toISOString(),
+      });
+
+    let registered = await this.#worktreeRegistered(resolvedPath).catch(() => true);
+    attempts.push({ step: "git-registration", attempt: 1, ok: !registered });
+    if (registered) {
+      try {
+        await this.#git(["worktree", "remove", "--force", resolvedPath], this.#canonicalPath);
+        attempts.push({ step: "git-remove", attempt: 1, ok: true });
+      } catch (error) {
+        attempts.push({
+          step: "git-remove",
+          attempt: 1,
+          ok: false,
+          code: this.#errorCode(error),
+        });
+      }
     }
+    try {
+      await this.#git(["worktree", "prune"], this.#canonicalPath);
+      attempts.push({ step: "git-prune", attempt: 1, ok: true });
+    } catch (error) {
+      attempts.push({
+        step: "git-prune",
+        attempt: 1,
+        ok: false,
+        code: this.#errorCode(error),
+      });
+    }
+    try {
+      await rm(resolvedPath, {
+        recursive: true,
+        force: true,
+        maxRetries: 3,
+        retryDelay: 100,
+      });
+      attempts.push({ step: "filesystem-remove", attempt: 1, ok: true });
+    } catch (error) {
+      attempts.push({
+        step: "filesystem-remove",
+        attempt: 1,
+        ok: false,
+        code: this.#errorCode(error),
+      });
+    }
+    registered = await this.#worktreeRegistered(resolvedPath).catch(() => true);
+    const filesystemAbsent = !(await this.workspaceExists(workspace));
+    const gitRegistrationAbsent = !registered;
+    attempts.push({
+      step: "verify",
+      attempt: 1,
+      ok: gitRegistrationAbsent && filesystemAbsent,
+      ...(gitRegistrationAbsent && filesystemAbsent
+        ? {}
+        : { code: "EXECUTABLE_WORKER_CLEANUP_INCOMPLETE" }),
+    });
+    return executableWorkerCleanupEvidenceSchema.parse({
+      workspaceRootVerified,
+      gitRegistrationAbsent,
+      filesystemAbsent,
+      verified: gitRegistrationAbsent && filesystemAbsent,
+      attempts,
+      completedAt: new Date().toISOString(),
+    });
   }
 
   #resolve(workspace: ExecutableWorkerWorkspace, path: string): string {
@@ -318,6 +449,8 @@ export class GitCandidateWorkspaceAdapter implements ExecutableWorkerAdapter {
 
   async #resolveSafe(workspace: ExecutableWorkerWorkspace, path: string): Promise<string> {
     const target = this.#resolve(workspace, path);
+    if (await this.#trackedSymlink(workspace, path))
+      throw new Error(`EXECUTABLE_WORKER_SYMLINK_DENIED:${path}`);
     let current = workspace.path;
     for (const part of path.replaceAll("\\", "/").split("/").filter(Boolean)) {
       current = join(current, part);
@@ -330,6 +463,30 @@ export class GitCandidateWorkspaceAdapter implements ExecutableWorkerAdapter {
       }
     }
     return target;
+  }
+
+  async #trackedSymlink(workspace: ExecutableWorkerWorkspace, path: string): Promise<boolean> {
+    const output = (await this.#git(["ls-files", "-s", "-z", "--", path], workspace.path)).stdout;
+    return output
+      .split("\0")
+      .filter(Boolean)
+      .some((record) => record.startsWith("120000 "));
+  }
+
+  async #worktreeRegistered(path: string): Promise<boolean> {
+    const expected = resolve(path).toLowerCase();
+    const output = (await this.#git(["worktree", "list", "--porcelain"], this.#canonicalPath))
+      .stdout;
+    return output
+      .split(/\r?\n/u)
+      .filter((line) => line.startsWith("worktree "))
+      .map((line) => resolve(line.slice("worktree ".length)).toLowerCase())
+      .includes(expected);
+  }
+
+  #errorCode(error: unknown): string {
+    const code = (error as NodeJS.ErrnoException).code;
+    return typeof code === "string" && code !== "" ? code : "EXECUTABLE_WORKER_CLEANUP_STEP_FAILED";
   }
 
   async #refExists(ref: string): Promise<boolean> {

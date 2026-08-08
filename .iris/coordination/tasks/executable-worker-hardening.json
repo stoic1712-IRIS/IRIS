@@ -1,0 +1,103 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "executable-worker-hardening",
+  "objective": "Locally implement and verify deterministic executable-worker hardening across IRIS Core and the Founder Command Center: digest-bound exact replacements, atomic writes, proposal-bound baseline and normalization commands, durable redacted per-command evidence, restart-safe repair context, and idempotent two-phase cleanup that proves both Git-registration and filesystem absence without adding authority or publishing changes.",
+  "issuer": "Founder Cristofer Stoic Arellano through Codex",
+  "executor": "Codex",
+  "assigned_role": "producer",
+  "created_at": "2026-08-08T00:52:18Z",
+  "status": "approved",
+  "risk_class": "R2",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "Founder mandate: approve the deterministic executable-worker hardening design for local implementation and verification. Do not publish.",
+  "completion_actions": ["edit", "verify", "repair"],
+  "completion_exclusions": [
+    "Dependency installation or version changes",
+    "Staging or committing",
+    "Push, pull request, merge, or publication",
+    "Live executable-worker activation without a separate exact digest-bound Founder approval",
+    "Credentials, spending, deployment, public or LAN exposure, provider resources, or repository administration",
+    "Final Phase 0 graduation execution"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "8d29c18d3e89bdc81797b1a28b7e623d905d1423"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "iris/conversational-executable-worker-activation",
+      "commit": "57af9e2a2076c0e90a53e43c0a2f173a945e84db"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/tasks/executable-worker-hardening.json",
+    "docs/operations/executable-worker-hardening-design.md",
+    "docs/operations/executable-worker-hardening-plan.md",
+    "docs/specifications/cycle-eight-executable-worker-runtime.md",
+    "packages/development/src/executable-worker-contracts.ts",
+    "packages/development/src/executable-worker-runtime.ts",
+    "packages/development/src/execution-journal.ts",
+    "packages/development/src/git-candidate-workspace-adapter.ts",
+    "scripts/development/cycle-eight-live-proof.mjs",
+    "tests/cycle-eight-executable-worker-runtime.test.ts",
+    "scripts/local-gateway.mjs",
+    "src/executable-worker-client.ts",
+    "src/views/Develop.tsx",
+    "tests/local-gateway.test.ts"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    "docs/governance/**",
+    "docs/architecture/**",
+    "docs/registries/**",
+    "evidence/**",
+    "package.json",
+    "pnpm-lock.yaml",
+    "C:/Projects/STOIC-IRIS-source-library/**"
+  ],
+  "permitted_actions": [
+    "Create and modify only the exact allowed paths in isolated local worktrees",
+    "Run repository-pinned focused and full verification commands",
+    "Repair failures within the approved deterministic design",
+    "Use existing locally materialized dependencies without network access",
+    "Retain the uncommitted isolated worktrees for Founder review"
+  ],
+  "prohibited_actions": [
+    "Weaken typed approval, path, byte, credential, model, timeout, or repository boundaries",
+    "Allow complete-file model rewrites for existing files",
+    "Persist raw secret-bearing command output",
+    "Claim cleanup without Git-registration and filesystem absence evidence",
+    "Install or update dependencies",
+    "Stage, commit, push, create or merge a pull request, deploy, spend, use credentials, or execute final graduation"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run tests/cycle-eight-executable-worker-runtime.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm exec vitest run tests/local-gateway.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "Failing-before-passing regression tests for mutation integrity, durable command evidence, restart recovery, and cleanup",
+    "Exact focused and full verification commands with exit codes",
+    "Changed-path and lockfile-integrity verification",
+    "No dependency, credential, network, publication, provider-resource, spending, deployment, or Phase 0 effect",
+    "Rollback and retained-worktree status"
+  ],
+  "publisher": null,
+  "approval_reference": "founder-deterministic-executable-worker-hardening-2026-08-07",
+  "phase0_graduation": false
+}
