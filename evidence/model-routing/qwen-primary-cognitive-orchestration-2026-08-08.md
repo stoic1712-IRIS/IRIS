@@ -4,8 +4,8 @@
 **Repository:** `stoic1712-IRIS/IRIS`
 **Branch:** `iris/qwen-primary-cognitive-orchestration`
 **Base:** `6367e4547d34092472c672ee93a9e1b2a8e5c80f`
-**Locally verified payload revision:** `22f72dedd05824991f31739946af56de60870b26`
-**Payload patch digest:** `sha256:b12af2bdcd53f8ee4a598a67ca708839a87dc480e316913003d095ede7b910bb`
+**Locally verified payload revision:** `4abe722f8bdf4f57b98b56c2d6f31c4bb99eb21f`
+**Payload patch digest:** `sha256:8511a607ddff7addf75aad80239320445d1b9fa9ea500e4ff69660e6b8d86a8c`
 
 ## Result
 
@@ -42,6 +42,11 @@ accepted, integrated into the Founder Command Center, or evidence of Phase 0 gra
   duplicate identifiers across all evidence.
 - The synthesis repair budget persists across restart, and steering redacts bare provider tokens,
   bearer values, credential URLs, and private keys before storage.
+- A delayed degraded Qwen 8B response cannot outlive Founder cancellation or produce a late
+  presentation.
+- Image presence determines authoritative `vision` purpose before a model override is applied.
+- Steering reuses the canonical gateway secret detector, covering credential assignments and
+  incomplete private-key material in addition to the explicit redaction patterns.
 
 ## Verification evidence
 
@@ -54,11 +59,11 @@ Focused profiles, with package-manager network disabled:
 - Contract profile: 1 file, 6 tests passed, exit `0`, output digest
   `sha256:bc13232b8a88b1e1a2f9e68723983963984476c9c7e89af2ad2f14f2fd920b9a`.
 - Lease profile: 1 file, 5 tests passed, exit `0`.
-- Runtime profile: 1 file, 17 tests passed, exit `0`.
+- Runtime profile: 1 file, 19 tests passed, exit `0`.
 
 Full `pnpm verify` used Node `v24.19.0` and pnpm `11.20.0` with network disabled. After
 history-preservingly synchronizing canonical `main`, formatting, lint, type checking, 59 test files,
-476 passed tests, production build, and repository diagnostics
+478 passed tests, production build, and repository diagnostics
 all exited `0`. One pre-existing platform-conditioned test was skipped on Windows: the Unix-only
 Founder runtime build-launcher test in `tests/cycle-five-founder-dialogue.test.ts`. Vite emitted its
 existing non-failing large-chunk advisory.

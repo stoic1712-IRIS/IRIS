@@ -21,8 +21,8 @@
     {
       "repository": "stoic1712-IRIS/IRIS",
       "branch": "iris/qwen-primary-cognitive-orchestration",
-      "commit": "22f72dedd05824991f31739946af56de60870b26",
-      "patch_digest": "sha256:b12af2bdcd53f8ee4a598a67ca708839a87dc480e316913003d095ede7b910bb"
+      "commit": "4abe722f8bdf4f57b98b56c2d6f31c4bb99eb21f",
+      "patch_digest": "sha256:8511a607ddff7addf75aad80239320445d1b9fa9ea500e4ff69660e6b8d86a8c"
     }
   ],
   "changed_paths": [
@@ -65,26 +65,26 @@
     },
     {
       "repository": "stoic1712-IRIS/IRIS",
-      "command": "iris-dev focused verify tests/qwen-primary-cognitive-orchestration-runtime.test.ts: 17 passed",
+      "command": "iris-dev focused verify tests/qwen-primary-cognitive-orchestration-runtime.test.ts: 19 passed",
       "exit_code": 0
     },
     {
       "repository": "stoic1712-IRIS/IRIS",
-      "command": "COREPACK_ENABLE_NETWORK=0 pnpm verify after synchronizing canonical main: format, lint, typecheck, 59 files and 476 passed tests with 1 platform skip, build, diagnostics",
+      "command": "COREPACK_ENABLE_NETWORK=0 pnpm verify after synchronizing canonical main and repairing independent-review findings: format, lint, typecheck, 59 files and 478 passed tests with 1 platform skip, build, diagnostics",
       "exit_code": 0
     },
     {
       "repository": "stoic1712-IRIS/IRIS",
-      "command": "git diff --check 2314f9782902b975317ff242932a40c778d2c31a...22f72dedd05824991f31739946af56de60870b26",
+      "command": "git diff --check 2314f9782902b975317ff242932a40c778d2c31a...4abe722f8bdf4f57b98b56c2d6f31c4bb99eb21f",
       "exit_code": 0
     }
   ],
   "evidence": [
     "evidence/model-routing/qwen-primary-cognitive-orchestration-2026-08-08.md",
     "docs/specifications/qwen-primary-cognitive-orchestration.md",
-    "The three focused profiles passed 6, 5, and 17 tests respectively with package-manager network disabled.",
-    "Full pnpm verify after synchronizing canonical main passed 59 files and 476 tests; one pre-existing Unix-only launcher test was skipped on Windows.",
-    "The synchronized review payload through 22f72dedd05824991f31739946af56de60870b26 is bound by sha256:b12af2bdcd53f8ee4a598a67ca708839a87dc480e316913003d095ede7b910bb.",
+    "The three focused profiles passed 6, 5, and 19 tests respectively with package-manager network disabled.",
+    "Full pnpm verify after synchronizing canonical main and repairing independent-review findings passed 59 files and 478 tests; one pre-existing Unix-only launcher test was skipped on Windows.",
+    "The synchronized repaired payload through 4abe722f8bdf4f57b98b56c2d6f31c4bb99eb21f is bound by sha256:8511a607ddff7addf75aad80239320445d1b9fa9ea500e4ff69660e6b8d86a8c.",
     "No dependency, lockfile, live provider, credential, deployment, spending, public or LAN, destructive, GitHub, Command Center, or Phase 0 effect occurred."
   ],
   "limitations": [

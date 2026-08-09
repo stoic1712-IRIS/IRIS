@@ -20,8 +20,10 @@ completion truth. A model proposes typed outputs; it never becomes an authority 
 - `qwen3:8b`: clearly disclosed R0-only degraded dialogue when the primary model is unavailable.
 
 The existing `routeIrisModel` behavior and explicit allowlisted Founder overrides remain intact.
-Overrides change only the selected route; they do not change the objective, repository/path scope,
-capabilities, risk, review obligation, or authority.
+Overrides change only the selected model; they do not change the request-derived purpose,
+objective, repository/path scope, capabilities, risk, review obligation, or authority. Image
+presence takes purpose precedence and therefore remains `vision` even when the Founder names a
+model explicitly.
 
 ## Strict contracts and validation order
 
@@ -87,12 +89,15 @@ budget is durable and cannot reset through resume.
 
 ## Interruption and recovery
 
-Pause and cancellation are persisted before the active lease is aborted. Provider results are
+Pause and cancellation are persisted before the active lease is aborted, including while a
+degraded Qwen 8B response is still being generated. Provider results are
 accepted only when the durable generation still matches the captured generation, so a late
 non-cooperative worker cannot overwrite terminal cancellation. Store transitions use atomic
 compare-and-set writes against the captured generation. Steering retains at most ten notes, removes
 labeled secrets, bare provider tokens, bearer credentials, credential-bearing URLs, and private
-keys before persistence, and cannot widen the stored request or policy.
+keys before persistence, and cannot widen the stored request or policy. The final persistence gate
+reuses the canonical model-gateway secret detector, so new canonical detector patterns also protect
+steering state.
 
 Resume requires byte-equivalent request and policy bindings. Completed/cancelled states remain
 terminal. A durable reviewed artifact resumes at synthesis without repeating specialist or reviewer
@@ -106,8 +111,8 @@ evidence available.
 - Qwen 8B is never final judgment for coding, research, deep reasoning, review, or protected work.
 - Coding requires GPT-OSS as the distinct reviewer; absence saves `reviewer-model-unavailable`.
 - Missing models never silently weaken the requested purpose or authority boundary.
-- Explicit model overrides are normalized against independently derived material purpose; they
-  never convert coding, research, or deep reasoning into direct conversation.
+- Explicit model overrides are normalized against independently derived purpose; they never convert
+  vision, coding, research, or deep reasoning into ordinary conversation.
 
 ## Security, authority, and compatibility
 
