@@ -1,0 +1,100 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "qwen-primary-cognitive-orchestration-command-center",
+  "objective": "Bind the Founder Command Center conversation surface to canonical IRIS Core Qwen primary cognitive orchestration at merge 031e19de5af7ebd9e227ace7025757fa8d3bbe44, making qwen3.6:27b the normal IRIS dialogue and synthesis owner while delegating coding to qwen3-coder:30b and research or deep review to gpt-oss:20b under the existing fail-closed authority, evidence, cancellation, model-lifecycle, and Founder-session boundaries.",
+  "issuer": "Founder Cristofer Stoic Arellano through Codex",
+  "executor": "Codex",
+  "assigned_role": "producer",
+  "created_at": "2026-08-09T00:04:00Z",
+  "status": "approved",
+  "risk_class": "R2",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "Founder mandate: implement Approach 2 as fast as possible with precision and do the full bounded sequence. This task authorizes implementation, local verification and repair, exact staging and commit, non-force branch push, pull-request creation, independent exact-patch review, merge after a pass, synchronization, local restart, smoke testing, remote equality verification, and safe disposable-worktree cleanup. It does not authorize credentials, spending, dependency changes, deployment, public or LAN exposure, repository administration, force-push, history rewriting, destructive data operations, or Phase 0 graduation.",
+  "completion_actions": [
+    "research",
+    "edit",
+    "verify",
+    "repair",
+    "stage",
+    "commit",
+    "push_branch",
+    "create_pull_request",
+    "independent_review",
+    "merge",
+    "synchronize",
+    "cleanup"
+  ],
+  "completion_exclusions": [
+    "Dependency or lockfile changes",
+    "Credential use or persistence",
+    "Deployment, public or LAN exposure, spending, or provider-resource creation",
+    "Repository administration, force-push, history rewriting, or destructive data operations",
+    "Phase 0 Development Independence graduation"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "031e19de5af7ebd9e227ace7025757fa8d3bbe44"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "main",
+      "commit": "edb2f882cc91deff7109491e609b733157c92e5a"
+    }
+  ],
+  "allowed_paths": [
+    "README.md",
+    "scripts/local-gateway.mjs",
+    "src/conversation-client.ts",
+    "src/views/Presence.tsx",
+    "tests/conversation-client.test.ts",
+    "tests/local-gateway.test.ts",
+    "tests/presence.test.tsx"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    ".claude/**",
+    ".iris/**",
+    "package.json",
+    "pnpm-lock.yaml",
+    "C:/Projects/STOIC-IRIS/**",
+    "C:/Projects/STOIC-IRIS-source-library/**"
+  ],
+  "permitted_actions": [
+    "Consume the built canonical Core cognitive-orchestration contract at 031e19de5af7ebd9e227ace7025757fa8d3bbe44 through the existing IRIS_ROOT boundary",
+    "Route ordinary dialogue and final synthesis through qwen3.6:27b",
+    "Delegate coding to qwen3-coder:30b and research or deep review to gpt-oss:20b with exact model identity validation",
+    "Use sequential keep-alive-zero model calls and an explicit CPU-safe GPT-OSS provider profile when the current Windows CUDA backend fails closed",
+    "Expose metadata-only route, phase, and model-role status in authenticated loopback Founder sessions",
+    "Verify hermetically and perform one loopback-only live smoke test after merge"
+  ],
+  "prohibited_actions": [
+    "Reimplement or replace Core authority, evidence, completion, cancellation, lease, or review truth in the Command Center",
+    "Allow a model override to weaken request purpose, review, scope, risk, or authority",
+    "Persist model context, raw credentials, microphone audio, or secret-like steering text",
+    "Run multiple large local models concurrently",
+    "Install dependencies or change the lockfile",
+    "Deploy, expose, spend, administer repositories, force-push, rewrite history, or claim Phase 0 graduation"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm exec vitest run tests/conversation-client.test.ts tests/presence.test.tsx tests/local-gateway.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "Exact Core and Command Center base revisions and changed paths",
+    "Qwen 27B primary dialogue and synthesis plus specialist-role identity tests",
+    "Purpose-preserving override, cancellation, redaction, evidence, and fail-closed tests",
+    "Sequential model release and GPT-OSS Windows CUDA fail-closed or CPU-safe profile evidence",
+    "Independent review, exit codes, PR and merge identifiers, remote equality, rollback, restart, smoke test, and cleanup"
+  ],
+  "publisher": "Codex under the exact Founder completion mandate after independent review",
+  "approval_reference": "founder-qwen-primary-orchestrator-approach-2-2026-08-08",
+  "phase0_graduation": false
+}
