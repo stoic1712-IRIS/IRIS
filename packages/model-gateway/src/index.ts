@@ -4,3 +4,7 @@ export * from "./founder-dialogue.js";
 export * from "./model-router.js";
 export * from "./ollama-adapter.js";
 export * from "./secret-filter.js";
+export * from "./cognitive-orchestrator.js";
+export * from "./cognitive-turn-contracts.js";
+export * from "./cognitive-turn-errors.js";
+export * from "./model-lease-scheduler.js";

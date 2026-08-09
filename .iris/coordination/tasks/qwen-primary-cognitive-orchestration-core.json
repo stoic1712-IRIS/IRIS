@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "qwen-primary-cognitive-orchestration-core",
+  "objective": "Implement and locally verify the approved Core-first Qwen primary cognitive orchestration plan so qwen3.6:27b becomes IRIS's normal Founder-facing orchestrator and communicator while preserving the existing deterministic router, specialist workers, authority gates, exact evidence, rollback paths, and every existing capability.",
+  "issuer": "Founder Cristofer Stoic Arellano through Codex",
+  "executor": "Codex",
+  "assigned_role": "producer",
+  "created_at": "2026-08-08T23:00:00Z",
+  "status": "approved",
+  "risk_class": "R2",
+  "authorization_mode": "single_action",
+  "completion_mandate_text": null,
+  "completion_actions": [],
+  "completion_exclusions": [
+    "Push, pull-request creation, review approval, merge, synchronization, or worktree cleanup",
+    "Founder Command Center implementation or modification",
+    "Dependency or lockfile changes and dependency installation",
+    "Live Ollama acceptance, model installation, or provider mutation",
+    "Deployment, public or LAN exposure, credentials, spending, paid resources, or repository administration",
+    "Destructive operations, force-push, history rewriting, or deletion of canonical evidence",
+    "Permanent Phase 0 graduation claim or execution"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "6367e4547d34092472c672ee93a9e1b2a8e5c80f"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/tasks/qwen-primary-cognitive-orchestration-core.json",
+    ".iris/coordination/handoffs/qwen-primary-cognitive-orchestration-core.json",
+    "docs/superpowers/specs/2026-08-08-qwen-primary-cognitive-orchestration-design.md",
+    "docs/superpowers/plans/2026-08-08-qwen-primary-cognitive-orchestration-core.md",
+    "packages/model-gateway/src/cognitive-turn-contracts.ts",
+    "packages/model-gateway/src/cognitive-turn-errors.ts",
+    "packages/model-gateway/src/model-lease-scheduler.ts",
+    "packages/model-gateway/src/cognitive-orchestrator.ts",
+    "packages/model-gateway/src/index.ts",
+    "tests/qwen-primary-cognitive-orchestration-contracts.test.ts",
+    "tests/model-lease-scheduler.test.ts",
+    "tests/qwen-primary-cognitive-orchestration-runtime.test.ts",
+    "tests/fixtures/qwen-primary-cognitive-orchestration-fixture.ts",
+    "docs/specifications/qwen-primary-cognitive-orchestration.md",
+    "evidence/model-routing/qwen-primary-cognitive-orchestration-2026-08-08.md"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    ".claude/**",
+    "package.json",
+    "pnpm-lock.yaml",
+    "C:/Projects/STOIC-IRIS-source-library/**",
+    "C:/Projects/iris-founder-command-center-main/**"
+  ],
+  "permitted_actions": [
+    "Preserve the approved design and implementation plan in the isolated Core branch",
+    "Create strict cognitive-turn, delegation, evidence, review, presentation, transition, lease, and snapshot contracts",
+    "Implement a single-active-model lease scheduler with cancellation and truthful release events",
+    "Implement direct and delegated cognitive orchestration through injected provider and worker adapters",
+    "Implement exact evidence preservation, one bounded synthesis repair, pause, cancellation, steering, restart, and resume",
+    "Implement the Qwen 27B primary path, Qwen 8B R0-only degraded path, specialist routing, distinct review, and explicit route override validation",
+    "Write deterministic tests before production behavior and run focused and full verification without network installation",
+    "Stage only exact allowed paths and create bounded local commits required by the plan",
+    "Record truthful local verification evidence and prepare a schema-valid handoff for independent review"
+  ],
+  "prohibited_actions": [
+    "Remove, weaken, rename, or replace an existing model, router, worker contract, capability, authority gate, or security control",
+    "Modify the preserved model router, Founder dialogue compatibility path, Ollama adapter, dependency manifests, lockfile, or Command Center",
+    "Treat model output as authority, canonical memory, approval, exact evidence, or completion truth",
+    "Run a dependency installation, download a model, mutate a provider, or use a credential",
+    "Push, create or approve a pull request, merge, synchronize main, or clean the worktree",
+    "Deploy, expose a listener, spend money, create provider resources, administer repositories, or disclose secrets",
+    "Use broad staging, force-push, destructive reset, history rewrite, or delete canonical evidence",
+    "Claim Command Center integration, live Ollama acceptance, deployment, publication, or Phase 0 graduation"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run tests/qwen-primary-cognitive-orchestration-contracts.test.ts tests/model-lease-scheduler.test.ts tests/qwen-primary-cognitive-orchestration-runtime.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run tests/model-router.test.ts tests/model-gateway-ollama.test.ts tests/cycle-five-founder-dialogue.test.ts tests/cycle-nine-goal-multi-agent-orchestration.test.ts tests/cycle-eleven-complete-software-delivery.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "Exact Core base, isolated branch, result commits, changed paths, and patch digest",
+    "Source-library hash verification and applicable governance reconciliation",
+    "Red-green evidence for every implemented behavior",
+    "Strict provider-output, route, capability, objective, scope, review, evidence, fallback, lease, interruption, and resume tests",
+    "Existing router, Ollama adapter, Founder dialogue, goal orchestration, and software delivery compatibility results",
+    "Full verification command and exit code with every limitation or skip recorded",
+    "Unchanged package manifest and pnpm lockfile digest",
+    "History-preserving rollback instructions and independent-review handoff",
+    "Explicit non-claims for live provider integration, Command Center integration, publication, deployment, and Phase 0 graduation"
+  ],
+  "publisher": null,
+  "approval_reference": "qwen-primary-cognitive-orchestration-inline-2026-08-08",
+  "phase0_graduation": false
+}

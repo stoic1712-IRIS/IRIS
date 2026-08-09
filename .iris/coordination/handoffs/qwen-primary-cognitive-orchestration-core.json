@@ -1,0 +1,104 @@
+{
+  "schema_version": "1.0.0",
+  "handoff_id": "qwen-primary-cognitive-orchestration-core",
+  "task_id": "qwen-primary-cognitive-orchestration-core",
+  "producer": "Codex under the exact Founder-approved Core task",
+  "recipient": "Independent material reviewer",
+  "created_at": "2026-08-08T22:44:00.000Z",
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "6367e4547d34092472c672ee93a9e1b2a8e5c80f"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "2314f9782902b975317ff242932a40c778d2c31a"
+    }
+  ],
+  "result_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "iris/qwen-primary-cognitive-orchestration",
+      "commit": "4abe722f8bdf4f57b98b56c2d6f31c4bb99eb21f",
+      "patch_digest": "sha256:8511a607ddff7addf75aad80239320445d1b9fa9ea500e4ff69660e6b8d86a8c"
+    }
+  ],
+  "changed_paths": [
+    ".iris/coordination/handoffs/qwen-primary-cognitive-orchestration-core.json",
+    ".iris/coordination/tasks/qwen-primary-cognitive-orchestration-core.json",
+    "docs/specifications/qwen-primary-cognitive-orchestration.md",
+    "docs/superpowers/plans/2026-08-08-qwen-primary-cognitive-orchestration-core.md",
+    "docs/superpowers/specs/2026-08-08-qwen-primary-cognitive-orchestration-design.md",
+    "evidence/model-routing/qwen-primary-cognitive-orchestration-2026-08-08.md",
+    "packages/model-gateway/src/cognitive-orchestrator.ts",
+    "packages/model-gateway/src/cognitive-turn-contracts.ts",
+    "packages/model-gateway/src/cognitive-turn-errors.ts",
+    "packages/model-gateway/src/index.ts",
+    "packages/model-gateway/src/model-lease-scheduler.ts",
+    "tests/fixtures/qwen-primary-cognitive-orchestration-fixture.ts",
+    "tests/model-lease-scheduler.test.ts",
+    "tests/qwen-primary-cognitive-orchestration-contracts.test.ts",
+    "tests/qwen-primary-cognitive-orchestration-runtime.test.ts"
+  ],
+  "commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "verify all six foundation-source SHA-256 values against SOURCE-MANIFEST.md",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "iris-dev task validate and scope check for qwen-primary-cognitive-orchestration-core",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "iris-dev focused verify tests/qwen-primary-cognitive-orchestration-contracts.test.ts: 6 passed",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "iris-dev focused verify tests/model-lease-scheduler.test.ts: 5 passed",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "iris-dev focused verify tests/qwen-primary-cognitive-orchestration-runtime.test.ts: 19 passed",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "COREPACK_ENABLE_NETWORK=0 pnpm verify after synchronizing canonical main and repairing independent-review findings: format, lint, typecheck, 59 files and 478 passed tests with 1 platform skip, build, diagnostics",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "git diff --check 2314f9782902b975317ff242932a40c778d2c31a...4abe722f8bdf4f57b98b56c2d6f31c4bb99eb21f",
+      "exit_code": 0
+    }
+  ],
+  "evidence": [
+    "evidence/model-routing/qwen-primary-cognitive-orchestration-2026-08-08.md",
+    "docs/specifications/qwen-primary-cognitive-orchestration.md",
+    "The three focused profiles passed 6, 5, and 19 tests respectively with package-manager network disabled.",
+    "Full pnpm verify after synchronizing canonical main and repairing independent-review findings passed 59 files and 478 tests; one pre-existing Unix-only launcher test was skipped on Windows.",
+    "The synchronized repaired payload through 4abe722f8bdf4f57b98b56c2d6f31c4bb99eb21f is bound by sha256:8511a607ddff7addf75aad80239320445d1b9fa9ea500e4ff69660e6b8d86a8c.",
+    "No dependency, lockfile, live provider, credential, deployment, spending, public or LAN, destructive, GitHub, Command Center, or Phase 0 effect occurred."
+  ],
+  "limitations": [
+    "The verified adapters are hermetic in-memory boundaries; live Ollama model acceptance and provider lifecycle behavior remain unclaimed.",
+    "Command Center integration requires a separate task bound to the exact independently reviewed and merged Core revision.",
+    "This additive tranche does not execute or complete the permanent Phase 0 Development Independence graduation workflow."
+  ],
+  "rollback": "Before publication, preserve the base and feature branches and omit or history-preservingly revert the local feature commits without reset, force, or history rewriting. After a future merge, revert the exact merge commit through the ordinary governed pull-request path. The additive contract created no provider resource, credential, migration, deployment, or live state requiring destructive cleanup.",
+  "protected_actions_remaining": [
+    "Independent review of the exact locally verified payload and any bounded repair",
+    "Non-force feature-branch push and pull-request creation",
+    "Merge, provider-authoritative equality verification, local-main synchronization, and safe worktree cleanup",
+    "A separate Command Center tranche bound to the exact reviewed and merged Core revision",
+    "Live Ollama acceptance and the separately governed Phase 0 graduation workflow"
+  ],
+  "ready_for_review": true
+}
