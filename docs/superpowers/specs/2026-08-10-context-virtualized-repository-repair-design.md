@@ -58,9 +58,9 @@ The disposable candidate receives a non-canonical journal outside the Git diff. 
 - requested context slices and model-output digests;
 - last progress time and terminal state.
 
-A later activation may resume only when the newly approved proposal has the same repository, base, expected remote, finding, defect, paths, commands, and zero-authority fields, and when every recorded candidate digest matches disk. Created time, proposal ID, approval code, and proposal digest may differ because approval is new; execution scope may not. Drift, tamper, changed scope, or an unexpected Git path denies resume.
+A later activation may resume only when the newly approved proposal has the same repository, base, expected remote, finding, defect, paths, commands, and zero-authority fields, and when every recorded candidate digest matches disk. Created time, proposal ID, approval code, and proposal digest may differ because approval is new; execution scope may not. Every stage packet rechecks all editable and context files against canonical-before or completed-stage digests and regular-file modes. Drift, tamper, changed scope, or any staged, unstaged, untracked, deleted, renamed, copied, or type-changed path outside the exact allowlist denies resume.
 
-Successful verification removes the journal and candidate through the existing cleanup path. Retryable model or process failure retains the candidate only until the proposal retention bound. The next run first removes stale retained candidates using exact validated paths. Canonical worktrees and Git history are never cleanup targets.
+Successful verification removes the journal and candidate through the existing cleanup path before cleanup completion is attested. Surviving worktree or journal state fails closed rather than producing a successful result. Retryable model or process failure retains the candidate only until the proposal retention bound. The next run first removes stale retained candidates using exact validated paths. Canonical worktrees and Git history are never cleanup targets.
 
 ### 5. Activity-aware model transport
 

@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   assertRepositoryRepairCheckoutContent,
+  assertRepositoryRepairCleanupState,
   bindRepositoryRepairCode,
   createRepositoryRepairModelSchema,
   createRepositoryRepairIdleDeadline,
@@ -17,6 +18,7 @@ import {
   type RepositoryRepairProposal,
   validateRepositoryRepairCandidate,
   validateRepositoryRepairResume,
+  validateRepositoryRepairWorkingSet,
   validateRepositoryRepairStageCandidate,
   verifyRepositoryRepairApproval,
 } from "../packages/kernel/src/index.js";
@@ -482,6 +484,7 @@ describe("Release Seven governed repository repair", () => {
       canonicalBeforeDigests: {
         "src/a.ts": digest(canonicalBefore),
         "src/b.ts": digest("export const b = 1;\n"),
+        "src/context.ts": digest("export const context = true;\n"),
       },
       completedStages: [
         {
@@ -503,7 +506,11 @@ describe("Release Seven governed repository repair", () => {
         proposal: replacement,
         journal,
         candidateHead: replacement.baseRevision,
-        currentFiles: { "src/a.ts": staged, "src/b.ts": "export const b = 1;\n" },
+        currentFiles: {
+          "src/a.ts": staged,
+          "src/b.ts": "export const b = 1;\n",
+          "src/context.ts": "export const context = true;\n",
+        },
         changedPaths: ["src/a.ts"],
       }),
     ).toEqual({ nextStageIndex: 1 });
@@ -512,7 +519,11 @@ describe("Release Seven governed repository repair", () => {
         proposal: replacement,
         journal,
         candidateHead: replacement.baseRevision,
-        currentFiles: { "src/a.ts": "tampered\n", "src/b.ts": "export const b = 1;\n" },
+        currentFiles: {
+          "src/a.ts": "tampered\n",
+          "src/b.ts": "export const b = 1;\n",
+          "src/context.ts": "export const context = true;\n",
+        },
         changedPaths: ["src/a.ts"],
       }),
     ).toThrow("REPAIR_RESUME_TAMPERED");
@@ -521,7 +532,11 @@ describe("Release Seven governed repository repair", () => {
         proposal: replacement,
         journal,
         candidateHead: replacement.baseRevision,
-        currentFiles: { "src/a.ts": staged, "src/b.ts": "export const b = 1;\n" },
+        currentFiles: {
+          "src/a.ts": staged,
+          "src/b.ts": "export const b = 1;\n",
+          "src/context.ts": "export const context = true;\n",
+        },
         changedPaths: ["src/a.ts", "src/invented.ts"],
       }),
     ).toThrow("REPAIR_RESUME_PATH_DENIED");
@@ -533,7 +548,11 @@ describe("Release Seven governed repository repair", () => {
         }),
         journal,
         candidateHead: replacement.baseRevision,
-        currentFiles: { "src/a.ts": staged, "src/b.ts": "export const b = 1;\n" },
+        currentFiles: {
+          "src/a.ts": staged,
+          "src/b.ts": "export const b = 1;\n",
+          "src/context.ts": "export const context = true;\n",
+        },
         changedPaths: ["src/a.ts"],
       }),
     ).toThrow("REPAIR_RESUME_SCOPE_MISMATCH");
@@ -548,6 +567,74 @@ describe("Release Seven governed repository repair", () => {
     expect(source).toContain(".iris-repair-journal.json");
     expect(source).not.toContain("complete replacement text");
     expect(source).not.toContain("maximum = 120_000");
+  });
+
+  it("detects every tracked change state before enforcing the path allowlist", () => {
+    const source = readFileSync("scripts/runtime/iris-repository-repair-worker.mjs", "utf8");
+
+    expect(source).not.toContain('"--diff-filter=M"');
+    expect(source).toContain('"diff", "--name-only", "--no-renames", "-z"');
+    expect(source).toMatch(/"diff",\s*"--cached",\s*"--name-only",\s*"--no-renames",\s*"-z"/u);
+    expect(source).toMatch(/"ls-files",\s*"--others",\s*"--exclude-standard",\s*"-z"/u);
+  });
+
+  it("binds every stage packet to canonical and checkpointed file digests", () => {
+    const proposal = createRepositoryRepairProposal(input);
+    const canonicalA = "export const a = 1;\n";
+    const stagedA = "export const a = 2;\n";
+    const canonicalB = "export const b = 1;\n";
+    const canonicalContext = "export const context = true;\n";
+    const digest = (value: string) =>
+      `sha256:${createHash("sha256").update(value).digest("hex")}` as const;
+    const journal = repositoryRepairJournalSchema.parse({
+      schemaVersion: 1,
+      scopeDigest: createRepositoryRepairScopeDigest(proposal),
+      repository: proposal.repository,
+      baseRevision: proposal.baseRevision,
+      expectedRemoteRevision: proposal.expectedRemoteRevision,
+      candidateId: `candidate_release-seven-${proposal.digest.slice(7, 19)}`,
+      candidateHead: proposal.baseRevision,
+      canonicalBeforeDigests: {
+        "src/a.ts": digest(canonicalA),
+        "src/b.ts": digest(canonicalB),
+        "src/context.ts": digest(canonicalContext),
+      },
+      completedStages: [
+        {
+          index: 0,
+          path: "src/a.ts",
+          afterDigest: digest(stagedA),
+          modelOutputDigest: digest("model output"),
+          completedAt: "2026-08-10T18:01:00.000Z",
+        },
+      ],
+      contextSlices: [],
+      lastProgressAt: "2026-08-10T18:01:00.000Z",
+      state: "active",
+    });
+
+    const valid = {
+      "src/a.ts": stagedA,
+      "src/b.ts": canonicalB,
+      "src/context.ts": canonicalContext,
+    };
+    expect(validateRepositoryRepairWorkingSet({ proposal, journal, currentFiles: valid })).toBe(
+      true,
+    );
+    expect(() =>
+      validateRepositoryRepairWorkingSet({
+        proposal,
+        journal,
+        currentFiles: { ...valid, "src/context.ts": "tampered context\n" },
+      }),
+    ).toThrow("REPAIR_WORKING_SET_TAMPERED");
+    expect(() =>
+      validateRepositoryRepairWorkingSet({
+        proposal,
+        journal,
+        currentFiles: { ...valid, "src/b.ts": "premature edit\n" },
+      }),
+    ).toThrow("REPAIR_WORKING_SET_TAMPERED");
   });
 
   it("extends only the model idle deadline when response activity continues", () => {
@@ -565,5 +652,23 @@ describe("Release Seven governed repository repair", () => {
     expect(source).toContain("controller.abort()");
     expect(source).toContain("createRepositoryRepairIdleDeadline");
     expect(source).toContain("MODEL_IDLE_TIMEOUT");
+  });
+
+  it("attests completed cleanup only after candidate removal succeeds", () => {
+    const source = readFileSync("scripts/runtime/iris-repository-repair-worker.mjs", "utf8");
+    const cleanupIndex = source.lastIndexOf(
+      "await cleanupCandidate(sourceRoot, candidateRoot, journalPath)",
+    );
+    const resultIndex = source.lastIndexOf("repositoryRepairResultSchema.parse");
+
+    expect(cleanupIndex).toBeGreaterThan(-1);
+    expect(resultIndex).toBeGreaterThan(cleanupIndex);
+    expect(source).toContain("cleanupState,");
+    expect(source).not.toContain(
+      "await cleanupCandidate(sourceRoot, candidateRoot, journalPath).catch(() => undefined)",
+    );
+    expect(assertRepositoryRepairCleanupState(false, false)).toBe("completed");
+    expect(() => assertRepositoryRepairCleanupState(true, false)).toThrow("REPAIR_CLEANUP_FAILED");
+    expect(() => assertRepositoryRepairCleanupState(false, true)).toThrow("REPAIR_CLEANUP_FAILED");
   });
 });

@@ -5,6 +5,7 @@ import { lstat, mkdir, readFile, readdir, rename, rm, unlink, writeFile } from "
 import { join, relative, resolve, sep } from "node:path";
 import {
   assertRepositoryRepairCheckoutContent,
+  assertRepositoryRepairCleanupState,
   createRepositoryRepairIdleDeadline,
   createRepositoryRepairScopeDigest,
   createRepositoryRepairStageModelSchema,
@@ -16,6 +17,7 @@ import {
   repositoryRepairResultSchema,
   validateRepositoryRepairResume,
   validateRepositoryRepairStageCandidate,
+  validateRepositoryRepairWorkingSet,
 } from "../../packages/kernel/dist/repository-repair.js";
 
 const roots = new Map([
@@ -258,19 +260,50 @@ async function requestStage(proposal, packet) {
 async function readCandidateFiles(candidateRoot, paths) {
   return Object.fromEntries(
     await Promise.all(
-      paths.map(async (path) => [path, await readFile(resolve(candidateRoot, path), "utf8")]),
+      paths.map(async (path) => {
+        const target = resolve(candidateRoot, path);
+        if (!contained(candidateRoot, target)) throw new Error("READ_PATH_DENIED");
+        const metadata = await lstat(target);
+        if (!metadata.isFile() || metadata.isSymbolicLink()) throw new Error("FILE_MODE_DENIED");
+        return [path, await readFile(target, "utf8")];
+      }),
     ),
   );
 }
 
+function gitNulPaths(candidateRoot, ...args) {
+  return execFileSync(
+    "git",
+    ["-c", "core.hooksPath=NUL", "-c", "core.pager=cat", "--no-pager", ...args],
+    { cwd: candidateRoot, encoding: "utf8", maxBuffer: 1_048_576 },
+  )
+    .split("\0")
+    .filter(Boolean);
+}
+
 function changedPaths(candidateRoot) {
-  const tracked = git(candidateRoot, "diff", "--name-only", "--diff-filter=M")
-    .split(/\r?\n/u)
-    .filter(Boolean);
-  const untracked = git(candidateRoot, "ls-files", "--others", "--exclude-standard")
-    .split(/\r?\n/u)
-    .filter(Boolean);
-  return [...new Set([...tracked, ...untracked])];
+  const tracked = gitNulPaths(candidateRoot, "diff", "--name-only", "--no-renames", "-z");
+  const staged = gitNulPaths(
+    candidateRoot,
+    "diff",
+    "--cached",
+    "--name-only",
+    "--no-renames",
+    "-z",
+  );
+  const untracked = gitNulPaths(candidateRoot, "ls-files", "--others", "--exclude-standard", "-z");
+  return [...new Set([...tracked, ...staged, ...untracked])];
+}
+
+async function pathExists(path) {
+  try {
+    await lstat(path);
+    return true;
+  } catch (error) {
+    if (error instanceof Error && Reflect.has(error, "code") && error.code === "ENOENT")
+      return false;
+    throw error;
+  }
 }
 
 async function cleanupCandidate(sourceRoot, candidateRoot, journalPath) {
@@ -281,7 +314,16 @@ async function cleanupCandidate(sourceRoot, candidateRoot, journalPath) {
     await rm(candidateRoot, { recursive: true, force: true });
     git(sourceRoot, "worktree", "prune");
   }
-  await unlink(journalPath).catch(() => undefined);
+  try {
+    await unlink(journalPath);
+  } catch (error) {
+    if (!(error instanceof Error) || !Reflect.has(error, "code") || error.code !== "ENOENT")
+      throw error;
+  }
+  return assertRepositoryRepairCleanupState(
+    await pathExists(candidateRoot),
+    await pathExists(journalPath),
+  );
 }
 
 async function findRetainedCandidate(sourceRoot, proposal) {
@@ -313,7 +355,9 @@ async function findRetainedCandidate(sourceRoot, proposal) {
     try {
       const metadata = await lstat(candidateRoot);
       if (!metadata.isDirectory() || metadata.isSymbolicLink()) continue;
-      const currentFiles = await readCandidateFiles(candidateRoot, proposal.editableFiles);
+      const currentFiles = await readCandidateFiles(candidateRoot, [
+        ...new Set([...proposal.editableFiles, ...proposal.contextFiles]),
+      ]);
       const resume = validateRepositoryRepairResume({
         proposal,
         journal,
@@ -439,7 +483,7 @@ try {
       candidateId,
       candidateHead: proposal.baseRevision,
       canonicalBeforeDigests: Object.fromEntries(
-        proposal.editableFiles.map((path) => [path, sha256(canonicalFiles[path])]),
+        allPaths.map((path) => [path, sha256(canonicalFiles[path])]),
       ),
       completedStages: [],
       contextSlices: [],
@@ -460,6 +504,7 @@ try {
     emitProgress({ stageIndex, targetPath, state: "started", startedAt });
     for (let contextRound = 0; contextRound < 6; contextRound++) {
       const currentFiles = await readCandidateFiles(candidateRoot, allPaths);
+      validateRepositoryRepairWorkingSet({ proposal, journal, currentFiles });
       const packet = createRepositoryRepairStagePacket({
         proposal,
         targetPath,
@@ -561,6 +606,10 @@ try {
   );
   const verified = verification.every((item) => item.state === "passed");
   const finalFiles = await readCandidateFiles(candidateRoot, proposal.editableFiles);
+  const cleanupState = await cleanupCandidate(sourceRoot, candidateRoot, journalPath);
+  candidateRoot = "";
+  journalPath = "";
+  retainCandidate = false;
   const result = repositoryRepairResultSchema.parse({
     verdict: verified ? "verified" : "needs-repair",
     summary: verified
@@ -579,10 +628,9 @@ try {
     verification,
     canonicalRepositoryChanged: false,
     githubChanged: false,
-    cleanupState: "completed",
+    cleanupState,
     expiresAt: new Date().toISOString(),
   });
-  retainCandidate = false;
   process.stdout.write(JSON.stringify(result));
 } catch (error) {
   const errorCode = safeErrorCode(error);
@@ -603,8 +651,4 @@ try {
   });
   process.stderr.write(`${errorCode}\n`);
   process.exitCode = 1;
-} finally {
-  if (!retainCandidate && candidateRoot && sourceRoot && journalPath) {
-    await cleanupCandidate(sourceRoot, candidateRoot, journalPath).catch(() => undefined);
-  }
 }

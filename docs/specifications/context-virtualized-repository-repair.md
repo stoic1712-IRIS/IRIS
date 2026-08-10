@@ -90,12 +90,12 @@ It binds:
 - repository, base and expected remote revisions;
 - a scope digest covering defect, finding, paths, commands, limits, model, and zero-authority fields;
 - candidate identifier and base HEAD;
-- canonical before digests;
+- canonical before digests for every editable and context file;
 - contiguous completed stage indices, paths, after digests, model-output digests, and timestamps;
 - bounded context-slice metadata without source content; and
 - last progress time and terminal state.
 
-A replacement proposal may resume when its execution scope digest is identical even if its proposal identifier, proposal digest, creation time, or approval material differs. Resume rejects scope drift, HEAD drift, non-contiguous stages, unexpected changed paths, missing files, or a digest mismatch. Incompatible candidates remain isolated until their own retention cleanup rather than being repurposed.
+A replacement proposal may resume when its execution scope digest is identical even if its proposal identifier, proposal digest, creation time, or approval material differs. Resume rejects scope drift, HEAD drift, non-contiguous stages, unexpected changed paths, missing files, or a digest mismatch. Before every model packet, the worker revalidates every editable and context file against either its canonical-before digest or its completed-stage digest and rejects symlinks or non-regular files. Incompatible candidates remain isolated until their own retention cleanup rather than being repurposed.
 
 ## Progress Evidence
 
@@ -117,7 +117,7 @@ The worker emits `REPAIR_PROGRESS` records containing only stage index, target p
 
 ## Cleanup and Rollback
 
-A retryable interrupted candidate is retained only inside the validated candidate parent for the proposal retention period. A verified or completed-result candidate is removed with its journal through the exact Git worktree cleanup path. Stale retained candidates are removed only after validating their bounded candidate identifier and containment.
+A retryable interrupted candidate is retained only inside the validated candidate parent for the proposal retention period. Changed-path inspection covers unstaged, staged, untracked, deleted, renamed, copied, and type-changed paths before allowlist enforcement. A verified candidate is removed with its journal through the exact Git worktree cleanup path before a result may attest `cleanupState: completed`; either surviving artifact fails closed. Stale retained candidates are removed only after validating their bounded candidate identifier and containment.
 
 Before publication, rollback is deletion of this isolated development worktree and branch after preserving required evidence. After a future merge, rollback is a normal history-preserving revert of the exact merge commit. Force-push, history rewrite, broad filesystem deletion, and canonical evidence deletion are not rollback mechanisms.
 

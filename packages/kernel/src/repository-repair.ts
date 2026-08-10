@@ -575,6 +575,35 @@ export function createRepositoryRepairScopeDigest(
   return `sha256:${createHash("sha256").update(JSON.stringify(scope)).digest("hex")}`;
 }
 
+export function assertRepositoryRepairCleanupState(
+  candidateExists: boolean,
+  journalExists: boolean,
+): "completed" {
+  if (candidateExists || journalExists) throw new Error("REPAIR_CLEANUP_FAILED");
+  return "completed";
+}
+
+export function validateRepositoryRepairWorkingSet(input: {
+  proposal: RepositoryRepairProposal;
+  journal: RepositoryRepairJournal;
+  currentFiles: Readonly<Record<string, string>>;
+}): true {
+  const proposal = repositoryRepairProposalSchema.parse(input.proposal);
+  const journal = repositoryRepairJournalSchema.parse(input.journal);
+  const completed = new Map(
+    journal.completedStages.map((stage) => [stage.path, stage.afterDigest]),
+  );
+  const allPaths = [...new Set([...proposal.editableFiles, ...proposal.contextFiles])];
+  for (const path of allPaths) {
+    const content = input.currentFiles[path];
+    const expected = completed.get(path) ?? journal.canonicalBeforeDigests[path];
+    if (typeof content !== "string" || !expected) throw new Error("REPAIR_WORKING_SET_TAMPERED");
+    const actual = `sha256:${createHash("sha256").update(content).digest("hex")}`;
+    if (actual !== expected) throw new Error("REPAIR_WORKING_SET_TAMPERED");
+  }
+  return true;
+}
+
 export function validateRepositoryRepairResume(input: {
   proposal: RepositoryRepairProposal;
   journal: RepositoryRepairJournal;
@@ -604,16 +633,14 @@ export function validateRepositoryRepairResume(input: {
     if (stage?.index !== index || stage.path !== proposal.editableFiles[index])
       throw new Error("REPAIR_RESUME_STAGE_MISMATCH");
   }
+  try {
+    validateRepositoryRepairWorkingSet({ proposal, journal, currentFiles: input.currentFiles });
+  } catch {
+    throw new Error("REPAIR_RESUME_TAMPERED");
+  }
   const completed = new Map(
     journal.completedStages.map((stage) => [stage.path, stage.afterDigest]),
   );
-  for (const path of proposal.editableFiles) {
-    const content = input.currentFiles[path];
-    if (typeof content !== "string") throw new Error("REPAIR_RESUME_TAMPERED");
-    const expected = completed.get(path) ?? journal.canonicalBeforeDigests[path];
-    const actual = `sha256:${createHash("sha256").update(content).digest("hex")}`;
-    if (!expected || actual !== expected) throw new Error("REPAIR_RESUME_TAMPERED");
-  }
   const expectedChanged = [...completed.keys()].sort();
   if (JSON.stringify([...input.changedPaths].sort()) !== JSON.stringify(expectedChanged))
     throw new Error("REPAIR_RESUME_PATH_DENIED");
