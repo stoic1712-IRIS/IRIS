@@ -1,0 +1,90 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "context-virtualized-repository-repair-worker",
+  "objective": "Replace the repository-repair worker's single oversized full-file model request with a local-first, context-virtualized, staged exact-edit loop that deduplicates inputs, requests additional bounded context when needed, checkpoints each verified stage, resumes compatible retained candidates, uses activity-aware model streaming, and preserves the existing exact proposal, approval, path, candidate-only, verification, cleanup, zero-cost, and zero-provider-authority boundaries.",
+  "issuer": "Founder Cristofer Stoic Arellano",
+  "executor": "Codex",
+  "assigned_role": "producer",
+  "created_at": "2026-08-10T20:48:49.577Z",
+  "status": "in_progress",
+  "risk_class": "R2",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "Founder mandate: do it after Codex reported the context-virtualized repository-repair implementation ready for review and publication authorization. Complete exact-path staging, commit, non-force push, pull-request creation, independent review, merge if verification and review pass, local main synchronization, provider/local equality verification, and cleanup. This does not authorize executing or approving a repository-repair or Phase 0 graduation proposal, deployment, spending, credentials, repository administration, force-push, history rewrite, destructive canonical data work, public or LAN exposure, or unrelated changes.",
+  "completion_actions": [
+    "verify",
+    "repair",
+    "stage",
+    "commit",
+    "push_branch",
+    "create_pull_request",
+    "independent_review",
+    "merge",
+    "synchronize",
+    "cleanup"
+  ],
+  "completion_exclusions": [
+    "Deployment, public or LAN exposure, spending, credentials, repository administration, force-push, history rewrite, destructive canonical data work, or unrelated changes",
+    "Typing, submitting, approving, or executing a repository-repair or Phase 0 graduation proposal for the Founder",
+    "Weakening exact proposal digest, typed approval, one-time code, repository identity, revision, path, candidate-only, verification, cleanup, or zero-authority controls"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "50b35ecfbddccc5bae41994e2973e973d5041bcd"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/tasks/context-virtualized-repository-repair-worker.json",
+    "docs/superpowers/specs/2026-08-10-context-virtualized-repository-repair-design.md",
+    "docs/superpowers/plans/2026-08-10-context-virtualized-repository-repair.md",
+    "docs/specifications/context-virtualized-repository-repair.md",
+    "packages/kernel/src/repository-repair.ts",
+    "scripts/runtime/iris-repository-repair-worker.mjs",
+    "tests/release-seven-repository-repair.test.ts"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    "docs/governance/**",
+    "docs/registries/**",
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "C:/Projects/STOIC-IRIS-source-library/**",
+    "credentials/**"
+  ],
+  "permitted_actions": [
+    "Use the exact isolated Core worktree C:/Projects/STOIC-IRIS-scalable-repair-worker",
+    "Read verified canonical sources and current repository state",
+    "Implement only the staged candidate-generation and resume machinery inside the existing disposable repository-repair boundary",
+    "Run focused and full verification without changing dependency versions or lockfiles",
+    "Stage and commit only the exact allowed paths, push the feature branch non-force, create one pull request into main, independently review the exact patch, merge only if checks and review pass, synchronize local main, verify remote equality, and clean the exact disposable worktree"
+  ],
+  "prohibited_actions": [
+    "Approve or execute a repository-repair or Phase 0 graduation proposal",
+    "Allow model-authored paths, commands, shell strings, secrets, provider effects, canonical writes, or GitHub effects",
+    "Silently drop failed-stage evidence or accept ambiguous, stale, overlapping, or non-allowlisted edits",
+    "Deploy, expose non-loopback ports, read or expose raw credentials, spend, administer repositories, force-push, rewrite history, or modify unrelated paths"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run tests/release-seven-repository-repair.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "A failing regression proves duplicate editable and context files are not sent twice",
+    "A failing regression proves staged exact edits replace complete-file model output and reject ambiguous, stale, no-op, secret-bearing, and out-of-scope edits",
+    "A failing regression proves large files are represented by bounded line-addressed slices and can request additional allowlisted context",
+    "A failing regression proves compatible retained candidate state resumes only when repository, base, finding, scope, and file digests still match",
+    "A failing regression proves model activity extends the idle watchdog while a genuinely stalled stream aborts safely",
+    "Focused and full verification results plus exact changed paths and rollback instructions"
+  ],
+  "publisher": "Codex under the Founder publication completion mandate after independent exact-patch review",
+  "approval_reference": "founder-do-context-virtualized-repair-publication-2026-08-10",
+  "phase0_graduation": false
+}
