@@ -205,6 +205,9 @@ async function git(root, args) {
   // Retry only that exact cross-platform case; every other Git error remains
   // unchanged and fail-closed.
   if (!/^\/mnt\/[a-z]\//u.test(root)) return result;
+  const failureText = `${result.stderr}\n${result.stdout}`;
+  if (!/not a git repository:/iu.test(failureText) || !/[\\/][A-Za-z]:[\\/]/u.test(failureText))
+    return result;
   let pointer;
   try {
     pointer = readFileSync(join(root, ".git"), "utf8").trim();
