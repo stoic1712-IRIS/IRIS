@@ -1,5 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { mkdir, open, readFile, rename, rm } from "node:fs/promises";
 import { dirname } from "node:path";
 
 import { z } from "zod";
@@ -47,8 +47,21 @@ import {
 
 const digestSchema = z.string().regex(/^sha256:[a-f0-9]{64}$/u);
 const revisionSchema = z.string().regex(/^[a-f0-9]{40}$/u);
-const protectedPath =
-  /^(?:\.git|\.github|\.iris)(?:\/|$)|^(?:AGENTS|CLAUDE)\.md$|^docs\/(?:governance|registries)(?:\/|$)|^pnpm-lock\.yaml$/u;
+const protectedSegments = new Set([
+  ".git",
+  ".github",
+  ".iris",
+  "AGENTS.md",
+  "CLAUDE.md",
+  "pnpm-lock.yaml",
+]);
+function isProtectedPath(value: string): boolean {
+  const segments = value.split("/");
+  return (
+    segments.some((segment) => protectedSegments.has(segment)) ||
+    /^docs\/(?:governance|registries)(?:\/|$)/u.test(value)
+  );
+}
 const boundedPathSchema = z
   .string()
   .min(1)
@@ -59,7 +72,7 @@ const boundedPathSchema = z
       !value.includes("..") &&
       !value.includes("\\") &&
       !value.endsWith("/") &&
-      !protectedPath.test(value),
+      !isProtectedPath(value),
   );
 const permittedVerificationCommands = new Set([
   JSON.stringify(["pnpm", "format:check"]),
@@ -198,6 +211,8 @@ export class FilePhaseZeroGraduationCoordinator
   readonly #onActivationError: (error: unknown) => void;
   #active: CoordinatorRecord | null = null;
   #activationStarted = false;
+  #preparingProposal = false;
+  #consumingApproval = false;
 
   constructor(options: {
     statePath: string;
@@ -245,6 +260,16 @@ export class FilePhaseZeroGraduationCoordinator
   }
 
   async prepareProposal(input: PhaseZeroGraduationProposalRequest): Promise<unknown> {
+    if (this.#preparingProposal) throw new Error("PHASE_ZERO_PROPOSAL_CREATION_IN_PROGRESS");
+    this.#preparingProposal = true;
+    try {
+      return await this.#prepareProposal(input);
+    } finally {
+      this.#preparingProposal = false;
+    }
+  }
+
+  async #prepareProposal(input: PhaseZeroGraduationProposalRequest): Promise<unknown> {
     const request = phaseZeroGraduationProposalRequestSchema.parse(input);
     const existing = await this.#load();
     if (existing !== null) {
@@ -389,6 +414,16 @@ export class FilePhaseZeroGraduationCoordinator
   }
 
   async consumeApproval(input: z.infer<typeof phaseZeroGraduationApprovalEnvelopeSchema>) {
+    if (this.#consumingApproval) throw new Error("PHASE_ZERO_APPROVAL_CONSUMPTION_IN_PROGRESS");
+    this.#consumingApproval = true;
+    try {
+      return await this.#consumeApproval(input);
+    } finally {
+      this.#consumingApproval = false;
+    }
+  }
+
+  async #consumeApproval(input: z.infer<typeof phaseZeroGraduationApprovalEnvelopeSchema>) {
     const submitted = phaseZeroGraduationApprovalEnvelopeSchema.parse(input);
     const record = await this.#requireRecord();
     const proposalDigest = phaseZeroGraduationProposalDigest(record.proposal);
@@ -637,10 +672,13 @@ export class FilePhaseZeroGraduationCoordinator
     await mkdir(dirname(this.#statePath), { recursive: true });
     const temporary = `${this.#statePath}.${randomUUID()}.tmp`;
     try {
-      await writeFile(temporary, `${JSON.stringify(record)}\n`, {
-        encoding: "utf8",
-        mode: 0o600,
-      });
+      const handle = await open(temporary, "wx", 0o600);
+      try {
+        await handle.writeFile(`${JSON.stringify(record)}\n`, "utf8");
+        await handle.sync();
+      } finally {
+        await handle.close();
+      }
       await rename(temporary, this.#statePath);
     } finally {
       await rm(temporary, { force: true }).catch(() => undefined);

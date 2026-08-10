@@ -13,6 +13,7 @@ import {
   PhaseZeroGraduationReadinessController,
   type PhaseZeroGraduationExecutionProvider,
   phaseZeroGraduationEnvelopeSchema,
+  phaseZeroGraduationModelPlanSchema,
   phaseZeroGraduationProposalDigest,
   resolvePhaseZeroProviderExecutable,
 } from "../packages/development/src/index.js";
@@ -102,6 +103,25 @@ function coordinator(
 }
 
 describe("IRIS-owned Phase 0 proposal and activation", () => {
+  it("rejects protected control paths at every directory depth", () => {
+    for (const path of [
+      "src/.git/config",
+      "packages/worker/.github/workflows/ci.yml",
+      "apps/runtime/.iris/state.json",
+      "packages/worker/AGENTS.md",
+      "packages/worker/CLAUDE.md",
+      "packages/worker/pnpm-lock.yaml",
+    ])
+      expect(
+        phaseZeroGraduationModelPlanSchema.safeParse({
+          objective: "Attempt a nested protected control-file mutation.",
+          readPaths: [path, "README.md"],
+          writePaths: [path, "README.md"],
+          verificationCommands: [["pnpm", "verify"]],
+        }).success,
+      ).toBe(false);
+  });
+
   it("resolves provider executable names for the deployed WSL interop boundary", () => {
     expect(resolvePhaseZeroProviderExecutable("gh", "linux", "Ubuntu")).toBe("gh.exe");
     expect(resolvePhaseZeroProviderExecutable("ollama", "linux", "Ubuntu")).toBe("ollama.exe");
@@ -262,6 +282,17 @@ describe("IRIS-owned Phase 0 proposal and activation", () => {
     expect(JSON.parse(await readFile(statePath, "utf8"))).toMatchObject({ version: 1 });
   });
 
+  it("serializes concurrent proposal creation to one durable active proposal", async () => {
+    const root = await mkdtemp(join(tmpdir(), "iris-phase-zero-concurrent-proposal-"));
+    const store = coordinator(join(root, "state.json"), () => undefined);
+    const results = await Promise.allSettled([
+      store.prepareProposal({ objective: "Perform the first bounded multi-file upgrade." }),
+      store.prepareProposal({ objective: "Perform the second bounded multi-file upgrade." }),
+    ]);
+    expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+    expect(results.filter((result) => result.status === "rejected")).toHaveLength(1);
+  });
+
   it("durably consumes one exact authenticated approval and activates the runtime once", async () => {
     const root = await mkdtemp(join(tmpdir(), "iris-phase-zero-activation-"));
     const statePath = join(root, "state.json");
@@ -319,6 +350,49 @@ describe("IRIS-owned Phase 0 proposal and activation", () => {
     const durable = phaseZeroGraduationEnvelopeSchema.parse(await restarted.read());
     expect(durable.state).toBe("concluded");
     expect(preflights).toBe(1);
+  });
+
+  it("serializes concurrent approval submissions to one durable receipt", async () => {
+    const root = await mkdtemp(join(tmpdir(), "iris-phase-zero-concurrent-approval-"));
+    const store = coordinator(
+      join(root, "state.json"),
+      () => undefined,
+      () => undefined,
+      pendingExecution(() => undefined),
+    );
+    const controller = new PhaseZeroGraduationReadinessController(store, () => now);
+    const prepared = phaseZeroGraduationEnvelopeSchema.parse(
+      await controller.prepareProposal({
+        objective: "Perform a concurrency-safe multi-file upgrade.",
+      }),
+    );
+    if (prepared.state !== "presented") throw new Error("EXPECTED_PRESENTED");
+    const approval = {
+      approvalType: "graduation" as const,
+      approval: {
+        approvalId: "approval_phase0-concurrent-0001",
+        graduationId: prepared.proposal.graduationId,
+        proposalDigest: prepared.proposalDigest,
+        approvedBy: "Founder" as const,
+        authentication: {
+          actorId: "Founder" as const,
+          sessionId: "founder.session",
+          assurance: "founder-loopback-session" as const,
+          verified: true as const,
+          evidenceDigest: `sha256:${"4".repeat(64)}` as const,
+          authenticatedAt: now.toISOString(),
+        },
+        typedStatement: prepared.approvalStatement,
+        oneTime: true as const,
+        issuedAt: now.toISOString(),
+      },
+    };
+    const results = await Promise.allSettled([
+      controller.consumeApproval(approval),
+      controller.consumeApproval(approval),
+    ]);
+    expect(results.filter((result) => result.status === "fulfilled")).toHaveLength(1);
+    expect(results.filter((result) => result.status === "rejected")).toHaveLength(1);
   });
 
   it("resumes an approved non-concluded activation from durable state after restart", async () => {

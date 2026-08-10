@@ -24,13 +24,14 @@ The Founder authorized implementation, local verification, non-force publication
 
 ## Verification
 
-- Core focused after restart, expiry, and WSL interop hardening: 2 files, 18 tests passed.
-- Core full: formatting, build, lint, typecheck, 60 test files, 489 tests passed, 1 existing skip, diagnostics; exit 0; report digest `sha256:d2e1b3ec42bfd08143534a94cd46cd710174e9daad98aa11dec214880def7d63`.
+- Core focused after restart, expiry, WSL interop, protected-path, and concurrency hardening: 2 files, 21 tests passed.
+- Core full: formatting, build, lint, typecheck, 60 test files, 492 tests passed, 1 existing skip, diagnostics; exit 0; report digest `sha256:83bb2340d9da5824aa39b1711ab917f36f8ed6f642d7c74abb9cd17e47d0507e`.
 - Command Center focused: 3 files, 95 tests passed, 1 existing skip.
 - Command Center full: formatting, lint, typecheck, build, 45 test files, 273 tests passed, 4 existing skips; exit 0; report digest `sha256:4383d5f59f68246031254b610e55021e43af8cc33d6db7cb52792bb155fb757b`.
 - Lockfiles and dependency versions unchanged. Existing pinned dependencies were reused through local worktree junctions.
 - Deployment preflight resolves `gh.exe` and `ollama.exe` only at the detected WSL interop boundary; explicit executable paths and non-WSL platforms remain unchanged.
 - A consumed non-concluded approval resumes from durable state after Core restart; delayed approval after proposal expiry is rejected, and an unapproved expired proposal may be replaced.
+- Concurrent proposal creation and approval consumption are serialized so only one proposal and one durable receipt can succeed; protected control-file segments are rejected at every path depth; the atomic state file is flushed before rename.
 
 ## Non-claims
 
