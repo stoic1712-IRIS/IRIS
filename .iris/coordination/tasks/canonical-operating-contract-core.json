@@ -1,0 +1,103 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "canonical-operating-contract-core",
+  "objective": "Implement the approved Canonical Operating Contract Core plan: one authored machine-readable operating contract, deterministic compiled artifact, live capability snapshot, five-outcome controller decision engine, minimum relevant model context, agent-facing contract inspection, and lifecycle-consistent ordinary access and capability acquisition without removing existing capabilities or weakening protected-effect boundaries.",
+  "issuer": "Founder Cristofer Stoic Arellano",
+  "executor": "Codex",
+  "assigned_role": "producer",
+  "created_at": "2026-08-10T22:52:10.0259760Z",
+  "status": "in_progress",
+  "risk_class": "R3",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "Founder mandate: stage and commit the four approved Canonical Operating Contract specification and plan files in their respective repositories, then execute the Core implementation plan inline through local verification. Do not push, merge, delete retirement candidates, restart IRIS, or perform protected provider operations until separately authorized.",
+  "completion_actions": ["edit", "verify", "repair", "stage", "commit"],
+  "completion_exclusions": [
+    "Push, pull-request creation, merge, canonical main synchronization, deployment, runtime restart, public or LAN exposure, provider resource creation, credentials, spending, or repository administration",
+    "Deletion or retirement of compatibility paths, historical governance, source documents, tests, evidence, workers, models, providers, approvals, rollback artifacts, or Phase 0 records",
+    "Execution, approval, or completion claim for Phase 0 graduation",
+    "Granting a model authority or silently including protected effects in Founder Full access"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "iris/canonical-operating-contract-core",
+      "commit": "3a96b6588e7e00ea81dea363a4beca06cbc4d2af"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/tasks/canonical-operating-contract-core.json",
+    "AGENTS.md",
+    "config/iris-operating-contract.v1.json",
+    "docs/specifications/canonical-operating-contract.md",
+    "evidence/operating-contract/canonical-operating-contract-core-2026-08-10.md",
+    "generated/iris-operating-contract.compiled.json",
+    "package.json",
+    "packages/capabilities/src/capability-acquisition.ts",
+    "packages/capabilities/src/index.ts",
+    "packages/capabilities/src/live-capability-snapshot.ts",
+    "packages/contracts/src/index.ts",
+    "packages/contracts/src/operating-contract.ts",
+    "packages/contracts/tsconfig.json",
+    "packages/kernel/src/founder-access-profile.ts",
+    "packages/kernel/src/index.ts",
+    "packages/kernel/src/operating-context.ts",
+    "packages/kernel/src/operating-decision-engine.ts",
+    "packages/model-gateway/src/contracts.ts",
+    "packages/model-gateway/src/founder-dialogue.ts",
+    "packages/model-gateway/src/ollama-adapter.ts",
+    "scripts/contracts/compile-operating-contract.mjs",
+    "scripts/dev/iris-dev.mjs",
+    "tests/capability-gap-and-acquisition.test.ts",
+    "tests/cycle-five-founder-dialogue.test.ts",
+    "tests/cycle-ten-founder-full-access-profile.test.ts",
+    "tests/founder-autonomous-access-profile.test.ts",
+    "tests/founder-full-access-delivery.test.ts",
+    "tests/iris-dev-contract.test.ts",
+    "tests/model-gateway-ollama.test.ts",
+    "tests/operating-context.test.ts",
+    "tests/operating-contract.test.ts",
+    "tests/operating-decision-engine.test.ts"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    "pnpm-lock.yaml",
+    "C:/Projects/STOIC-IRIS-source-library/**",
+    "credentials/**",
+    "docs/governance/**",
+    "docs/architecture/**"
+  ],
+  "permitted_actions": [
+    "Edit only the exact allowed paths in the isolated implementation worktree",
+    "Reuse already materialized pinned dependencies and local build outputs without changing versions or lockfiles",
+    "Run focused and full local verification with network access disabled",
+    "Create exact-path local commits after the applicable verification passes"
+  ],
+  "prohibited_actions": [
+    "Push, create or merge a pull request, synchronize canonical main, restart IRIS, or delete retirement candidates",
+    "Install dependencies, change lockfiles, download models, use credentials, create provider resources, spend, deploy, or expose public or LAN ports",
+    "Force-push, rewrite history, bypass branch protection, administer repositories, or perform destructive data work",
+    "Approve or execute Phase 0 graduation or claim the graduation criterion is complete"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run tests/operating-contract.test.ts tests/operating-decision-engine.test.ts tests/operating-context.test.ts tests/iris-dev-contract.test.ts tests/cycle-five-founder-dialogue.test.ts tests/model-gateway-ollama.test.ts tests/capability-gap-and-acquisition.test.ts tests/founder-full-access-delivery.test.ts tests/founder-autonomous-access-profile.test.ts tests/cycle-ten-founder-full-access-profile.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "Strict authored contract and deterministic compiled digest with source digest verification",
+    "Live capability snapshot and one of exactly five controller-owned decisions for every actionable objective",
+    "Provider output remains modelAuthority none while controller authority is represented separately",
+    "Founder Full access remains session-bound and ordinary-only without arbitrary countdown expiry",
+    "Capability acquisition approvals remain digest-bound and valid until consumption, replacement, revocation, or canonical drift rather than a short timer",
+    "Agent-facing iris-dev contract inspection reads the same compiled artifact and never claims authority",
+    "Focused and full local verification, exact changed paths, contract digest, rollback instructions, and known limitations"
+  ],
+  "publisher": null,
+  "approval_reference": "founder-canonical-operating-contract-core-2026-08-10",
+  "phase0_graduation": false
+}
