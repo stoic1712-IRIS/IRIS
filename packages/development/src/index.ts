@@ -7,6 +7,8 @@ export * from "./git-development-adapter.js";
 export * from "./github-actions-resource-provider.js";
 export * from "./github-cli-repository-provider.js";
 export * from "./phase-zero-graduation-readiness.js";
+export * from "./phase-zero-graduation-coordinator.js";
+export * from "./phase-zero-graduation-live-adapter.js";
 export * from "./phase-zero-graduation-transport.js";
 export * from "./sovereign-development-runtime.js";
 export * from "./self-description.js";

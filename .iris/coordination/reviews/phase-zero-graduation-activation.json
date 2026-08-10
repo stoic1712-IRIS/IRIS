@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0.0",
+  "review_id": "phase-zero-graduation-activation",
+  "task_id": "phase-zero-graduation-activation",
+  "reviewer": "gpt-oss:20b local independent reviewer",
+  "producer": "Codex",
+  "created_at": "2026-08-10T01:35:06.839Z",
+  "reviewed_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "iris/phase-zero-graduation-activation",
+      "commit": "53b4f9d87040cd1d1065a78dc51d0a8f0ee9a57c"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "iris/phase-zero-graduation-activation",
+      "commit": "6d2b5accb0bed084bc23ea719aed9133cfc91f80"
+    }
+  ],
+  "scope": [
+    "Core proposal coordinator, signed transport, service wiring, real-model adapter, and authenticated approval activation",
+    "Command Center proposal presentation and relay without graduation truth or automatic approval authority",
+    "Restart recovery, expiry, concurrency, durable one-time receipts, protected path containment, provider preflight, rollback, cleanup, and zero-resource verification"
+  ],
+  "commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "Ollama gpt-oss:20b strict-JSON exact-head review of phase-zero-graduation-coordinator.ts and iris-core-read-service.mjs",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "Ollama gpt-oss:20b strict-JSON corrected full-source review of phase-zero-graduation-live-adapter.ts and phase-zero-graduation-readiness.ts",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "Ollama gpt-oss:20b strict-JSON exact-commit review of Command Center proposal presentation and relay",
+      "exit_code": 0
+    }
+  ],
+  "findings": [],
+  "verdict": "pass",
+  "independent": true,
+  "material_disagreement": false,
+  "protected_actions_authorized": false
+}

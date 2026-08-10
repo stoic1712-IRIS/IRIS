@@ -1,0 +1,120 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "phase-zero-graduation-activation",
+  "objective": "Implement, verify, publish, and merge the missing IRIS Core-owned Phase 0 graduation proposal and activation path: real local-model planning from canonical repository evidence, strict digest-bound proposal state, authenticated exact Founder approvals, durable one-time consumption, and production activation of the existing graduation runtime without Codex or Claude approving or executing the resulting proposal.",
+  "issuer": "Founder Cristofer Stoic Arellano",
+  "executor": "Codex",
+  "assigned_role": "producer",
+  "created_at": "2026-08-10T00:50:02.191Z",
+  "status": "approved",
+  "risk_class": "R3",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "Founder mandate: Codex may implement, locally verify, repair, stage, commit, publish non-force, create pull requests, obtain independent review, merge if verification passes, synchronize, restart, and smoke-test the missing IRIS-owned Phase 0 graduation proposal and activation path. The resulting proposal must not be approved or executed by Codex. Once the Founder later activates it, Codex and Claude become audit-only.",
+  "completion_actions": [
+    "edit",
+    "verify",
+    "repair",
+    "stage",
+    "commit",
+    "push_branch",
+    "create_pull_request",
+    "independent_review",
+    "merge",
+    "synchronize",
+    "cleanup"
+  ],
+  "completion_exclusions": [
+    "Typing, forwarding, or approving the generated graduation proposal on the Founder behalf",
+    "Executing the generated graduation proposal during Codex implementation or smoke testing",
+    "Codex or Claude mutation after Founder activation",
+    "Credentials in model context, credential disclosure, spending, deployment, public or LAN exposure, repository administration, force-push, history rewrite, or destructive data work"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "ff82266d5f1702f96bff015f44a185cd3c8dac9b"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "main",
+      "commit": "7dfbed6e4a71c615971e6ae1cd2118d6ae616800"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/tasks/phase-zero-graduation-activation.json",
+    ".iris/coordination/handoffs/phase-zero-graduation-activation.json",
+    ".iris/coordination/reviews/phase-zero-graduation-activation.json",
+    "docs/registries/technology-and-platform-registry.md",
+    "docs/specifications/phase-zero-graduation-activation.md",
+    "docs/superpowers/specs/2026-08-09-phase-zero-graduation-activation-design.md",
+    "docs/superpowers/plans/2026-08-09-phase-zero-graduation-activation.md",
+    "evidence/phase-zero/graduation-activation-2026-08-09.md",
+    "packages/development/src/index.ts",
+    "packages/development/src/phase-zero-graduation-coordinator.ts",
+    "packages/development/src/phase-zero-graduation-live-adapter.ts",
+    "packages/development/src/phase-zero-graduation-transport.ts",
+    "packages/kernel/src/graduation-service.ts",
+    "scripts/runtime/iris-core-read-service.mjs",
+    "tests/phase-zero-graduation-activation.test.ts",
+    "tests/cycle-nine-phase-zero-graduation-transport.test.ts",
+    "src/graduation-client.ts",
+    "src/views/Graduation.tsx",
+    "scripts/local-gateway.mjs",
+    "tests/graduation-client.test.ts",
+    "tests/graduation.test.tsx",
+    "tests/local-gateway.test.ts"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    "docs/governance/**",
+    "pnpm-lock.yaml",
+    "C:/Projects/STOIC-IRIS-source-library/**",
+    "credentials/**"
+  ],
+  "permitted_actions": [
+    "Use the two exact isolated worktrees bound above",
+    "Reuse existing pinned dependencies without changing versions or lockfiles",
+    "Call real loopback Ollama during the final proposal smoke test",
+    "Reference OS-keyring-backed GitHub CLI authentication without reading its secret",
+    "Publish and merge only after full verification and independent exact-head review"
+  ],
+  "prohibited_actions": [
+    "Approve or execute the resulting Phase 0 graduation proposal",
+    "Place graduation truth or approval authority in the Command Center",
+    "Use a fixture, mock, Codex, or Claude as the proposal model",
+    "Broaden model file access beyond bounded canonical evidence",
+    "Force-push, rewrite history, bypass branch protection, administer repositories, expose credentials, spend, deploy, or expose non-loopback ports"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run tests/phase-zero-graduation-activation.test.ts tests/cycle-nine-phase-zero-graduation-transport.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm exec vitest run tests/graduation-client.test.ts tests/graduation.test.tsx tests/local-gateway.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build"
+    }
+  ],
+  "required_evidence": [
+    "Exact base revisions and allowed changed paths in both repositories",
+    "Real local-model proposal from canonical repository evidence with strict schema and Core-owned digest",
+    "Atomic durable Core state and one-time authenticated approval receipts",
+    "Existing graduation runtime activated exactly once after exact approval",
+    "Command Center remains presentation and relay only",
+    "No automatic approval or proposal execution during implementation smoke testing",
+    "Focused and full verification plus independent exact-head review",
+    "Non-force publication, merged remote equality, synchronized canonical mains, restart, and live presented-proposal smoke evidence"
+  ],
+  "publisher": "Codex after independent-review pass",
+  "approval_reference": "founder-phase-zero-graduation-activation-2026-08-09",
+  "phase0_graduation": false
+}

@@ -1,5 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { createServer } from "node:http";
+import { homedir } from "node:os";
+import { join, resolve } from "node:path";
 import {
   attestCoreResponse,
   createCoreReadEnvelope,
@@ -12,13 +14,23 @@ import {
 } from "../../packages/kernel/dist/graduation-service.js";
 import { parseCoreReadRequest } from "../../packages/kernel/dist/read-service.js";
 import {
-  createIdlePhaseZeroGraduationEnvelope,
+  CanonicalPhaseZeroGraduationEvidenceProvider,
+  FilePhaseZeroGraduationCoordinator,
+  LivePhaseZeroGraduationExecutionProvider,
+  OllamaPhaseZeroGraduationProposalModel,
+  PhaseZeroGraduationReadinessController,
   phaseZeroGraduationApprovalEnvelopeSchema,
+  phaseZeroGraduationProposalRequestSchema,
+  resolvePhaseZeroProviderExecutable,
 } from "../../packages/development/dist/index.js";
 
 const host = "127.0.0.1";
 const port = readLoopbackPort("IRIS_CORE_READ_PORT", 4181);
 const maximumBytes = 256 * 1024;
+const irisRoot = process.cwd();
+const commandCenterRoot = resolve(
+  process.env.IRIS_COMMAND_CENTER_ROOT ?? join(irisRoot, "..", "iris-founder-command-center-main"),
+);
 
 function readLoopbackPort(name, fallback) {
   const value = process.env[name];
@@ -75,6 +87,39 @@ async function readBootstrap() {
 }
 
 const { requestKey, responseKey } = await readBootstrap();
+const phaseZeroStateRoot = resolve(
+  process.env.IRIS_PHASE_ZERO_STATE_ROOT ??
+    join(homedir(), ".local", "state", "stoic-iris", "phase-zero"),
+);
+const graduationStore = new FilePhaseZeroGraduationCoordinator({
+  statePath: join(phaseZeroStateRoot, "graduation.json"),
+  evidence: new CanonicalPhaseZeroGraduationEvidenceProvider({
+    corePath: irisRoot,
+    commandCenterPath: commandCenterRoot,
+    deploymentId: "founder-command-center-local",
+  }),
+  model: new OllamaPhaseZeroGraduationProposalModel({
+    model: "qwen3-coder:30b",
+    baseUrl: "http://127.0.0.1:11434",
+  }),
+  execution: new LivePhaseZeroGraduationExecutionProvider({
+    canonicalPath: irisRoot,
+    commandCenterPath: commandCenterRoot,
+    deploymentId: "founder-command-center-local",
+    ghExecutable: process.env.IRIS_GH_EXECUTABLE ?? resolvePhaseZeroProviderExecutable("gh"),
+    ollamaExecutable:
+      process.env.IRIS_OLLAMA_EXECUTABLE ?? resolvePhaseZeroProviderExecutable("ollama"),
+    workspaceRoot: join(phaseZeroStateRoot, "workspaces"),
+    journalRoot: join(phaseZeroStateRoot, "journals"),
+  }),
+  onActivationError(error) {
+    console.error(
+      "PHASE_ZERO_ACTIVATION_FAILED",
+      error instanceof Error ? error.message : "UNKNOWN_ERROR",
+    );
+  },
+});
+const graduationController = new PhaseZeroGraduationReadinessController(graduationStore);
 const seen = new Map();
 const unavailable = (response) => {
   response.writeHead(404, { "content-type": "application/json", "cache-control": "no-store" });
@@ -135,23 +180,29 @@ const server = createServer(async (request, response) => {
 
   if (graduationRequest.method === "GET") {
     if (!verifyCoreGraduationBody(graduationRequest, "")) return unavailable(response);
-    return writeResult(
-      response,
-      graduationRequest.requestId,
-      createIdlePhaseZeroGraduationEnvelope(realState(now).canonicalRevision, now),
-    );
+    try {
+      return writeResult(response, graduationRequest.requestId, await graduationController.read());
+    } catch {
+      return unavailable(response);
+    }
   }
 
   try {
     const body = await readBody(request);
     if (!verifyCoreGraduationBody(graduationRequest, body)) return unavailable(response);
-    phaseZeroGraduationApprovalEnvelopeSchema.parse(JSON.parse(body));
+    const parsed = JSON.parse(body);
+    const result =
+      graduationRequest.path === "/v1/graduation-proposals"
+        ? await graduationController.prepareProposal(
+            phaseZeroGraduationProposalRequestSchema.parse(parsed),
+          )
+        : await graduationController.consumeApproval(
+            phaseZeroGraduationApprovalEnvelopeSchema.parse(parsed),
+          );
+    return writeResult(response, graduationRequest.requestId, result);
   } catch {
     return unavailable(response);
   }
-  // No active authoritative graduation store is configured in the ordinary
-  // read service. Approval is never consumed or retained here.
-  return unavailable(response);
 });
 
 server.listen(port, host, () => console.log("IRIS_CORE_READ_READY"));

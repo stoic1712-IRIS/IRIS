@@ -1,0 +1,103 @@
+{
+  "schema_version": "1.0.0",
+  "handoff_id": "phase-zero-graduation-activation",
+  "task_id": "phase-zero-graduation-activation",
+  "producer": "Codex under Founder completion mandate",
+  "recipient": "Founder and canonical main publication",
+  "created_at": "2026-08-10T01:35:06.839Z",
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "ff82266d5f1702f96bff015f44a185cd3c8dac9b"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "main",
+      "commit": "7dfbed6e4a71c615971e6ae1cd2118d6ae616800"
+    }
+  ],
+  "result_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "iris/phase-zero-graduation-activation",
+      "commit": "53b4f9d87040cd1d1065a78dc51d0a8f0ee9a57c",
+      "patch_digest": "sha256:b98254edea3cd84ff7f77aca798dca376afd441502fe772f1c95845aa40be3be"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "iris/phase-zero-graduation-activation",
+      "commit": "6d2b5accb0bed084bc23ea719aed9133cfc91f80",
+      "patch_digest": "sha256:552599bc745301d4edcf59f5990b6076821cac08818bd4b39b08014e56c59b42"
+    }
+  ],
+  "changed_paths": [
+    ".iris/coordination/tasks/phase-zero-graduation-activation.json",
+    ".iris/coordination/handoffs/phase-zero-graduation-activation.json",
+    ".iris/coordination/reviews/phase-zero-graduation-activation.json",
+    "docs/registries/technology-and-platform-registry.md",
+    "docs/specifications/phase-zero-graduation-activation.md",
+    "docs/superpowers/specs/2026-08-09-phase-zero-graduation-activation-design.md",
+    "docs/superpowers/plans/2026-08-09-phase-zero-graduation-activation.md",
+    "evidence/phase-zero/graduation-activation-2026-08-09.md",
+    "packages/development/src/index.ts",
+    "packages/development/src/phase-zero-graduation-coordinator.ts",
+    "packages/development/src/phase-zero-graduation-live-adapter.ts",
+    "packages/development/src/phase-zero-graduation-transport.ts",
+    "packages/kernel/src/graduation-service.ts",
+    "scripts/runtime/iris-core-read-service.mjs",
+    "tests/phase-zero-graduation-activation.test.ts",
+    "tests/cycle-nine-phase-zero-graduation-transport.test.ts",
+    "scripts/local-gateway.mjs",
+    "src/graduation-client.ts",
+    "src/views/Graduation.tsx",
+    "tests/graduation-client.test.ts",
+    "tests/graduation.test.tsx",
+    "tests/local-gateway.test.ts"
+  ],
+  "commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run tests/phase-zero-graduation-activation.test.ts tests/cycle-nine-phase-zero-graduation-transport.test.ts",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm exec vitest run tests/graduation-client.test.ts tests/graduation.test.tsx tests/local-gateway.test.ts",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+      "exit_code": 0
+    }
+  ],
+  "evidence": [
+    "Core focused verification passed 21 tests and full pnpm verify passed 492 tests with 1 existing skip; report digest sha256:987337d454e2ed9285dc4ebed86dbbdf7cf721a8acfbdd9dad9f411fefce38ae.",
+    "Command Center focused verification passed 95 tests with 1 existing skip; the full chain passed 273 tests with 4 existing skips; report digest sha256:4383d5f59f68246031254b610e55021e43af8cc33d6db7cb52792bb155fb757b.",
+    "The real local proposal model is pinned to qwen3-coder:30b through loopback Ollama and receives only bounded canonical repository evidence.",
+    "Core owns the strict proposal schema, digest, durable proposal state, exact typed approval, one-time receipt, restart recovery, and activation of the existing graduation runtime.",
+    "The Command Center only presents and relays Core-owned proposal and approval values; it cannot create graduation truth or approve automatically.",
+    "A distinct local gpt-oss:20b independent review of the exact implementation revisions returned pass with no material findings.",
+    "Lockfiles and dependency versions are unchanged, no credential entered model context, and no proposal was approved or executed."
+  ],
+  "limitations": [
+    "This handoff proves the proposal and activation machinery, not permanent Phase 0 completion.",
+    "The final live smoke test must stop after displaying the real Core-owned proposal ID, digest, and exact Founder approval statement.",
+    "Only the Founder may later submit the exact approval; after activation Codex and Claude become audit-only for the graduation workflow.",
+    "The deployed Core read service is a singleton bound to a fixed loopback port; in-process serialization and durable one-time receipts protect its supported execution boundary."
+  ],
+  "rollback": "Before merge, close both pull requests and delete only the feature branches without force. After merge, history-preservingly revert the two merge commits. Durable graduation state remains outside Git and must never be silently deleted; an unapproved proposal may expire and be replaced through the Core contract.",
+  "protected_actions_remaining": [
+    "Non-force feature-branch pushes and pull-request creation in both repositories",
+    "Exact-head provider review, merge after checks pass, canonical-main synchronization, and disposable-worktree cleanup",
+    "Loopback runtime restart and proposal-only live smoke test",
+    "Separate future Founder submission of the exact digest-bound proposal approval"
+  ],
+  "ready_for_review": true
+}

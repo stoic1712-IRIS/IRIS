@@ -19,6 +19,7 @@ import {
 export const phaseZeroGraduationTransportVersion = "iris.stoic/phase-zero-graduation/v1" as const;
 export const phaseZeroGraduationTransportPaths = {
   readiness: "/v1/graduation-readiness",
+  proposals: "/v1/graduation-proposals",
   approvals: "/v1/graduation-approvals",
 } as const;
 
@@ -42,6 +43,10 @@ export const phaseZeroGraduationProposalViewSchema = z.strictObject({
   modelName: z.string().trim().min(2).max(200),
   modelEndpoint: z.literal("loopback"),
   realModel: z.literal(true),
+  objective: z.string().trim().min(10).max(5_000),
+  readPaths: z.array(z.string().min(1).max(500)).min(2).max(100),
+  writePaths: z.array(z.string().min(1).max(500)).min(2).max(50),
+  materializationCommands: z.array(z.array(z.string().min(1).max(500))).max(3),
   candidateBranch: z.string().regex(/^iris\/candidate\/[a-z0-9][a-z0-9/-]{7,180}$/u),
   checkpointRepository: z.literal("stoic1712-IRIS/IRIS-checkpoints"),
   checkpointRef: z.string().regex(/^checkpoint\/phase-zero-[a-f0-9]{12}$/u),
@@ -58,6 +63,7 @@ export const phaseZeroGraduationProposalViewSchema = z.strictObject({
   claudeMutation: z.literal(false),
   fixtureExecution: z.literal(false),
   maximumCostUsd: z.literal(0),
+  maximumRuntimeMs: z.number().int().min(60_000).max(3_600_000),
   createdAt: z.iso.datetime(),
   expiresAt: z.iso.datetime(),
 });
@@ -229,8 +235,16 @@ export const phaseZeroGraduationApprovalEnvelopeSchema = z.discriminatedUnion("a
   }),
 ]);
 
+export const phaseZeroGraduationProposalRequestSchema = z.strictObject({
+  objective: z.string().trim().min(10).max(2_000),
+});
+export type PhaseZeroGraduationProposalRequest = z.infer<
+  typeof phaseZeroGraduationProposalRequestSchema
+>;
+
 export interface PhaseZeroGraduationTransportStore {
   read(): Promise<unknown>;
+  prepareProposal(input: PhaseZeroGraduationProposalRequest): Promise<unknown>;
   consumeApproval(
     envelope: z.infer<typeof phaseZeroGraduationApprovalEnvelopeSchema>,
   ): Promise<unknown>;
@@ -251,6 +265,11 @@ export class PhaseZeroGraduationReadinessController {
 
   async read() {
     return phaseZeroGraduationEnvelopeSchema.parse(await this.#store.read());
+  }
+
+  async prepareProposal(input: unknown) {
+    const request = phaseZeroGraduationProposalRequestSchema.parse(input);
+    return phaseZeroGraduationEnvelopeSchema.parse(await this.#store.prepareProposal(request));
   }
 
   async consumeApproval(input: unknown) {
