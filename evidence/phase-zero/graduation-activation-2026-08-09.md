@@ -41,6 +41,16 @@ The Founder authorized implementation, local verification, non-force publication
 - No force-push, history rewrite, deployment, public or LAN exposure, spending, provider administration, or destructive data operation occurred.
 - The historical Wave 10 checkpoint remains evidence of machinery, not permanent Phase 0 completion.
 
+## First live proposal smoke and repair
+
+- The first post-merge live proposal request failed closed before durable proposal creation. No proposal state file, approval receipt, activation, or graduation execution was created.
+- Canonical evidence collection succeeded for Core `fe598682e42e2a69f75f4abbe48b08f237e397b3` and Command Center `5723bf0bedb1bf1c0667aaff812a776ecdb5d953`, producing evidence digest `sha256:05711b5c3894be6400053d990c7e3883701190673ff3f7e818c2a9448cc9db03`.
+- The real `qwen3-coder:30b` response violated the existing strict plan contract because two write paths were absent from `readPaths`. Core correctly rejected the response.
+- The repair preserves the strict schema and adds the missing model-facing invariant that every write path must also be inspected. Core permits exactly one bounded corrective retry with local validation feedback, then remains fail closed.
+- A direct real-model test against the same canonical evidence returned a strictly valid plan after the repair. It did not create, approve, or execute a durable graduation proposal.
+- Repair-focused activation tests: 14 passed.
+- Repair full verification: formatting, build, lint, typecheck, 60 test files, 493 tests passed, 1 existing skip, diagnostics; exit 0; report digest `sha256:d968e730530776113980d2799cfd80a94c09649bcbb1bbffbd83e81df339ad64`.
+
 ## Remaining actions
 
-Independent exact-patch review, publication and merge, local-main synchronization, runtime restart, and a live real-model proposal-only smoke test remain before this implementation task is complete. The final IRIS-generated approval statement must be presented to the Founder and left unsubmitted.
+Independent exact-head repair review, publication and merge, local-main synchronization, runtime restart, and a live real-model proposal-only smoke test remain before this implementation task is complete. The final IRIS-generated approval statement must be presented to the Founder and left unsubmitted.

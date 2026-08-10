@@ -214,6 +214,70 @@ describe("IRIS-owned Phase 0 proposal and activation", () => {
     expect(request.messages.at(0)?.content).toContain(coreRevision);
   });
 
+  it("reprompts once when the real model omits a write path from the inspected paths", async () => {
+    const responses = [
+      {
+        objective: "Create a bounded multi-file self-upgrade with exact regression coverage.",
+        readPaths: ["README.md"],
+        writePaths: ["README.md", "tests/readme.test.ts"],
+        verificationCommands: [["pnpm", "verify"]],
+      },
+      {
+        objective: "Create a bounded multi-file self-upgrade with exact regression coverage.",
+        readPaths: ["README.md", "tests/readme.test.ts"],
+        writePaths: ["README.md", "tests/readme.test.ts"],
+        verificationCommands: [["pnpm", "verify"]],
+      },
+    ];
+    const fetchImplementation = vi.fn(
+      (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
+        void input;
+        void init;
+        return Promise.resolve(
+          new Response(
+            JSON.stringify({
+              model: "qwen3-coder:30b",
+              message: {
+                role: "assistant",
+                content: JSON.stringify(responses.shift()),
+              },
+              done: true,
+            }),
+            { status: 200, headers: { "content-type": "application/json" } },
+          ),
+        );
+      },
+    );
+    const model = new OllamaPhaseZeroGraduationProposalModel({ fetchImplementation });
+
+    await expect(
+      model.plan({
+        objective: "Perform a bounded self-upgrade.",
+        evidence: "bounded canonical evidence",
+        repositoryInspectionDigest: `sha256:${"3".repeat(64)}`,
+        canonicalBaseRevision: coreRevision,
+      }),
+    ).resolves.toMatchObject({
+      readPaths: ["README.md", "tests/readme.test.ts"],
+      writePaths: ["README.md", "tests/readme.test.ts"],
+    });
+    expect(fetchImplementation).toHaveBeenCalledTimes(2);
+    const firstBody = fetchImplementation.mock.calls.at(0)?.[1]?.body;
+    const secondBody = fetchImplementation.mock.calls.at(1)?.[1]?.body;
+    if (typeof firstBody !== "string" || typeof secondBody !== "string")
+      throw new Error("EXPECTED_STRING_REQUEST_BODY");
+    const promptRequestSchema = z.object({
+      messages: z.array(z.object({ content: z.string() })).min(1),
+    });
+    const firstPrompt = promptRequestSchema.parse(JSON.parse(firstBody) as unknown).messages[0]
+      ?.content;
+    const secondPrompt = promptRequestSchema.parse(JSON.parse(secondBody) as unknown).messages[0]
+      ?.content;
+    expect(firstPrompt).toContain("Every write path must also appear in readPaths");
+    expect(secondPrompt).toContain("Previous output failed strict validation");
+    expect(secondPrompt).toContain("Every write path must also be inspected");
+  });
+
   it("preflights the exact canonical, provider, checkpoint, model, and zero-resource state", async () => {
     const runner = {
       run: vi.fn((_executable: string, args: string[], options?: { cwd?: string }) => {
