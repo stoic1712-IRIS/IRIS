@@ -580,6 +580,31 @@ describe("IRIS-owned Phase 0 proposal and activation", () => {
     expect(replacement.proposal.graduationId).not.toBe(prepared.proposal.graduationId);
   });
 
+  it("projects an expired unapproved proposal as idle without deleting its durable record", async () => {
+    const root = await mkdtemp(join(tmpdir(), "iris-phase-zero-expired-read-"));
+    const statePath = join(root, "state.json");
+    let current = now;
+    const store = coordinator(
+      statePath,
+      () => undefined,
+      () => undefined,
+      blockedExecution(() => undefined),
+      () => current,
+    );
+    const prepared = phaseZeroGraduationEnvelopeSchema.parse(
+      await store.prepareProposal({ objective: "Perform an expiring read projection upgrade." }),
+    );
+    expect(prepared.state).toBe("presented");
+    const durableRecord = await readFile(statePath, "utf8");
+
+    current = new Date(now.getTime() + 61 * 60_000);
+    const projected = phaseZeroGraduationEnvelopeSchema.parse(await store.read());
+
+    expect(projected.state).toBe("idle");
+    expect(store.activeProposal()).toBeNull();
+    expect(await readFile(statePath, "utf8")).toBe(durableRecord);
+  });
+
   it("rejects unsafe model-selected paths before any proposal is stored", async () => {
     const root = await mkdtemp(join(tmpdir(), "iris-phase-zero-unsafe-"));
     const statePath = join(root, "state.json");

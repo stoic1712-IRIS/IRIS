@@ -237,14 +237,18 @@ export class FilePhaseZeroGraduationCoordinator
 
   async read(): Promise<unknown> {
     const record = await this.#load();
-    if (record === null)
-      return createIdlePhaseZeroGraduationEnvelope(
-        revisionSchema.parse(await this.#evidence.currentCoreRevision()),
-        this.#now(),
-      );
+    const coreRevision = revisionSchema.parse(await this.#evidence.currentCoreRevision());
+    if (record === null) return createIdlePhaseZeroGraduationEnvelope(coreRevision, this.#now());
+    if (
+      record.graduationReceipt === undefined &&
+      this.#now().getTime() >= Date.parse(record.proposal.expiresAt)
+    ) {
+      this.#active = null;
+      return createIdlePhaseZeroGraduationEnvelope(coreRevision, this.#now());
+    }
     const refreshed = {
       ...record.envelope,
-      coreRevision: revisionSchema.parse(await this.#evidence.currentCoreRevision()),
+      coreRevision,
       generatedAt: this.#now().toISOString(),
       expiresAt: new Date(this.#now().getTime() + 30_000).toISOString(),
     };
