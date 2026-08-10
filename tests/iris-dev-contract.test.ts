@@ -23,7 +23,7 @@ async function inspect(extra: string[] = [], cwd = root) {
 }
 
 describe("iris-dev canonical contract inspection", () => {
-  it("returns the exact validated contract identity and canonical Core revision", async () => {
+  it("returns the exact validated contract identity and canonical Core revision from a cross-platform worktree", async () => {
     const result = await inspect();
     const { coreRevision, ...stable } = result;
     expect(stable).toEqual({

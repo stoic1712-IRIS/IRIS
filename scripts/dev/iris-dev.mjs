@@ -3,6 +3,7 @@
 import { execFile } from "node:child_process";
 import { Buffer } from "node:buffer";
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
@@ -196,7 +197,27 @@ function validateChecks(checks) {
 }
 
 async function git(root, args) {
-  return run("git", ["-C", root, ...args]);
+  const result = await run("git", ["-C", root, ...args]);
+  if (result.code === 0) return result;
+
+  // A Git worktree created by Git for Windows records an absolute Windows
+  // gitdir. WSL Git otherwise treats that value as relative to the worktree.
+  // Retry only that exact cross-platform case; every other Git error remains
+  // unchanged and fail-closed.
+  if (!/^\/mnt\/[a-z]\//u.test(root)) return result;
+  let pointer;
+  try {
+    pointer = readFileSync(join(root, ".git"), "utf8").trim();
+  } catch {
+    return result;
+  }
+  const match = /^gitdir:\s*([A-Za-z]):[\\/](.+)$/u.exec(pointer);
+  if (match === null) return result;
+  const drive = match[1];
+  const remainder = match[2];
+  if (drive === undefined || remainder === undefined) return result;
+  const gitDirectory = `/mnt/${drive.toLowerCase()}/${remainder.replaceAll("\\", "/")}`;
+  return run("git", ["--git-dir", gitDirectory, "--work-tree", root, ...args]);
 }
 
 const contractInspectionSchema = z
