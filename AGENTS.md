@@ -23,6 +23,10 @@ Technical capability never creates permission. When sources conflict, stop and r
 
 Every material decision must cite the exact controlling file or task record and verify the revision that made it authoritative.
 
+## Canonical operating contract
+
+Before reasoning about capability, authority, execution, repair, acquisition, or completion, run `node scripts/dev/iris-dev.mjs contract inspect --json` and validate `generated/iris-operating-contract.compiled.json`. Its digest-bound v1 contract is the single runtime decision source. Canonical source documents remain provenance and detail sources; do not reconstruct a competing policy from summaries or prior conversation.
+
 ### Shared Operating Virtues
 
 The canonical virtues are the twelve Core Reasoning Principles in `docs/governance/worker-reasoning-framework-and-cognitive-identity.md` version 1.0.0. They are project authority, not model-specific preferences. Claude, Codex, IRIS, and every governed worker must apply the same principles without inventing a replacement list:
