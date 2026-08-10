@@ -3,13 +3,18 @@ import type { IncomingHttpHeaders } from "node:http";
 
 export const graduationTransportAudience = "iris-founder-command-center" as const;
 export const graduationReadScope = "phase-zero-graduation:read:v1" as const;
+export const graduationProposalScope = "phase-zero-graduation:propose:v1" as const;
 export const graduationApprovalScope = "phase-zero-graduation:approve:v1" as const;
 export const graduationReadinessPath = "/v1/graduation-readiness" as const;
+export const graduationProposalsPath = "/v1/graduation-proposals" as const;
 export const graduationApprovalsPath = "/v1/graduation-approvals" as const;
 
 export interface CoreGraduationRequest {
   method: "GET" | "POST";
-  path: typeof graduationReadinessPath | typeof graduationApprovalsPath;
+  path:
+    | typeof graduationReadinessPath
+    | typeof graduationProposalsPath
+    | typeof graduationApprovalsPath;
   requestId: string;
   timestamp: string;
   audience: string;
@@ -59,15 +64,25 @@ export function parseCoreGraduationRequest(
   headers: IncomingHttpHeaders,
 ): CoreGraduationRequest | null {
   const isRead = method === "GET" && path === graduationReadinessPath;
+  const isProposal = method === "POST" && path === graduationProposalsPath;
   const isApproval = method === "POST" && path === graduationApprovalsPath;
-  if (!isRead && !isApproval) return null;
+  if (!isRead && !isProposal && !isApproval) return null;
   const scope = one(headers, "x-iris-scope");
-  if (scope !== (isRead ? graduationReadScope : graduationApprovalScope)) return null;
+  const expectedScope = isRead
+    ? graduationReadScope
+    : isProposal
+      ? graduationProposalScope
+      : graduationApprovalScope;
+  if (scope !== expectedScope) return null;
   const audience = one(headers, "x-iris-audience");
   if (audience !== graduationTransportAudience) return null;
   return {
     method: isRead ? "GET" : "POST",
-    path: isRead ? graduationReadinessPath : graduationApprovalsPath,
+    path: isRead
+      ? graduationReadinessPath
+      : isProposal
+        ? graduationProposalsPath
+        : graduationApprovalsPath,
     requestId: one(headers, "x-iris-request-id"),
     timestamp: one(headers, "x-iris-timestamp"),
     audience,
@@ -85,9 +100,11 @@ export function verifyCoreGraduationRequest(
   const expectedScope =
     input.method === "GET" && input.path === graduationReadinessPath
       ? graduationReadScope
-      : input.method === "POST" && input.path === graduationApprovalsPath
-        ? graduationApprovalScope
-        : null;
+      : input.method === "POST" && input.path === graduationProposalsPath
+        ? graduationProposalScope
+        : input.method === "POST" && input.path === graduationApprovalsPath
+          ? graduationApprovalScope
+          : null;
   if (expectedScope === null || input.scope !== expectedScope) return false;
   if (input.audience !== graduationTransportAudience) return false;
   if (!/^request_[a-f0-9]{32}$/u.test(input.requestId)) return false;

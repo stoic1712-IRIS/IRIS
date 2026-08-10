@@ -11,6 +11,8 @@ import {
   graduationApprovalScope as kernelApprovalScope,
   graduationApprovalsPath as kernelApprovalsPath,
   graduationBodyDigest as kernelBodyDigest,
+  graduationProposalScope as kernelProposalScope,
+  graduationProposalsPath as kernelProposalsPath,
   graduationReadScope as kernelReadScope,
   graduationReadinessPath as kernelReadinessPath,
   graduationTransportAudience as kernelAudience,
@@ -73,6 +75,44 @@ describe("Cycle Nine Core graduation transport", () => {
     expect(kernelVerifyBody(request, `${body} `)).toBe(false);
   });
 
+  it("separates signed proposal preparation from read and approval authority", () => {
+    const body = JSON.stringify({
+      objective: "Perform one bounded multi-file IRIS self-upgrade from canonical evidence.",
+    });
+    const unsigned = {
+      method: "POST" as const,
+      path: kernelProposalsPath,
+      requestId: `request_${"9".repeat(32)}`,
+      timestamp: now.toISOString(),
+      audience: kernelAudience,
+      scope: kernelProposalScope,
+      bodyDigest: kernelBodyDigest(body),
+    };
+    const request = { ...unsigned, signature: kernelSign(key, unsigned) };
+    expect(kernelVerify(key, request, now)).toBe(true);
+    expect(kernelVerifyBody(request, body)).toBe(true);
+    expect(
+      kernelParse("POST", kernelProposalsPath, {
+        "x-iris-request-id": request.requestId,
+        "x-iris-timestamp": request.timestamp,
+        "x-iris-audience": request.audience,
+        "x-iris-scope": request.scope,
+        "x-iris-content-sha256": request.bodyDigest,
+        "x-iris-signature": request.signature,
+      }),
+    ).toEqual(request);
+    expect(
+      kernelParse("POST", kernelProposalsPath, {
+        "x-iris-request-id": request.requestId,
+        "x-iris-timestamp": request.timestamp,
+        "x-iris-audience": request.audience,
+        "x-iris-scope": kernelApprovalScope,
+        "x-iris-content-sha256": request.bodyDigest,
+        "x-iris-signature": request.signature,
+      }),
+    ).toBeNull();
+  });
+
   it("rejects incomplete approval envelopes", () => {
     expect(
       phaseZeroGraduationApprovalEnvelopeSchema.safeParse({
@@ -87,6 +127,8 @@ describe("Cycle Nine Core graduation transport", () => {
     const controller = new PhaseZeroGraduationReadinessController(
       {
         read: () => Promise.resolve(createIdlePhaseZeroGraduationEnvelope("b".repeat(40), now)),
+        prepareProposal: () =>
+          Promise.resolve(createIdlePhaseZeroGraduationEnvelope("b".repeat(40), now)),
         consumeApproval: () =>
           Promise.resolve({
             approvalId: `approval_phase0-${"f".repeat(8)}`,
