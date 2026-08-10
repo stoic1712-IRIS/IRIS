@@ -15,7 +15,7 @@ import {
 
 const input: Omit<
   RepositoryRepairProposal,
-  "proposalId" | "digest" | "approvalStatement" | "createdAt" | "expiresAt"
+  "proposalId" | "digest" | "approvalStatement" | "createdAt"
 > = {
   repository: "stoic1712-IRIS/IRIS" as const,
   baseRevision: "a".repeat(40),
@@ -70,7 +70,7 @@ describe("Release Seven governed repository repair", () => {
     ).toThrow();
   });
 
-  it("requires exact unexpired one-time approval material", () => {
+  it("requires exact persistent one-time approval material", () => {
     const now = new Date("2026-08-05T22:00:00Z");
     const proposal = createRepositoryRepairProposal(input, now);
     const secret = "c".repeat(64);
@@ -96,6 +96,7 @@ describe("Release Seven governed repository repair", () => {
         now,
       }),
     ).toBe(false);
+    expect("expiresAt" in proposal).toBe(false);
     expect(
       verifyRepositoryRepairApproval({
         proposal,
@@ -103,20 +104,9 @@ describe("Release Seven governed repository repair", () => {
         code,
         expectedCodeBinding,
         bindingSecret: secret,
-        now: new Date("2026-08-05T22:09:59.999Z"),
+        now: new Date("2027-08-05T22:00:00.000Z"),
       }),
     ).toBe(true);
-    expect(proposal.expiresAt).toBe("2026-08-05T22:10:00.000Z");
-    expect(
-      verifyRepositoryRepairApproval({
-        proposal,
-        statement: proposal.approvalStatement,
-        code,
-        expectedCodeBinding,
-        bindingSecret: secret,
-        now: new Date("2026-08-05T22:10:00.000Z"),
-      }),
-    ).toBe(false);
   });
 
   it("accepts only bounded unique allowlisted complete-file replacements", () => {
