@@ -53,6 +53,7 @@
     "tests/founder-autonomous-access-profile.test.ts",
     "tests/founder-full-access-delivery.test.ts",
     "tests/iris-dev-contract.test.ts",
+    "tests/live-capability-snapshot.test.ts",
     "tests/model-gateway-ollama.test.ts",
     "tests/operating-context.test.ts",
     "tests/operating-contract.test.ts",
