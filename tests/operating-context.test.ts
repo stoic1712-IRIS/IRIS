@@ -10,6 +10,12 @@ import { decideOperatingAction } from "../packages/kernel/src/operating-decision
 
 const contract = loadCompiledOperatingContract("generated/iris-operating-contract.compiled.json");
 
+function ordinaryCapability(index: number): string {
+  const capability = contract.ordinaryCapabilities[index];
+  if (capability === undefined) throw new Error(`Expected ordinary capability ${String(index)}.`);
+  return capability;
+}
+
 function provider(capability: string): LiveCapabilityProviderEvidence {
   return {
     capability,
@@ -27,7 +33,7 @@ function provider(capability: string): LiveCapabilityProviderEvidence {
 
 describe("operating context", () => {
   it("contains the five outcomes, exact decision, and only applicable capability evidence", () => {
-    const requested = [contract.ordinaryCapabilities[0]!, contract.ordinaryCapabilities[3]!];
+    const requested = [ordinaryCapability(0), ordinaryCapability(3)];
     const snapshot = buildLiveCapabilitySnapshot({
       contract,
       providers: contract.ordinaryCapabilities.map((capability) => provider(capability)),
@@ -76,7 +82,7 @@ describe("operating context", () => {
     });
     const objective = {
       objectiveId: "objective_context-test",
-      requiredCapabilities: [contract.ordinaryCapabilities[0]!],
+      requiredCapabilities: [ordinaryCapability(0)],
       protectedEffects: [],
     };
     const decision = decideOperatingAction({

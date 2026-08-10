@@ -31,23 +31,21 @@ export type OperatingObjective = z.infer<typeof operatingObjectiveSchema>;
 const decisionSnapshotSchema = z
   .object({
     capabilities: z.array(
-      z
-        .object({
-          capability: capabilitySchema,
-          status: z.enum([
-            "ready",
-            "needs-access",
-            "needs-provider-repair",
-            "needs-acquisition",
-            "unsupported",
-          ]),
-          gap: gapSchema.optional(),
-        })
-        .passthrough(),
+      z.looseObject({
+        capability: capabilitySchema,
+        status: z.enum([
+          "ready",
+          "needs-access",
+          "needs-provider-repair",
+          "needs-acquisition",
+          "unsupported",
+        ]),
+        gap: gapSchema.optional(),
+      }),
     ),
     protectedEffects: z.array(capabilitySchema),
   })
-  .passthrough();
+  .loose();
 
 export const operatingDecisionSchema = z.discriminatedUnion("kind", [
   z

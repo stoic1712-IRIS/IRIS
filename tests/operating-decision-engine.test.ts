@@ -9,6 +9,27 @@ import { decideOperatingAction } from "../packages/kernel/src/operating-decision
 
 const contract = loadCompiledOperatingContract("generated/iris-operating-contract.compiled.json");
 
+function ordinaryCapability(index: number): string {
+  const value = contract.ordinaryCapabilities[index];
+  if (value === undefined) throw new Error(`Expected ordinary capability ${String(index)}.`);
+  return value;
+}
+
+function protectedEffect(index: number): string {
+  const value = contract.protectedEffects[index];
+  if (value === undefined) throw new Error(`Expected protected effect ${String(index)}.`);
+  return value;
+}
+
+function providerAt(
+  providers: LiveCapabilityProviderEvidence[],
+  index: number,
+): LiveCapabilityProviderEvidence {
+  const value = providers[index];
+  if (value === undefined) throw new Error(`Expected provider evidence ${String(index)}.`);
+  return value;
+}
+
 function evidence(capability: string): LiveCapabilityProviderEvidence {
   return {
     capability,
@@ -39,7 +60,7 @@ function snapshot(
 }
 
 const objectiveId = "objective_contract-test";
-const capability = contract.ordinaryCapabilities[0]!;
+const capability = ordinaryCapability(0);
 
 describe("operating decision engine", () => {
   it("executes immediately when required ordinary capabilities are ready and granted", () => {
@@ -62,7 +83,7 @@ describe("operating decision engine", () => {
     const absent = decideOperatingAction({
       objective: { objectiveId, requiredCapabilities: [capability], protectedEffects: [] },
       snapshot: snapshot((providers) => {
-        providers[0] = { ...providers[0]!, providerInstalled: false };
+        providers[0] = { ...providerAt(providers, 0), providerInstalled: false };
       }),
       activeGrantId: "access_contract-test",
     });
@@ -79,7 +100,7 @@ describe("operating decision engine", () => {
     const decision = decideOperatingAction({
       objective: { objectiveId, requiredCapabilities: [capability], protectedEffects: [] },
       snapshot: snapshot((providers) => {
-        providers[0] = { ...providers[0]!, providerRunning: false };
+        providers[0] = { ...providerAt(providers, 0), providerRunning: false };
       }),
       activeGrantId: "access_contract-test",
     });
@@ -87,7 +108,7 @@ describe("operating decision engine", () => {
   });
 
   it("returns the first unsatisfied capability in canonical contract order", () => {
-    const second = contract.ordinaryCapabilities[1]!;
+    const second = ordinaryCapability(1);
     const decision = decideOperatingAction({
       objective: {
         objectiveId,
@@ -95,8 +116,8 @@ describe("operating decision engine", () => {
         protectedEffects: [],
       },
       snapshot: snapshot((providers) => {
-        providers[0] = { ...providers[0]!, providerInstalled: false };
-        providers[1] = { ...providers[1]!, providerRunning: false };
+        providers[0] = { ...providerAt(providers, 0), providerInstalled: false };
+        providers[1] = { ...providerAt(providers, 1), providerRunning: false };
       }),
       activeGrantId: "access_contract-test",
     });
@@ -111,7 +132,7 @@ describe("operating decision engine", () => {
         objective: {
           objectiveId,
           requiredCapabilities: [],
-          protectedEffects: [contract.protectedEffects[0]!],
+          protectedEffects: [protectedEffect(0)],
         },
         snapshot: snapshot(),
       }),
@@ -129,7 +150,7 @@ describe("operating decision engine", () => {
         objective: {
           objectiveId,
           requiredCapabilities: [capability],
-          protectedEffects: [contract.protectedEffects[0]!],
+          protectedEffects: [protectedEffect(0)],
           terminal: { state: "completed", evidence: ["evidence:verified"] },
         },
         snapshot: snapshot(),
@@ -152,13 +173,13 @@ describe("operating decision engine", () => {
       decideOperatingAction({
         objective: { objectiveId, requiredCapabilities: [capability], protectedEffects: [] },
         snapshot: snapshot((providers) => {
-          providers[0] = { ...providers[0]!, providerInstalled: false };
+          providers[0] = { ...providerAt(providers, 0), providerInstalled: false };
         }),
       }),
       decideOperatingAction({
         objective: { objectiveId, requiredCapabilities: [capability], protectedEffects: [] },
         snapshot: snapshot((providers) => {
-          providers[0] = { ...providers[0]!, providerRunning: false };
+          providers[0] = { ...providerAt(providers, 0), providerRunning: false };
         }),
       }),
     ];

@@ -38,16 +38,21 @@ describe("live capability snapshot", () => {
       contract.ordinaryCapabilities,
     );
     expect(snapshot.protectedEffects).toEqual(contract.protectedEffects);
-    expect(snapshot.capabilities.every((entry) => entry.protected === false)).toBe(true);
+    expect(snapshot.capabilities.map((entry) => entry.protected)).toEqual(
+      snapshot.capabilities.map(() => false),
+    );
     expect(snapshot.capabilities.every((entry) => entry.status === "ready")).toBe(true);
   });
 
   it("derives access, repair, acquisition, and unsupported states only from evidence", () => {
     const providers = contract.ordinaryCapabilities.map((capability) => readyEvidence(capability));
-    providers[0] = { ...providers[0]!, providerInstalled: false };
-    providers[1] = { ...providers[1]!, providerRunning: false };
+    const [first, second, third] = providers;
+    if (first === undefined || second === undefined || third === undefined)
+      throw new Error("Expected three ordinary capabilities.");
+    providers[0] = { ...first, providerInstalled: false };
+    providers[1] = { ...second, providerRunning: false };
     providers[2] = {
-      ...providers[2]!,
+      ...third,
       supportedAfterResearch: false,
       providerInstalled: false,
     };
@@ -67,6 +72,10 @@ describe("live capability snapshot", () => {
 
   it("rejects duplicate, missing, extra, and protected provider evidence", () => {
     const providers = contract.ordinaryCapabilities.map((capability) => readyEvidence(capability));
+    const [first] = providers;
+    const [protectedEffect] = contract.protectedEffects;
+    if (first === undefined || protectedEffect === undefined)
+      throw new Error("Expected contract capabilities.");
     const input = {
       contract,
       activeGrant: { capabilities: [] },
@@ -77,7 +86,7 @@ describe("live capability snapshot", () => {
       "LIVE_CAPABILITY_EVIDENCE_MISSING",
     );
     expect(() =>
-      buildLiveCapabilitySnapshot({ ...input, providers: [...providers, providers[0]!] }),
+      buildLiveCapabilitySnapshot({ ...input, providers: [...providers, first] }),
     ).toThrow("LIVE_CAPABILITY_EVIDENCE_DUPLICATE");
     expect(() =>
       buildLiveCapabilitySnapshot({
@@ -88,7 +97,7 @@ describe("live capability snapshot", () => {
     expect(() =>
       buildLiveCapabilitySnapshot({
         ...input,
-        providers: [readyEvidence(contract.protectedEffects[0]!), ...providers.slice(1)],
+        providers: [readyEvidence(protectedEffect), ...providers.slice(1)],
       }),
     ).toThrow("LIVE_CAPABILITY_EVIDENCE_PROTECTED");
   });

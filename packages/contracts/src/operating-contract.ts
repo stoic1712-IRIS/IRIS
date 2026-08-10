@@ -129,8 +129,7 @@ export const compiledIrisOperatingContractSchema = irisOperatingContractObjectSc
   .extend({ contractDigest: sha256DigestSchema })
   .strict()
   .superRefine((value, context) => {
-    const { contractDigest: _contractDigest, ...contract } = value;
-    addUniquenessIssues(contract, context);
+    addUniquenessIssues(value, context);
   });
 export type CompiledIrisOperatingContract = z.infer<typeof compiledIrisOperatingContractSchema>;
 
@@ -161,9 +160,7 @@ export function compileOperatingContract(input: unknown): CompiledIrisOperatingC
   });
 }
 
-export function loadCompiledOperatingContract(
-  input: string | unknown,
-): CompiledIrisOperatingContract {
+export function loadCompiledOperatingContract(input: unknown): CompiledIrisOperatingContract {
   const raw =
     typeof input === "string" ? (JSON.parse(readFileSync(input, "utf8")) as unknown) : input;
   const compiled = compiledIrisOperatingContractSchema.parse(raw);
