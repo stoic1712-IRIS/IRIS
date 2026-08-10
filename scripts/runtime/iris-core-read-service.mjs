@@ -21,6 +21,7 @@ import {
   PhaseZeroGraduationReadinessController,
   phaseZeroGraduationApprovalEnvelopeSchema,
   phaseZeroGraduationProposalRequestSchema,
+  resolvePhaseZeroProviderExecutable,
 } from "../../packages/development/dist/index.js";
 
 const host = "127.0.0.1";
@@ -105,8 +106,9 @@ const graduationStore = new FilePhaseZeroGraduationCoordinator({
     canonicalPath: irisRoot,
     commandCenterPath: commandCenterRoot,
     deploymentId: "founder-command-center-local",
-    ghExecutable: process.env.IRIS_GH_EXECUTABLE ?? "gh",
-    ollamaExecutable: process.env.IRIS_OLLAMA_EXECUTABLE ?? "ollama",
+    ghExecutable: process.env.IRIS_GH_EXECUTABLE ?? resolvePhaseZeroProviderExecutable("gh"),
+    ollamaExecutable:
+      process.env.IRIS_OLLAMA_EXECUTABLE ?? resolvePhaseZeroProviderExecutable("ollama"),
     workspaceRoot: join(phaseZeroStateRoot, "workspaces"),
     journalRoot: join(phaseZeroStateRoot, "journals"),
   }),

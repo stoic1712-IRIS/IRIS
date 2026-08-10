@@ -14,6 +14,7 @@ import {
   type PhaseZeroGraduationExecutionProvider,
   phaseZeroGraduationEnvelopeSchema,
   phaseZeroGraduationProposalDigest,
+  resolvePhaseZeroProviderExecutable,
 } from "../packages/development/src/index.js";
 
 const coreRevision = "1".repeat(40);
@@ -39,14 +40,34 @@ function blockedExecution(onPreflight: () => void): PhaseZeroGraduationExecution
   };
 }
 
+function pendingExecution(onPreflight: () => void): PhaseZeroGraduationExecutionProvider {
+  return {
+    preflight() {
+      onPreflight();
+      return new Promise<never>(() => undefined);
+    },
+    executeCandidate: vi.fn(),
+    independentlyReview: vi.fn(),
+    deliver: vi.fn(),
+    merge: vi.fn(),
+    verifyCanonicalEquality: vi.fn(),
+    preserveRollbackEvidence: vi.fn(),
+    cleanup: vi.fn(),
+    terminatePaidResources: vi.fn(),
+    providerResources: vi.fn(),
+  };
+}
+
 function coordinator(
   statePath: string,
   onPreflight: () => void,
   onActivationError: (error: unknown) => void = () => undefined,
+  execution: PhaseZeroGraduationExecutionProvider = blockedExecution(onPreflight),
+  clock: () => Date = () => now,
 ) {
   return new FilePhaseZeroGraduationCoordinator({
     statePath,
-    now: () => now,
+    now: clock,
     evidence: {
       currentCoreRevision: () => Promise.resolve(coreRevision),
       inspect: vi.fn().mockResolvedValue({
@@ -75,12 +96,21 @@ function coordinator(
         verificationCommands: [["pnpm", "verify"]],
       }),
     },
-    execution: blockedExecution(onPreflight),
+    execution,
     onActivationError,
   });
 }
 
 describe("IRIS-owned Phase 0 proposal and activation", () => {
+  it("resolves provider executable names for the deployed WSL interop boundary", () => {
+    expect(resolvePhaseZeroProviderExecutable("gh", "linux", "Ubuntu")).toBe("gh.exe");
+    expect(resolvePhaseZeroProviderExecutable("ollama", "linux", "Ubuntu")).toBe("ollama.exe");
+    expect(resolvePhaseZeroProviderExecutable("gh", "win32", undefined)).toBe("gh");
+    expect(resolvePhaseZeroProviderExecutable("/usr/bin/gh", "linux", "Ubuntu")).toBe(
+      "/usr/bin/gh",
+    );
+  });
+
   it("binds bounded tracked Core and Command Center evidence to exact equal main revisions", async () => {
     const calls: string[] = [];
     const runner = {
@@ -289,6 +319,111 @@ describe("IRIS-owned Phase 0 proposal and activation", () => {
     const durable = phaseZeroGraduationEnvelopeSchema.parse(await restarted.read());
     expect(durable.state).toBe("concluded");
     expect(preflights).toBe(1);
+  });
+
+  it("resumes an approved non-concluded activation from durable state after restart", async () => {
+    const root = await mkdtemp(join(tmpdir(), "iris-phase-zero-resume-"));
+    const statePath = join(root, "state.json");
+    let preflights = 0;
+    const first = coordinator(
+      statePath,
+      () => {
+        preflights += 1;
+      },
+      () => undefined,
+      pendingExecution(() => {
+        preflights += 1;
+      }),
+    );
+    const controller = new PhaseZeroGraduationReadinessController(first, () => now);
+    const prepared = phaseZeroGraduationEnvelopeSchema.parse(
+      await controller.prepareProposal({ objective: "Perform a restart-safe multi-file upgrade." }),
+    );
+    if (prepared.state !== "presented") throw new Error("EXPECTED_PRESENTED");
+    await controller.consumeApproval({
+      approvalType: "graduation",
+      approval: {
+        approvalId: "approval_phase0-resume-0001",
+        graduationId: prepared.proposal.graduationId,
+        proposalDigest: prepared.proposalDigest,
+        approvedBy: "Founder",
+        authentication: {
+          actorId: "Founder",
+          sessionId: "founder.session",
+          assurance: "founder-loopback-session",
+          verified: true,
+          evidenceDigest: `sha256:${"4".repeat(64)}`,
+          authenticatedAt: now.toISOString(),
+        },
+        typedStatement: prepared.approvalStatement,
+        oneTime: true,
+        issuedAt: now.toISOString(),
+      },
+    });
+    await vi.waitFor(() => {
+      expect(preflights).toBe(1);
+    });
+    const restarted = coordinator(
+      statePath,
+      () => undefined,
+      () => undefined,
+      pendingExecution(() => {
+        preflights += 1;
+      }),
+    );
+    await restarted.read();
+    await vi.waitFor(() => {
+      expect(preflights).toBe(2);
+    });
+  });
+
+  it("rejects delayed approval after proposal expiry and permits a fresh replacement", async () => {
+    const root = await mkdtemp(join(tmpdir(), "iris-phase-zero-expiry-"));
+    const statePath = join(root, "state.json");
+    let current = now;
+    const store = coordinator(
+      statePath,
+      () => undefined,
+      () => undefined,
+      blockedExecution(() => undefined),
+      () => current,
+    );
+    const controller = new PhaseZeroGraduationReadinessController(store, () => current);
+    const prepared = phaseZeroGraduationEnvelopeSchema.parse(
+      await controller.prepareProposal({ objective: "Perform an expiring multi-file upgrade." }),
+    );
+    if (prepared.state !== "presented") throw new Error("EXPECTED_PRESENTED");
+    current = new Date(now.getTime() + 61 * 60_000);
+    await expect(
+      controller.consumeApproval({
+        approvalType: "graduation",
+        approval: {
+          approvalId: "approval_phase0-expired-0001",
+          graduationId: prepared.proposal.graduationId,
+          proposalDigest: prepared.proposalDigest,
+          approvedBy: "Founder",
+          authentication: {
+            actorId: "Founder",
+            sessionId: "founder.session",
+            assurance: "founder-loopback-session",
+            verified: true,
+            evidenceDigest: `sha256:${"4".repeat(64)}`,
+            authenticatedAt: now.toISOString(),
+          },
+          typedStatement: prepared.approvalStatement,
+          oneTime: true,
+          issuedAt: now.toISOString(),
+        },
+      }),
+    ).rejects.toThrow("PHASE_ZERO_APPROVAL_MISMATCH");
+    const replacement = phaseZeroGraduationEnvelopeSchema.parse(
+      await controller.prepareProposal({
+        objective: "Perform a fresh replacement multi-file upgrade.",
+      }),
+    );
+    expect(replacement.state).toBe("presented");
+    if (replacement.state !== "presented") throw new Error("EXPECTED_REPLACEMENT");
+    expect(replacement.proposal.graduationId).not.toBe(prepared.proposal.graduationId);
   });
 
   it("rejects unsafe model-selected paths before any proposal is stored", async () => {

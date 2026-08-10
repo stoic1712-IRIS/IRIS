@@ -235,13 +235,27 @@ export class FilePhaseZeroGraduationCoordinator
     };
     record.envelope = phaseZeroGraduationEnvelopeSchema.parse(refreshed);
     this.#active = record;
+    if (
+      record.graduationApproval !== undefined &&
+      record.graduationReceipt !== undefined &&
+      record.envelope.state !== "concluded"
+    )
+      this.#startActivation(record.proposal, record.graduationApproval);
     return record.envelope;
   }
 
   async prepareProposal(input: PhaseZeroGraduationProposalRequest): Promise<unknown> {
     const request = phaseZeroGraduationProposalRequestSchema.parse(input);
     const existing = await this.#load();
-    if (existing !== null) throw new Error("PHASE_ZERO_WORKFLOW_ALREADY_EXISTS");
+    if (existing !== null) {
+      if (
+        existing.graduationReceipt === undefined &&
+        this.#now().getTime() >= Date.parse(existing.proposal.expiresAt)
+      ) {
+        await rm(this.#statePath, { force: true });
+        this.#active = null;
+      } else throw new Error("PHASE_ZERO_WORKFLOW_ALREADY_EXISTS");
+    }
     const evidence = z
       .strictObject({
         canonicalBaseRevision: revisionSchema,
@@ -378,10 +392,12 @@ export class FilePhaseZeroGraduationCoordinator
     const submitted = phaseZeroGraduationApprovalEnvelopeSchema.parse(input);
     const record = await this.#requireRecord();
     const proposalDigest = phaseZeroGraduationProposalDigest(record.proposal);
+    const currentTime = this.#now().getTime();
     if (
       submitted.approval.graduationId !== record.proposal.graduationId ||
       submitted.approval.proposalDigest !== proposalDigest ||
-      Date.parse(submitted.approval.issuedAt) > this.#now().getTime() ||
+      currentTime >= Date.parse(record.proposal.expiresAt) ||
+      Date.parse(submitted.approval.issuedAt) > currentTime ||
       Date.parse(submitted.approval.issuedAt) >= Date.parse(record.proposal.expiresAt)
     )
       throw new Error("PHASE_ZERO_APPROVAL_MISMATCH");

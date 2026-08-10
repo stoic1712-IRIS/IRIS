@@ -91,6 +91,22 @@ export interface PhaseZeroProcessRunner {
   run(executable: string, args: string[], options?: { cwd?: string }): Promise<string>;
 }
 
+export function resolvePhaseZeroProviderExecutable(
+  executable: string,
+  platform: NodeJS.Platform = process.platform,
+  wslDistribution: string | undefined = process.env.WSL_DISTRO_NAME,
+): string {
+  if (
+    platform === "linux" &&
+    wslDistribution !== undefined &&
+    !executable.includes("/") &&
+    !executable.includes("\\") &&
+    !executable.toLowerCase().endsWith(".exe")
+  )
+    return `${executable}.exe`;
+  return executable;
+}
+
 class DefaultPhaseZeroProcessRunner implements PhaseZeroProcessRunner {
   async run(executable: string, args: string[], options: { cwd?: string } = {}): Promise<string> {
     const environment = { ...process.env };

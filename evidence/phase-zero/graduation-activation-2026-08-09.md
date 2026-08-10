@@ -24,11 +24,13 @@ The Founder authorized implementation, local verification, non-force publication
 
 ## Verification
 
-- Core focused: 2 files, 15 tests passed.
-- Core full: formatting, build, lint, typecheck, 60 test files, 486 tests passed, 1 existing skip, diagnostics; exit 0; report digest `sha256:18c71d943809444e7a60383ef4b2475814200522c694782262966f391aa8b9dd`.
+- Core focused after restart, expiry, and WSL interop hardening: 2 files, 18 tests passed.
+- Core full: formatting, build, lint, typecheck, 60 test files, 489 tests passed, 1 existing skip, diagnostics; exit 0; report digest `sha256:d2e1b3ec42bfd08143534a94cd46cd710174e9daad98aa11dec214880def7d63`.
 - Command Center focused: 3 files, 95 tests passed, 1 existing skip.
 - Command Center full: formatting, lint, typecheck, build, 45 test files, 273 tests passed, 4 existing skips; exit 0; report digest `sha256:4383d5f59f68246031254b610e55021e43af8cc33d6db7cb52792bb155fb757b`.
 - Lockfiles and dependency versions unchanged. Existing pinned dependencies were reused through local worktree junctions.
+- Deployment preflight resolves `gh.exe` and `ollama.exe` only at the detected WSL interop boundary; explicit executable paths and non-WSL platforms remain unchanged.
+- A consumed non-concluded approval resumes from durable state after Core restart; delayed approval after proposal expiry is rejected, and an unapproved expired proposal may be replaced.
 
 ## Non-claims
 
