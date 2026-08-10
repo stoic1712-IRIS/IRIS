@@ -1,0 +1,90 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "repository-repair-worker-canonical-root",
+  "objective": "Repair the live repository-repair worker bootstrap so it resolves only launcher-owned canonical repository roots instead of obsolete Release Seven worktrees, while preserving exact repository identity, input-root equality, revision checks, candidate-only mutation, and zero provider authority.",
+  "issuer": "Founder Cristofer Stoic Arellano",
+  "executor": "Codex",
+  "assigned_role": "producer",
+  "created_at": "2026-08-10T17:52:00.000Z",
+  "status": "in_progress",
+  "risk_class": "R3",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "Founder mandate: finish the blocked repository-repair path, repair discovered defects, verify, publish, merge, synchronize, restart, and return control to the Founder without approving or executing any repair or graduation proposal on the Founder behalf.",
+  "completion_actions": [
+    "edit",
+    "verify",
+    "repair",
+    "stage",
+    "commit",
+    "push_branch",
+    "create_pull_request",
+    "merge",
+    "synchronize",
+    "cleanup"
+  ],
+  "completion_exclusions": [
+    "Typing, submitting, approving, or executing a repository-repair or Phase 0 graduation proposal for the Founder",
+    "Weakening repository identity, root equality, revision, path, model, candidate-only, cleanup, or zero-authority controls",
+    "Credentials, spending, deployment, public or LAN exposure, administration, force-push, history rewrite, destructive data work, or unrelated changes"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "6189427a9bba79fe05d7c628be3733d8ecaf8deb"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "main",
+      "commit": "08496c0ece63c347a3444c7ce460b83e69401bd1"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/tasks/repository-repair-worker-canonical-root.json",
+    "scripts/runtime/iris-repository-repair-worker.mjs",
+    "tests/release-seven-repository-repair.test.ts",
+    "scripts/local-gateway.mjs",
+    "tests/local-gateway.test.ts"
+  ],
+  "excluded_paths": [".github/**", "docs/governance/**", "pnpm-lock.yaml", "credentials/**"],
+  "permitted_actions": [
+    "Use the two exact isolated worktrees bound above",
+    "Reuse already materialized pinned dependencies without changing versions or lockfiles",
+    "Pass canonical roots explicitly from the authenticated local gateway to the candidate-only repair worker",
+    "Publish and merge only after focused and full verification pass"
+  ],
+  "prohibited_actions": [
+    "Approve or execute the resulting repair or graduation proposal",
+    "Trust a repository root supplied only by browser input or model output",
+    "Grant canonical repository, GitHub, deployment, credential, spending, or network authority to repository repair",
+    "Force-push, rewrite history, bypass branch protection, administer repositories, expose credentials, spend, deploy, or expose non-loopback ports"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run tests/release-seven-repository-repair.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm exec vitest run tests/local-gateway.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "Obsolete Release Seven repository paths are absent from the live worker",
+    "The gateway passes both canonical roots explicitly to the repair worker",
+    "The worker still requires exact repository identity and exact input-root equality",
+    "Focused and full verification in both repositories",
+    "Non-force publication, merged remote equality, canonical synchronization, restart, and cleanup without proposal execution"
+  ],
+  "publisher": "Codex after verification pass",
+  "approval_reference": "founder-complete-repository-repair-path-2026-08-10",
+  "phase0_graduation": false
+}
