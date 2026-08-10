@@ -81,6 +81,9 @@ importers:
 
   packages/capabilities:
     dependencies:
+      '@stoic-iris/contracts':
+        specifier: workspace:*
+        version: link:../contracts
       '@stoic-iris/workers':
         specifier: workspace:*
         version: link:../workers

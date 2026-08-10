@@ -7,6 +7,6 @@
     "outDir": "dist",
     "tsBuildInfoFile": "dist/capabilities.tsbuildinfo"
   },
-  "references": [{ "path": "../workers" }],
+  "references": [{ "path": "../contracts" }, { "path": "../workers" }],
   "include": ["src/**/*.ts"]
 }

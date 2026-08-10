@@ -32,9 +32,12 @@
     "evidence/operating-contract/canonical-operating-contract-core-2026-08-10.md",
     "generated/iris-operating-contract.compiled.json",
     "package.json",
+    "pnpm-lock.yaml",
+    "packages/capabilities/package.json",
     "packages/capabilities/src/capability-acquisition.ts",
     "packages/capabilities/src/index.ts",
     "packages/capabilities/src/live-capability-snapshot.ts",
+    "packages/capabilities/tsconfig.json",
     "packages/contracts/src/index.ts",
     "packages/contracts/src/operating-contract.ts",
     "packages/contracts/tsconfig.json",
@@ -61,7 +64,6 @@
   ],
   "excluded_paths": [
     ".github/**",
-    "pnpm-lock.yaml",
     "C:/Projects/STOIC-IRIS-source-library/**",
     "credentials/**",
     "docs/governance/**",
@@ -69,13 +71,13 @@
   ],
   "permitted_actions": [
     "Edit only the exact allowed paths in the isolated implementation worktree",
-    "Reuse already materialized pinned dependencies and local build outputs without changing versions or lockfiles",
+    "Materialize only the local @stoic-iris/contracts workspace link required by @stoic-iris/capabilities; do not add or download third-party dependencies",
     "Run focused and full local verification with network access disabled",
     "Create exact-path local commits after the applicable verification passes"
   ],
   "prohibited_actions": [
     "Push, create or merge a pull request, synchronize canonical main, restart IRIS, or delete retirement candidates",
-    "Install dependencies, change lockfiles, download models, use credentials, create provider resources, spend, deploy, or expose public or LAN ports",
+    "Add or download third-party dependencies, change dependency versions, download models, use credentials, create provider resources, spend, deploy, or expose public or LAN ports",
     "Force-push, rewrite history, bypass branch protection, administer repositories, or perform destructive data work",
     "Approve or execute Phase 0 graduation or claim the graduation criterion is complete"
   ],

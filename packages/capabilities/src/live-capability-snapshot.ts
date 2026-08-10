@@ -5,6 +5,8 @@ import {
 } from "@stoic-iris/contracts";
 import { z } from "zod";
 
+import { capabilityGapSchema, classifyCapabilityGap } from "./capability-gap.js";
+
 const capabilityNameSchema = z.string().regex(/^[a-z][a-z0-9.-]+$/u);
 
 export const liveCapabilityStatusSchema = z.enum([
@@ -38,6 +40,7 @@ export const liveCapabilityEvidenceSchema = liveCapabilityProviderEvidenceSchema
     authorized: z.boolean(),
     protected: z.literal(false),
     status: liveCapabilityStatusSchema.exclude(["protected"]),
+    gap: capabilityGapSchema.optional(),
     capturedAt: timestampSchema,
   })
   .strict();
@@ -107,11 +110,23 @@ export function buildLiveCapabilitySnapshot(input: {
     const provider = providerMap.get(capability);
     if (provider === undefined) throw new Error(`LIVE_CAPABILITY_EVIDENCE_MISSING:${capability}`);
     const authorized = granted.has(capability);
+    const status = deriveStatus(provider, authorized);
+    const gap =
+      status === "ready"
+        ? undefined
+        : classifyCapabilityGap({
+            ...provider,
+            authorized: status === "needs-access" ? authorized : true,
+            credentialReferenceAvailable:
+              status === "needs-access" ? provider.credentialReferenceAvailable : true,
+            protectedEffectRequired: false,
+          });
     return liveCapabilityEvidenceSchema.parse({
       ...provider,
       authorized,
       protected: false,
-      status: deriveStatus(provider, authorized),
+      status,
+      ...(gap === undefined ? {} : { gap }),
       capturedAt,
     });
   });

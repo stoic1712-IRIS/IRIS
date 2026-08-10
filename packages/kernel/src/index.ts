@@ -3,6 +3,7 @@ export * from "./audit-store.js";
 export * from "./identity.js";
 export * from "./integrated-decision-gate.js";
 export * from "./objective-intake.js";
+export * from "./operating-decision-engine.js";
 export * from "./operational-control.js";
 export * from "./policy-registry.js";
 export * from "./read-model.js";
