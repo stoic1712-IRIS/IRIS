@@ -123,6 +123,7 @@ describe("IRIS-owned Phase 0 proposal and activation", () => {
   });
 
   it("resolves provider executable names for the deployed WSL interop boundary", () => {
+    expect(resolvePhaseZeroProviderExecutable("git", "linux", "Ubuntu")).toBe("git.exe");
     expect(resolvePhaseZeroProviderExecutable("gh", "linux", "Ubuntu")).toBe("gh.exe");
     expect(resolvePhaseZeroProviderExecutable("ollama", "linux", "Ubuntu")).toBe("ollama.exe");
     expect(resolvePhaseZeroProviderExecutable("gh", "win32", undefined)).toBe("gh");
@@ -131,10 +132,23 @@ describe("IRIS-owned Phase 0 proposal and activation", () => {
     );
   });
 
+  it("binds canonical evidence collection to the deployed WSL-aware Git executable", async () => {
+    const runtimeSource = await readFile(
+      new URL("../scripts/runtime/iris-core-read-service.mjs", import.meta.url),
+      "utf8",
+    );
+    expect(runtimeSource).toContain("gitExecutable:");
+    expect(runtimeSource).toContain(
+      'process.env.IRIS_GIT_EXECUTABLE ?? resolvePhaseZeroProviderExecutable("git")',
+    );
+  });
+
   it("binds bounded tracked Core and Command Center evidence to exact equal main revisions", async () => {
     const calls: string[] = [];
+    const executables: string[] = [];
     const runner = {
-      run: vi.fn((_executable: string, args: string[], options?: { cwd?: string }) => {
+      run: vi.fn((executable: string, args: string[], options?: { cwd?: string }) => {
+        executables.push(executable);
         calls.push(`${options?.cwd ?? ""}|${args.join(" ")}`);
         const joined = args.join(" ");
         if (joined === "status --porcelain=v1 -uall") return Promise.resolve("");
@@ -153,6 +167,7 @@ describe("IRIS-owned Phase 0 proposal and activation", () => {
       corePath: "C:/test/core",
       commandCenterPath: "C:/test/command-center",
       deploymentId: "founder-command-center-local",
+      gitExecutable: "git.exe",
       runner,
       now: () => new Date(inspectedAt),
     });
@@ -163,6 +178,7 @@ describe("IRIS-owned Phase 0 proposal and activation", () => {
     expect(evidence.evidence).toContain("packages/development/src/index.ts");
     expect(evidence.evidence).not.toContain("C:/test");
     expect(calls.some((call) => call.endsWith("core|status --porcelain=v1 -uall"))).toBe(true);
+    expect(new Set(executables)).toEqual(new Set(["git.exe"]));
   });
 
   it("uses the real loopback coding model and rejects output outside the strict plan schema", async () => {

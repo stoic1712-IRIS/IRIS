@@ -97,6 +97,7 @@ const graduationStore = new FilePhaseZeroGraduationCoordinator({
     corePath: irisRoot,
     commandCenterPath: commandCenterRoot,
     deploymentId: "founder-command-center-local",
+    gitExecutable: process.env.IRIS_GIT_EXECUTABLE ?? resolvePhaseZeroProviderExecutable("git"),
   }),
   model: new OllamaPhaseZeroGraduationProposalModel({
     model: "qwen3-coder:30b",

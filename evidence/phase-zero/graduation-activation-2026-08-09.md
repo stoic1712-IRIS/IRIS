@@ -51,6 +51,16 @@ The Founder authorized implementation, local verification, non-force publication
 - Repair-focused activation tests: 14 passed.
 - Repair full verification: formatting, build, lint, typecheck, 60 test files, 493 tests passed, 1 existing skip, diagnostics; exit 0; report digest `sha256:d968e730530776113980d2799cfd80a94c09649bcbb1bbffbd83e81df339ad64`.
 
+## Second live smoke and WSL Git repair
+
+- Core proposal-plan repair PR #89 merged at `80ebe32b613c4e02380b478e08b188cfe1c06836`; local, remote, and provider `main` equality passed.
+- The second live proposal request also failed closed before durable proposal creation, approval, or activation.
+- Exact reproduction inside the deployed Ubuntu WSL boundary showed that Linux Git misread the canonical Command Center's Windows worktree pointer as a relative WSL path. Canonical repository verification therefore stopped before Ollama was called.
+- Windows `git.exe` is available through WSL interop and successfully reads both canonical repositories. The runtime now applies the existing host-aware executable resolver to evidence Git, with an explicit `IRIS_GIT_EXECUTABLE` override retained.
+- A disposable WSL proof exercised canonical evidence, the real `qwen3-coder:30b` model, strict proposal construction, and durable presentation with `graduationApprovalConsumed: false`; its temporary state was removed without approval or execution.
+- WSL Git repair focused activation tests: 15 passed; exit 0; report digest `sha256:7f25267c51ed38c1d0bb71172475f6c9aa9843237263bd8d3d9bef0a4bc3aea3`.
+- WSL Git repair full verification: formatting, build, lint, typecheck, 60 test files, 494 tests passed, 1 existing skip, diagnostics; exit 0; report digest `sha256:e01ca650b0ef86992921f063b48b4c2e96144da5ab803039a68ae34ab4095004`.
+
 ## Remaining actions
 
-Independent exact-head repair review, publication and merge, local-main synchronization, runtime restart, and a live real-model proposal-only smoke test remain before this implementation task is complete. The final IRIS-generated approval statement must be presented to the Founder and left unsubmitted.
+Full verification, independent exact-head review, publication and merge of the WSL Git repair, local-main synchronization, runtime restart, and a live real-model proposal-only smoke test remain before this implementation task is complete. The final IRIS-generated approval statement must be presented to the Founder and left unsubmitted.
