@@ -94,7 +94,18 @@ describe("Release Seven governed repository repair", () => {
         code,
         expectedCodeBinding,
         bindingSecret: secret,
-        now: new Date("2026-08-05T22:02:00Z"),
+        now: new Date("2026-08-05T22:09:59.999Z"),
+      }),
+    ).toBe(true);
+    expect(proposal.expiresAt).toBe("2026-08-05T22:10:00.000Z");
+    expect(
+      verifyRepositoryRepairApproval({
+        proposal,
+        statement: proposal.approvalStatement,
+        code,
+        expectedCodeBinding,
+        bindingSecret: secret,
+        now: new Date("2026-08-05T22:10:00.000Z"),
       }),
     ).toBe(false);
   });

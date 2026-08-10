@@ -31,6 +31,7 @@ export const repairVerificationCommandSchema = z.enum([
   "repository-diagnostics",
 ]);
 export const repositoryRepairBootstrapCommand = "pnpm build" as const;
+export const repositoryRepairApprovalWindowMs = 10 * 60_000;
 
 export const repositoryRepairProposalSchema = z.strictObject({
   proposalId: z.string().regex(/^proposal_release-seven-[a-f0-9]{12}$/),
@@ -177,7 +178,7 @@ export function createRepositoryRepairProposal(
   const base = {
     ...input,
     createdAt: now.toISOString(),
-    expiresAt: new Date(now.getTime() + 120_000).toISOString(),
+    expiresAt: new Date(now.getTime() + repositoryRepairApprovalWindowMs).toISOString(),
   };
   const digest = `sha256:${createHash("sha256").update(JSON.stringify(base)).digest("hex")}`;
   const proposalId = `proposal_release-seven-${digest.slice(7, 19)}`;
