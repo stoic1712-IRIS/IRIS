@@ -25,7 +25,7 @@ Implementing this path does not complete Phase 0. Completion requires IRIS itsel
 
 `POST /v1/graduation-proposals` requires the signed scope `phase-zero-graduation:propose:v1` and a strict body containing only a bounded objective. Core then:
 
-1. verifies clean `main` and exact `HEAD == origin/main` in Core and Command Center;
+1. verifies clean `main` and exact `HEAD == origin/main` in Core and Command Center, using the host-aware Git executable at the deployed WSL boundary so Windows worktree pointers remain valid;
 2. reads bounded tracked content from the exact canonical Core revision;
 3. creates an evidence digest without exposing workstation paths;
 4. calls loopback Ollama with fixed model `qwen3-coder:30b`, temperature zero, a strict JSON schema, and bounded context; every write path must also be inspected, and one invalid response receives one bounded corrective retry without weakening validation;
