@@ -180,7 +180,7 @@ export class OllamaAdapter implements ModelRuntimeAdapter {
           loadDurationNanoseconds: providerOutput.load_duration,
         },
         doneReason: providerOutput.done_reason,
-        authority: "none",
+        modelAuthority: "none",
       }),
       output: validatedOutput.data,
     };

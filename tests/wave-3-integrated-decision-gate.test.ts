@@ -108,7 +108,7 @@ function successfulResponse(): ModelGatewayResponse & { output: { answer: string
       loadDurationNanoseconds: 10,
     },
     doneReason: "stop",
-    authority: "none",
+    modelAuthority: "none",
   };
 }
 
@@ -141,7 +141,7 @@ describe("Wave 3 integrated decision gate", () => {
     );
     expect(result.status).toBe("completed");
     expect(result.classification.riskClass).toBe("R0");
-    expect(result.modelResponse?.authority).toBe("none");
+    expect(result.modelResponse?.modelAuthority).toBe("none");
     expect(adapter.calls).toBe(1);
     expect(result.auditEvents.map((event) => event.eventType)).toEqual([
       "ObjectiveClassified",

@@ -114,6 +114,9 @@ importers:
 
   packages/kernel:
     dependencies:
+      '@stoic-iris/capabilities':
+        specifier: workspace:*
+        version: link:../capabilities
       '@stoic-iris/contracts':
         specifier: workspace:*
         version: link:../contracts

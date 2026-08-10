@@ -42,9 +42,11 @@
     "packages/contracts/src/operating-contract.ts",
     "packages/contracts/tsconfig.json",
     "packages/kernel/src/founder-access-profile.ts",
+    "packages/kernel/package.json",
     "packages/kernel/src/index.ts",
     "packages/kernel/src/operating-context.ts",
     "packages/kernel/src/operating-decision-engine.ts",
+    "packages/kernel/tsconfig.json",
     "packages/model-gateway/src/contracts.ts",
     "packages/model-gateway/src/founder-dialogue.ts",
     "packages/model-gateway/src/ollama-adapter.ts",
@@ -60,7 +62,8 @@
     "tests/model-gateway-ollama.test.ts",
     "tests/operating-context.test.ts",
     "tests/operating-contract.test.ts",
-    "tests/operating-decision-engine.test.ts"
+    "tests/operating-decision-engine.test.ts",
+    "tests/wave-3-integrated-decision-gate.test.ts"
   ],
   "excluded_paths": [
     ".github/**",
@@ -71,7 +74,7 @@
   ],
   "permitted_actions": [
     "Edit only the exact allowed paths in the isolated implementation worktree",
-    "Materialize only the local @stoic-iris/contracts workspace link required by @stoic-iris/capabilities; do not add or download third-party dependencies",
+    "Materialize only the local @stoic-iris/contracts workspace link required by @stoic-iris/capabilities and the local @stoic-iris/capabilities workspace link required by @stoic-iris/kernel; do not add or download third-party dependencies",
     "Run focused and full local verification with network access disabled",
     "Create exact-path local commits after the applicable verification passes"
   ],

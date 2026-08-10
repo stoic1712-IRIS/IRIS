@@ -13,6 +13,7 @@
     }
   },
   "dependencies": {
+    "@stoic-iris/capabilities": "workspace:*",
     "@stoic-iris/contracts": "workspace:*",
     "@stoic-iris/model-gateway": "workspace:*",
     "zod": "4.4.3"

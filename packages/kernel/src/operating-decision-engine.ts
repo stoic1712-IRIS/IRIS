@@ -12,7 +12,7 @@ const gapSchema = z
   })
   .strict();
 
-const operatingObjectiveSchema = z
+export const operatingObjectiveSchema = z
   .object({
     objectiveId: objectiveIdSchema,
     requiredCapabilities: z.array(capabilitySchema),

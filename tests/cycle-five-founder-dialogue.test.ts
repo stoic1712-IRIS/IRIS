@@ -24,7 +24,7 @@ class DialogueRuntime implements ModelRuntimeAdapter {
     intent: "conversation",
     proposedAction: "none",
     requiresApproval: false,
-    authority: "none",
+    modelAuthority: "none",
   };
 
   invoke<Output>(
@@ -46,7 +46,7 @@ class DialogueRuntime implements ModelRuntimeAdapter {
         loadDurationNanoseconds: 1,
       },
       doneReason: "stop",
-      authority: "none",
+      modelAuthority: "none",
     });
   }
 }
@@ -176,11 +176,11 @@ describe("Cycle Five Founder dialogue service", () => {
     },
   );
 
-  it("preserves bounded multi-turn context without execution authority", async () => {
+  it("preserves bounded multi-turn context with explicit model and controller separation", async () => {
     const runtime = new DialogueRuntime();
     const result = await new FounderDialogueService(runtime).reply(request());
 
-    expect(result.authority).toBe("none");
+    expect(result.modelAuthority).toBe("none");
     expect(runtime.request?.messages).toEqual(
       expect.arrayContaining([
         { role: "user", content: "Review the repository." },
@@ -188,6 +188,10 @@ describe("Cycle Five Founder dialogue service", () => {
       ]),
     );
     expect(runtime.request?.messages.at(-1)?.content).toMatch(/what should we do next/iu);
+    expect(runtime.request?.messages[0]?.content).toContain(
+      "You do not own authority; the IRIS controller may execute the supplied validated decision.",
+    );
+    expect(runtime.request?.messages[0]?.content).not.toContain("You have no execution authority");
   });
 
   it("fails closed if a mission proposal omits approval", async () => {
@@ -197,7 +201,7 @@ describe("Cycle Five Founder dialogue service", () => {
       intent: "propose-mission",
       proposedAction: "mission-proposal",
       requiresApproval: false,
-      authority: "none",
+      modelAuthority: "none",
     };
     await expect(new FounderDialogueService(runtime).reply(request())).rejects.toThrow(
       /APPROVAL_REQUIRED/u,

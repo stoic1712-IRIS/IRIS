@@ -1,6 +1,10 @@
 import { z } from "zod";
 
-import { canonicalIdSchema, timestampSchema } from "@stoic-iris/contracts";
+import {
+  canonicalIdSchema,
+  operatingDecisionKindSchema,
+  timestampSchema,
+} from "@stoic-iris/contracts";
 
 export const modelMessageSchema = z
   .object({
@@ -47,10 +51,46 @@ export const modelGatewayResponseSchema = z
     output: z.unknown(),
     usage: modelUsageSchema,
     doneReason: z.string().min(1).max(200),
-    authority: z.literal("none"),
+    modelAuthority: z.literal("none"),
   })
   .strict();
 export type ModelGatewayResponse = z.infer<typeof modelGatewayResponseSchema>;
+
+export const controllerProjectionSchema = z
+  .object({
+    decision: operatingDecisionKindSchema,
+    executable: z.boolean(),
+    activeGrantId: z
+      .string()
+      .regex(/^access_[a-z0-9-]{8,100}$/u)
+      .nullable(),
+  })
+  .strict();
+export type ControllerProjection = z.infer<typeof controllerProjectionSchema>;
+
+export const controlledModelGatewayResponseSchema = modelGatewayResponseSchema
+  .extend({ controller: controllerProjectionSchema })
+  .strict();
+export type ControlledModelGatewayResponse = z.infer<typeof controlledModelGatewayResponseSchema>;
+
+export function attachControllerProjection<Output>(
+  responseInput: ModelGatewayResponse & { output: Output },
+  projectionInput: {
+    decision: ControllerProjection["decision"];
+    activeGrantId: string | null;
+  },
+): ControlledModelGatewayResponse & { output: Output } {
+  const response = modelGatewayResponseSchema.parse(responseInput);
+  const controller = controllerProjectionSchema.parse({
+    decision: projectionInput.decision,
+    executable: projectionInput.decision === "execute-now",
+    activeGrantId: projectionInput.activeGrantId,
+  });
+  return {
+    ...controlledModelGatewayResponseSchema.parse({ ...response, controller }),
+    output: responseInput.output,
+  };
+}
 
 export type StructuredOutputValidator<Output> = z.ZodType<Output>;
 

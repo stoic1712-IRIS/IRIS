@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 
 import {
+  attachControllerProjection,
   ModelGatewayError,
   OllamaAdapter,
   type ModelGatewayRequest,
@@ -59,7 +60,7 @@ describe("Ollama model gateway adapter", () => {
     const result = await adapter.invoke(request, outputValidator);
 
     expect(result.output).toEqual({ status: "ready", explanation: "Local runtime passed." });
-    expect(result.authority).toBe("none");
+    expect(result.modelAuthority).toBe("none");
     expect(result.usage).toMatchObject({ inputTokens: 12, outputTokens: 8 });
     expect(fetchImplementation).toHaveBeenCalledOnce();
     const [url, init] = fetchImplementation.mock.calls[0] ?? [];
@@ -73,6 +74,29 @@ describe("Ollama model gateway adapter", () => {
       format: outputSchema,
       keep_alive: 0,
       options: { temperature: 0, seed: 0, num_ctx: 4096 },
+    });
+  });
+
+  it("attaches a controller decision only after provider output is validated", async () => {
+    const adapter = new OllamaAdapter({
+      fetchImplementation: vi
+        .fn<typeof fetch>()
+        .mockResolvedValue(
+          providerResponse('{"status":"ready","explanation":"Local runtime passed."}'),
+        ),
+    });
+    const providerResult = await adapter.invoke(request, outputValidator);
+    const controlled = attachControllerProjection(providerResult, {
+      decision: "execute-now",
+      activeGrantId: "access_contract-test",
+    });
+
+    expect(providerResult).not.toHaveProperty("controller");
+    expect(controlled.modelAuthority).toBe("none");
+    expect(controlled.controller).toEqual({
+      decision: "execute-now",
+      executable: true,
+      activeGrantId: "access_contract-test",
     });
   });
 

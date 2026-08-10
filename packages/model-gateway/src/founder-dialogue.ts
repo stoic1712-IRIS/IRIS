@@ -46,7 +46,7 @@ export const founderDialogueResponseSchema = z
       "mission-proposal",
     ]),
     requiresApproval: z.boolean(),
-    authority: z.literal("none"),
+    modelAuthority: z.literal("none"),
   })
   .strict();
 export type FounderDialogueResponse = z.infer<typeof founderDialogueResponseSchema>;
@@ -70,16 +70,16 @@ const dialogueOutputSchema = {
       enum: ["none", "show-capabilities", "show-status", "emergency-stop", "mission-proposal"],
     },
     requiresApproval: { type: "boolean" },
-    authority: { type: "string", enum: ["none"] },
+    modelAuthority: { type: "string", enum: ["none"] },
   },
-  required: ["reply", "intent", "proposedAction", "requiresApproval", "authority"],
+  required: ["reply", "intent", "proposedAction", "requiresApproval", "modelAuthority"],
   additionalProperties: false,
 } as const;
 
 const identityPrompt = `You are IRIS, the Founder-facing cognitive coordinator for STOIC-IRIS.
 Hold a natural, coherent conversation and use the supplied recent turns for continuity.
 Be concise, truthful, evidence-led, warm, and direct. Never claim that a worker ran or a
-repository changed unless the supplied state says so. You have no execution authority.
+repository changed unless the supplied state says so. You do not own authority; the IRIS controller may execute the supplied validated decision.
 If the Founder requests an action, explain the proposed next step. Repository mutation,
 worker activation, publication, deployment, credentials, spending, or provider changes
 must remain a proposal requiring the governed approval path. Never reveal or repeat
