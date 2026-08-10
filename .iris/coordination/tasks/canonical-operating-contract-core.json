@@ -6,7 +6,7 @@
   "executor": "Codex",
   "assigned_role": "producer",
   "created_at": "2026-08-10T22:52:10.0259760Z",
-  "status": "in_progress",
+  "status": "ready_for_review",
   "risk_class": "R3",
   "authorization_mode": "completion_mandate",
   "completion_mandate_text": "Founder mandate: stage and commit the four approved Canonical Operating Contract specification and plan files in their respective repositories, then execute the Core implementation plan inline through local verification. Do not push, merge, delete retirement candidates, restart IRIS, or perform protected provider operations until separately authorized.",
