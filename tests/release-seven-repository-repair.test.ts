@@ -1,15 +1,23 @@
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   assertRepositoryRepairCheckoutContent,
   bindRepositoryRepairCode,
   createRepositoryRepairModelSchema,
+  createRepositoryRepairIdleDeadline,
   createRepositoryRepairProposal,
+  createRepositoryRepairScopeDigest,
+  createRepositoryRepairStageModelSchema,
+  createRepositoryRepairStagePacket,
   formatRepositoryRepairModelDenial,
+  repositoryRepairJournalSchema,
   repositoryRepairBootstrapCommand,
   repositoryRepairResultSchema,
   type RepositoryRepairProposal,
   validateRepositoryRepairCandidate,
+  validateRepositoryRepairResume,
+  validateRepositoryRepairStageCandidate,
   verifyRepositoryRepairApproval,
 } from "../packages/kernel/src/index.js";
 
@@ -252,5 +260,310 @@ describe("Release Seven governed repository repair", () => {
 
   it("uses the pinned repository build as the disposable workspace bootstrap", () => {
     expect(repositoryRepairBootstrapCommand).toBe("pnpm build");
+  });
+
+  it("materializes bounded exact edits only for the active target", () => {
+    const proposal = createRepositoryRepairProposal(input);
+    const before = {
+      "src/a.ts": "export const a = 1;\nexport const keep = true;\n",
+      "src/b.ts": "export const b = 1;\n",
+      "src/context.ts": "export const context = true;\n",
+    };
+    const stage = {
+      summary: "Repair the active target.",
+      edits: [
+        {
+          path: "src/a.ts",
+          before: "export const a = 1;",
+          after: "export const a = 2;",
+          rationale: "Correct the fictional value.",
+          expectedVerificationImpact: "The value assertion passes.",
+        },
+      ],
+      contextRequests: [],
+    };
+
+    expect(validateRepositoryRepairStageCandidate(stage, proposal, "src/a.ts", before)).toEqual({
+      kind: "edits",
+      summary: stage.summary,
+      files: [
+        {
+          path: "src/a.ts",
+          content: "export const a = 2;\nexport const keep = true;\n",
+          rationale: stage.edits[0]?.rationale,
+          expectedVerificationImpact: stage.edits[0]?.expectedVerificationImpact,
+        },
+      ],
+    });
+    expect(() =>
+      validateRepositoryRepairStageCandidate(
+        { ...stage, edits: [{ ...stage.edits[0], path: "src/b.ts" }] },
+        proposal,
+        "src/a.ts",
+        before,
+      ),
+    ).toThrow("STAGE_TARGET_DENIED");
+    expect(() =>
+      validateRepositoryRepairStageCandidate(
+        { ...stage, edits: [{ ...stage.edits[0], before: "missing" }] },
+        proposal,
+        "src/a.ts",
+        before,
+      ),
+    ).toThrow("STAGE_EDIT_STALE");
+    expect(() =>
+      validateRepositoryRepairStageCandidate(
+        {
+          ...stage,
+          edits: [
+            {
+              ...stage.edits[0],
+              before: "export const",
+              after: "export let",
+            },
+          ],
+        },
+        proposal,
+        "src/a.ts",
+        before,
+      ),
+    ).toThrow("STAGE_EDIT_AMBIGUOUS");
+    expect(() =>
+      validateRepositoryRepairStageCandidate(
+        { ...stage, edits: [{ ...stage.edits[0], after: stage.edits[0]?.before }] },
+        proposal,
+        "src/a.ts",
+        before,
+      ),
+    ).toThrow("CANDIDATE_NOOP_DENIED");
+    expect(() =>
+      validateRepositoryRepairStageCandidate(
+        {
+          ...stage,
+          edits: [
+            {
+              ...stage.edits[0],
+              after: "export const token = 'github_pat_12345678901234567890';",
+            },
+          ],
+        },
+        proposal,
+        "src/a.ts",
+        before,
+      ),
+    ).toThrow("CANDIDATE_CONTENT_DENIED");
+  });
+
+  it("accepts bounded allowlisted context requests without mixing edits", () => {
+    const proposal = createRepositoryRepairProposal(input);
+    const before = {
+      "src/a.ts": "export const a = 1;\n",
+      "src/b.ts": "export const b = 1;\n",
+      "src/context.ts": "export function helper() { return true; }\n",
+    };
+    const request = {
+      summary: "Need the helper declaration.",
+      edits: [],
+      contextRequests: [
+        { path: "src/context.ts", query: "helper declaration", reason: "Confirm its contract." },
+      ],
+    };
+
+    expect(validateRepositoryRepairStageCandidate(request, proposal, "src/a.ts", before)).toEqual({
+      kind: "context-request",
+      requests: request.contextRequests,
+    });
+    expect(() =>
+      validateRepositoryRepairStageCandidate(
+        {
+          ...request,
+          contextRequests: [{ ...request.contextRequests[0], path: "src/unknown.ts" }],
+        },
+        proposal,
+        "src/a.ts",
+        before,
+      ),
+    ).toThrow("CONTEXT_PATH_DENIED");
+    expect(() =>
+      validateRepositoryRepairStageCandidate(
+        {
+          ...request,
+          edits: [
+            {
+              path: "src/a.ts",
+              before: "export const a = 1;",
+              after: "export const a = 2;",
+              rationale: "Repair.",
+              expectedVerificationImpact: "Pass.",
+            },
+          ],
+        },
+        proposal,
+        "src/a.ts",
+        before,
+      ),
+    ).toThrow("STAGE_MIXED_RESPONSE_DENIED");
+
+    const schema = JSON.stringify(createRepositoryRepairStageModelSchema(proposal));
+    expect(schema).toContain('"contextRequests"');
+    expect(schema).toContain('"before"');
+    expect(schema).not.toContain("maxLength");
+    expect(schema).not.toContain('"enum"');
+  });
+
+  it("creates deterministic deduplicated line-addressed packets within the byte ceiling", () => {
+    const proposal = createRepositoryRepairProposal({
+      ...input,
+      contextFiles: ["src/a.ts", "src/context.ts"],
+    });
+    const files = {
+      "src/a.ts": Array.from({ length: 240 }, (_, index) =>
+        index === 119
+          ? "export function brokenHandler() { return false; }"
+          : `// target ${String(index)}`,
+      ).join("\n"),
+      "src/b.ts": "export const b = 1;\n",
+      "src/context.ts": Array.from({ length: 240 }, (_, index) =>
+        index === 180
+          ? "export function expectedHelper() { return true; }"
+          : `// context ${String(index)}`,
+      ).join("\n"),
+    };
+    const packet = createRepositoryRepairStagePacket({
+      proposal,
+      targetPath: "src/a.ts",
+      files,
+      priorRequests: [
+        { path: "src/context.ts", query: "expectedHelper", reason: "Need its declaration." },
+      ],
+      maximumBytes: 4_096,
+    });
+    const repeated = createRepositoryRepairStagePacket({
+      proposal,
+      targetPath: "src/a.ts",
+      files,
+      priorRequests: [
+        { path: "src/context.ts", query: "expectedHelper", reason: "Need its declaration." },
+      ],
+      maximumBytes: 4_096,
+    });
+
+    expect(packet).toEqual(repeated);
+    expect(Buffer.byteLength(JSON.stringify(packet))).toBeLessThanOrEqual(4_096);
+    expect(packet.slices.some((slice) => slice.content.includes("brokenHandler"))).toBe(true);
+    expect(packet.slices.some((slice) => slice.content.includes("expectedHelper"))).toBe(true);
+    expect(packet.slices.every((slice) => slice.startLine >= 1)).toBe(true);
+    expect(packet.slices.every((slice) => slice.endLine >= slice.startLine)).toBe(true);
+    expect(
+      new Set(
+        packet.slices.map(
+          (slice) => `${slice.path}:${String(slice.startLine)}:${String(slice.endLine)}`,
+        ),
+      ).size,
+    ).toBe(packet.slices.length);
+    expect(packet.slices.filter((slice) => slice.path === "src/a.ts").length).toBeGreaterThan(0);
+  });
+
+  it("binds retained journals to exact compatible scope and candidate digests", () => {
+    const first = createRepositoryRepairProposal(input, new Date("2026-08-10T18:00:00.000Z"));
+    const replacement = createRepositoryRepairProposal(input, new Date("2026-08-10T19:00:00.000Z"));
+    const canonicalBefore = "export const a = 1;\n";
+    const staged = "export const a = 2;\n";
+    const digest = (value: string) =>
+      `sha256:${createHash("sha256").update(value).digest("hex")}` as const;
+    const journal = repositoryRepairJournalSchema.parse({
+      schemaVersion: 1,
+      scopeDigest: createRepositoryRepairScopeDigest(first),
+      repository: first.repository,
+      baseRevision: first.baseRevision,
+      expectedRemoteRevision: first.expectedRemoteRevision,
+      candidateId: `candidate_release-seven-${first.digest.slice(7, 19)}`,
+      candidateHead: first.baseRevision,
+      canonicalBeforeDigests: {
+        "src/a.ts": digest(canonicalBefore),
+        "src/b.ts": digest("export const b = 1;\n"),
+      },
+      completedStages: [
+        {
+          index: 0,
+          path: "src/a.ts",
+          afterDigest: digest(staged),
+          modelOutputDigest: digest("model output"),
+          completedAt: "2026-08-10T18:01:00.000Z",
+        },
+      ],
+      contextSlices: [],
+      lastProgressAt: "2026-08-10T18:01:00.000Z",
+      state: "active",
+    });
+
+    expect(createRepositoryRepairScopeDigest(replacement)).toBe(journal.scopeDigest);
+    expect(
+      validateRepositoryRepairResume({
+        proposal: replacement,
+        journal,
+        candidateHead: replacement.baseRevision,
+        currentFiles: { "src/a.ts": staged, "src/b.ts": "export const b = 1;\n" },
+        changedPaths: ["src/a.ts"],
+      }),
+    ).toEqual({ nextStageIndex: 1 });
+    expect(() =>
+      validateRepositoryRepairResume({
+        proposal: replacement,
+        journal,
+        candidateHead: replacement.baseRevision,
+        currentFiles: { "src/a.ts": "tampered\n", "src/b.ts": "export const b = 1;\n" },
+        changedPaths: ["src/a.ts"],
+      }),
+    ).toThrow("REPAIR_RESUME_TAMPERED");
+    expect(() =>
+      validateRepositoryRepairResume({
+        proposal: replacement,
+        journal,
+        candidateHead: replacement.baseRevision,
+        currentFiles: { "src/a.ts": staged, "src/b.ts": "export const b = 1;\n" },
+        changedPaths: ["src/a.ts", "src/invented.ts"],
+      }),
+    ).toThrow("REPAIR_RESUME_PATH_DENIED");
+    expect(() =>
+      validateRepositoryRepairResume({
+        proposal: createRepositoryRepairProposal({
+          ...input,
+          defectStatement: `${input.defectStatement} Changed.`,
+        }),
+        journal,
+        candidateHead: replacement.baseRevision,
+        currentFiles: { "src/a.ts": staged, "src/b.ts": "export const b = 1;\n" },
+        changedPaths: ["src/a.ts"],
+      }),
+    ).toThrow("REPAIR_RESUME_SCOPE_MISMATCH");
+  });
+
+  it("uses staged streaming model generation and bounded progress evidence", () => {
+    const source = readFileSync("scripts/runtime/iris-repository-repair-worker.mjs", "utf8");
+    expect(source).toContain("stream: true");
+    expect(source).toContain("response.body.getReader()");
+    expect(source).toContain("proposal.editableFiles.entries()");
+    expect(source).toContain("REPAIR_PROGRESS");
+    expect(source).toContain(".iris-repair-journal.json");
+    expect(source).not.toContain("complete replacement text");
+    expect(source).not.toContain("maximum = 120_000");
+  });
+
+  it("extends only the model idle deadline when response activity continues", () => {
+    const proposal = createRepositoryRepairProposal(input);
+    const initial = createRepositoryRepairIdleDeadline(proposal, 1_000);
+    const afterActivity = createRepositoryRepairIdleDeadline(proposal, 500_000);
+
+    expect(initial).toBe(601_000);
+    expect(afterActivity).toBe(1_100_000);
+    expect(afterActivity).toBeGreaterThan(initial);
+    expect(() => createRepositoryRepairIdleDeadline(proposal, -1)).toThrow();
+
+    const source = readFileSync("scripts/runtime/iris-repository-repair-worker.mjs", "utf8");
+    expect(source).toContain("resetIdleTimer");
+    expect(source).toContain("controller.abort()");
+    expect(source).toContain("createRepositoryRepairIdleDeadline");
+    expect(source).toContain("MODEL_IDLE_TIMEOUT");
   });
 });
