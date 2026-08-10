@@ -680,6 +680,14 @@ export class FilePhaseZeroGraduationCoordinator
         await handle.close();
       }
       await rename(temporary, this.#statePath);
+      if (process.platform !== "win32") {
+        const directory = await open(dirname(this.#statePath), "r");
+        try {
+          await directory.sync();
+        } finally {
+          await directory.close();
+        }
+      }
     } finally {
       await rm(temporary, { force: true }).catch(() => undefined);
     }
