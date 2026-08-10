@@ -38,18 +38,11 @@ export const capabilityAcquisitionProposalSchema = z
     removalCommands: z.array(commandSchema).min(1).max(20),
     registryUpdates: z.array(z.string().min(1).max(1_000)).min(1).max(50),
     objectiveDigest: digestSchema,
+    contractDigest: digestSchema,
+    canonicalRevision: z.string().regex(/^[a-f0-9]{40,64}$/u),
     createdAt: z.iso.datetime(),
-    expiresAt: z.iso.datetime(),
   })
-  .strict()
-  .superRefine((value, context) => {
-    if (Date.parse(value.expiresAt) <= Date.parse(value.createdAt))
-      context.addIssue({
-        code: "custom",
-        path: ["expiresAt"],
-        message: "Acquisition proposal must expire after creation.",
-      });
-  });
+  .strict();
 export type CapabilityAcquisitionProposal = z.infer<typeof capabilityAcquisitionProposalSchema>;
 
 export const preparedCapabilityAcquisitionSchema = capabilityAcquisitionProposalSchema.safeExtend({
@@ -57,6 +50,17 @@ export const preparedCapabilityAcquisitionSchema = capabilityAcquisitionProposal
   requiredApprovalStatement: z.string().min(1).max(500),
 });
 export type PreparedCapabilityAcquisition = z.infer<typeof preparedCapabilityAcquisitionSchema>;
+
+export const capabilityAcquisitionApprovalLifecycleSchema = z
+  .object({
+    lifecycle: z.enum(["active", "consumed", "replaced", "revoked"]),
+    contractDigest: digestSchema,
+    canonicalRevision: z.string().regex(/^[a-f0-9]{40,64}$/u),
+  })
+  .strict();
+export type CapabilityAcquisitionApprovalLifecycle = z.infer<
+  typeof capabilityAcquisitionApprovalLifecycleSchema
+>;
 
 export function prepareCapabilityAcquisition(input: unknown): PreparedCapabilityAcquisition {
   const proposal = capabilityAcquisitionProposalSchema.parse(input);
@@ -73,13 +77,23 @@ export function prepareCapabilityAcquisition(input: unknown): PreparedCapability
 export function verifyCapabilityAcquisitionApproval(
   input: unknown,
   statement: string,
-  now = new Date(),
+  lifecycleInput?: CapabilityAcquisitionApprovalLifecycle | Date,
 ): boolean {
   const prepared = preparedCapabilityAcquisitionSchema.parse(input);
   const { digest, requiredApprovalStatement, ...proposal } = prepared;
+  const lifecycle =
+    lifecycleInput instanceof Date || lifecycleInput === undefined
+      ? {
+          lifecycle: "active" as const,
+          contractDigest: prepared.contractDigest,
+          canonicalRevision: prepared.canonicalRevision,
+        }
+      : capabilityAcquisitionApprovalLifecycleSchema.parse(lifecycleInput);
   return (
     digest === sha256Digest(capabilityAcquisitionProposalSchema.parse(proposal)) &&
     statement === requiredApprovalStatement &&
-    now.getTime() < Date.parse(prepared.expiresAt)
+    lifecycle.lifecycle === "active" &&
+    lifecycle.contractDigest === prepared.contractDigest &&
+    lifecycle.canonicalRevision === prepared.canonicalRevision
   );
 }

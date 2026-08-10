@@ -63,6 +63,7 @@
     "tests/operating-context.test.ts",
     "tests/operating-contract.test.ts",
     "tests/operating-decision-engine.test.ts",
+    "tests/self-repair-runtime.test.ts",
     "tests/wave-3-integrated-decision-gate.test.ts"
   ],
   "excluded_paths": [

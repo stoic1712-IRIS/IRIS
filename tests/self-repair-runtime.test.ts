@@ -49,8 +49,9 @@ function acquisition(): CapabilityAcquisitionProposal {
     removalCommands: [["provider", "remove"]],
     registryUpdates: ["repository.inspect -> provider@1.2.3"],
     objectiveDigest: sha("a"),
+    contractDigest: sha("b"),
+    canonicalRevision: "c".repeat(40),
     createdAt: now.toISOString(),
-    expiresAt: new Date(now.getTime() + 1_800_000).toISOString(),
   };
 }
 

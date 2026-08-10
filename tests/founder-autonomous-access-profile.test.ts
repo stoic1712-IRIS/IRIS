@@ -48,7 +48,6 @@ function request(overrides: Record<string, unknown> = {}) {
       gatewayBootId: "boot_gateway-0001",
     },
     issuedAt: now.toISOString(),
-    expiresAt: new Date(now.getTime() + 24 * 60 * 60 * 1_000).toISOString(),
     ...overrides,
   };
 }
@@ -62,13 +61,35 @@ describe("Founder autonomous Full access", () => {
       now: () => now,
     });
 
-    const grant = registry.issue(request());
+    const grant = registry.issue(request({ expiresAt: "2020-01-01T00:00:00.000Z" }));
 
     expect(grant.profile).toBe("founder-full-access");
+    expect(grant.lifecycle).toBe("session-bound");
     for (const capability of ordinary) {
       expect(registry.authorize(grant.requestId, capability).grantDigest).toBe(grant.grantDigest);
     }
     expect(registry.auditVerified()).toBe(true);
+  });
+
+  it("remains valid without a countdown until the Founder session is invalidated", () => {
+    let current = now;
+    const registry = new FounderAccessRegistry({
+      registeredCapabilities: ordinary,
+      founderSessionId: "session_founder-0001",
+      gatewayBootId: "boot_gateway-0001",
+      now: () => current,
+    });
+    const grant = registry.issue(request());
+
+    current = new Date("2036-08-08T12:00:00.000Z");
+    expect(registry.authorize(grant.requestId, "repository.inspect").grantDigest).toBe(
+      grant.grantDigest,
+    );
+
+    registry.invalidateSession(grant.requestId, "logout");
+    expect(() => registry.authorize(grant.requestId, "repository.inspect")).toThrow(
+      "FOUNDER_ACCESS_SESSION_INVALIDATED",
+    );
   });
 
   it("invalidates a grant outside its authenticated Founder or gateway boot session", () => {
