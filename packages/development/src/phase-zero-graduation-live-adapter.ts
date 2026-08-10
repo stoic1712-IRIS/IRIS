@@ -259,33 +259,53 @@ export class OllamaPhaseZeroGraduationProposalModel implements PhaseZeroGraduati
     repositoryInspectionDigest: string;
     canonicalBaseRevision: string;
   }): Promise<PhaseZeroGraduationModelPlan> {
-    const prompt = [
+    const instructions = [
       "You are IRIS preparing your own genuine Phase 0 multi-file self-upgrade.",
       "Select at least two safe tracked source or test files. Do not select governance, registries, Git metadata, coordination state, instructions, or the lockfile.",
+      "Every write path must also appear in readPaths so every changed file is inspected before mutation.",
       "Verification commands must be one or more of: pnpm format:check, pnpm lint, pnpm typecheck, pnpm test, pnpm build, pnpm verify.",
       `Objective: ${input.objective}`,
       `Canonical revision: ${input.canonicalBaseRevision}`,
       `Evidence digest: ${input.repositoryInspectionDigest}`,
       `Bounded canonical evidence:\n${truncateUtf8(input.evidence, 450_000)}`,
-    ].join("\n\n");
-    const response = await this.#fetch(`${this.#baseUrl}/api/chat`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        model: this.name,
-        messages: [{ role: "user", content: prompt }],
-        stream: false,
-        think: false,
-        format: modelPlanJsonSchema,
-        options: { temperature: 0, seed: 0, num_ctx: 32_768 },
-      }),
-      signal: AbortSignal.timeout(300_000),
-    });
-    if (!response.ok)
-      throw new Error(`PHASE_ZERO_PROPOSAL_MODEL_REJECTED:${String(response.status)}`);
-    const envelope = ollamaEnvelopeSchema.parse(await response.json());
-    if (envelope.model !== this.name) throw new Error("PHASE_ZERO_PROPOSAL_MODEL_MISMATCH");
-    return phaseZeroGraduationModelPlanSchema.parse(JSON.parse(envelope.message.content));
+    ];
+    let validationFeedback = "";
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const prompt = [...instructions, validationFeedback].filter(Boolean).join("\n\n");
+      const response = await this.#fetch(`${this.#baseUrl}/api/chat`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          model: this.name,
+          messages: [{ role: "user", content: prompt }],
+          stream: false,
+          think: false,
+          format: modelPlanJsonSchema,
+          options: { temperature: 0, seed: attempt, num_ctx: 32_768 },
+        }),
+        signal: AbortSignal.timeout(300_000),
+      });
+      if (!response.ok)
+        throw new Error(`PHASE_ZERO_PROPOSAL_MODEL_REJECTED:${String(response.status)}`);
+      const envelope = ollamaEnvelopeSchema.parse(await response.json());
+      if (envelope.model !== this.name) throw new Error("PHASE_ZERO_PROPOSAL_MODEL_MISMATCH");
+      let decoded: unknown;
+      try {
+        decoded = JSON.parse(envelope.message.content);
+      } catch {
+        validationFeedback =
+          "Previous output failed strict validation because it was not valid JSON. Return one complete JSON object matching the provided schema.";
+        continue;
+      }
+      const parsed = phaseZeroGraduationModelPlanSchema.safeParse(decoded);
+      if (parsed.success) return parsed.data;
+      validationFeedback = `Previous output failed strict validation: ${parsed.error.issues
+        .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
+        .join(
+          "; ",
+        )}. Return one corrected complete JSON object; do not weaken or omit any invariant.`;
+    }
+    throw new Error("PHASE_ZERO_PROPOSAL_PLAN_INVALID");
   }
 }
 
