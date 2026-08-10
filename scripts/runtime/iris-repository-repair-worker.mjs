@@ -14,6 +14,7 @@ import {
   repositoryRepairBootstrapCommand,
   repositoryRepairJournalSchema,
   repositoryRepairProposalSchema,
+  repositoryRepairResultPayloadSchema,
   repositoryRepairResultSchema,
   validateRepositoryRepairResume,
   validateRepositoryRepairStageCandidate,
@@ -606,11 +607,7 @@ try {
   );
   const verified = verification.every((item) => item.state === "passed");
   const finalFiles = await readCandidateFiles(candidateRoot, proposal.editableFiles);
-  const cleanupState = await cleanupCandidate(sourceRoot, candidateRoot, journalPath);
-  candidateRoot = "";
-  journalPath = "";
-  retainCandidate = false;
-  const result = repositoryRepairResultSchema.parse({
+  const resultPayload = repositoryRepairResultPayloadSchema.parse({
     verdict: verified ? "verified" : "needs-repair",
     summary: verified
       ? summaries.join(" ") || "All retained stages and fixed verification checks passed."
@@ -628,9 +625,13 @@ try {
     verification,
     canonicalRepositoryChanged: false,
     githubChanged: false,
-    cleanupState,
     expiresAt: new Date().toISOString(),
   });
+  const cleanupState = await cleanupCandidate(sourceRoot, candidateRoot, journalPath);
+  candidateRoot = "";
+  journalPath = "";
+  retainCandidate = false;
+  const result = repositoryRepairResultSchema.parse({ ...resultPayload, cleanupState });
   process.stdout.write(JSON.stringify(result));
 } catch (error) {
   const errorCode = safeErrorCode(error);

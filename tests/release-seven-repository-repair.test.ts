@@ -14,6 +14,7 @@ import {
   formatRepositoryRepairModelDenial,
   repositoryRepairJournalSchema,
   repositoryRepairBootstrapCommand,
+  repositoryRepairResultPayloadSchema,
   repositoryRepairResultSchema,
   type RepositoryRepairProposal,
   validateRepositoryRepairCandidate,
@@ -656,19 +657,44 @@ describe("Release Seven governed repository repair", () => {
 
   it("attests completed cleanup only after candidate removal succeeds", () => {
     const source = readFileSync("scripts/runtime/iris-repository-repair-worker.mjs", "utf8");
+    const payloadIndex = source.lastIndexOf("repositoryRepairResultPayloadSchema.parse");
     const cleanupIndex = source.lastIndexOf(
       "await cleanupCandidate(sourceRoot, candidateRoot, journalPath)",
     );
     const resultIndex = source.lastIndexOf("repositoryRepairResultSchema.parse");
 
+    expect(payloadIndex).toBeGreaterThan(-1);
+    expect(cleanupIndex).toBeGreaterThan(payloadIndex);
     expect(cleanupIndex).toBeGreaterThan(-1);
     expect(resultIndex).toBeGreaterThan(cleanupIndex);
-    expect(source).toContain("cleanupState,");
     expect(source).not.toContain(
       "await cleanupCandidate(sourceRoot, candidateRoot, journalPath).catch(() => undefined)",
     );
     expect(assertRepositoryRepairCleanupState(false, false)).toBe("completed");
     expect(() => assertRepositoryRepairCleanupState(true, false)).toThrow("REPAIR_CLEANUP_FAILED");
     expect(() => assertRepositoryRepairCleanupState(false, true)).toThrow("REPAIR_CLEANUP_FAILED");
+
+    expect(() =>
+      repositoryRepairResultPayloadSchema.parse({
+        verdict: "verified",
+        summary: "x".repeat(8_001),
+        repository: "stoic1712-IRIS/IRIS",
+        baseRevision: "a".repeat(40),
+        candidateId: "candidate_release-seven-aaaaaaaaaaaa",
+        diffDigest: `sha256:${"b".repeat(64)}`,
+        changedFiles: [
+          {
+            path: "src/a.ts",
+            beforeDigest: `sha256:${"c".repeat(64)}`,
+            afterDigest: `sha256:${"d".repeat(64)}`,
+          },
+        ],
+        diff: "diff",
+        verification: [],
+        canonicalRepositoryChanged: false,
+        githubChanged: false,
+        expiresAt: new Date().toISOString(),
+      }),
+    ).toThrow();
   });
 });

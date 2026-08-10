@@ -108,6 +108,9 @@ export const repositoryRepairResultSchema = z.strictObject({
   cleanupState: z.enum(["retained-until-expiry", "completed"]),
   expiresAt: z.iso.datetime(),
 });
+export const repositoryRepairResultPayloadSchema = repositoryRepairResultSchema.omit({
+  cleanupState: true,
+});
 export type RepositoryRepairResult = z.infer<typeof repositoryRepairResultSchema>;
 
 export function formatRepositoryRepairModelDenial(status: number, responseBytes: number): string {
