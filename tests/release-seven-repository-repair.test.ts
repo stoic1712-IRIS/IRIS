@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   assertRepositoryRepairCheckoutContent,
@@ -40,6 +41,14 @@ const input: Omit<
 };
 
 describe("Release Seven governed repository repair", () => {
+  it("resolves approved repositories from launcher-owned canonical roots", () => {
+    const source = readFileSync("scripts/runtime/iris-repository-repair-worker.mjs", "utf8");
+    expect(source).toContain("process.env.IRIS_ROOT");
+    expect(source).toContain("process.env.IRIS_COMMAND_CENTER_ROOT");
+    expect(source).not.toContain("STOIC-IRIS-release-seven");
+    expect(source).not.toContain("iris-founder-command-center-release-seven");
+  });
+
   it("creates a deterministic exact zero-canonical-authority proposal", () => {
     const now = new Date("2026-08-05T22:00:00Z");
     const proposal = createRepositoryRepairProposal(input, now);

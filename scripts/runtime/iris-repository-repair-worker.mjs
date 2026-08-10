@@ -14,11 +14,8 @@ import {
 } from "../../packages/kernel/dist/repository-repair.js";
 
 const roots = new Map([
-  ["stoic1712-IRIS/IRIS", "C:\\Projects\\STOIC-IRIS-release-seven"],
-  [
-    "stoic1712-IRIS/iris-founder-command-center",
-    "C:\\Projects\\iris-founder-command-center-release-seven",
-  ],
+  ["stoic1712-IRIS/IRIS", process.env.IRIS_ROOT],
+  ["stoic1712-IRIS/iris-founder-command-center", process.env.IRIS_COMMAND_CENTER_ROOT],
 ]);
 const candidateParent = "C:\\Projects\\IRIS-candidates";
 const sha256 = (value) => `sha256:${createHash("sha256").update(value).digest("hex")}`;
@@ -181,7 +178,9 @@ try {
   const input = await readInput();
   const proposal = repositoryRepairProposalSchema.parse(input?.proposal);
   const deadline = Date.now() + proposal.maximumRuntimeSeconds * 1_000;
-  sourceRoot = roots.get(proposal.repository) ?? "";
+  const configuredRoot = roots.get(proposal.repository);
+  sourceRoot =
+    typeof configuredRoot === "string" && configuredRoot.length > 0 ? resolve(configuredRoot) : "";
   if (!sourceRoot || resolve(input?.root ?? "") !== resolve(sourceRoot))
     throw new Error("REPOSITORY_DENIED");
   if (
