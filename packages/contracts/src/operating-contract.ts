@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname, extname, resolve } from "node:path";
 
 import { z } from "zod";
 
@@ -356,7 +356,13 @@ export function verifyOperatingContractSources(
 ): readonly { path: string; digest: string }[] {
   const contract = irisOperatingContractSchema.parse(contractInput);
   return contract.sources.map((source) => {
-    const digest = digestBytes(readFileSync(resolve(root, source.path)));
+    const bytes = readFileSync(resolve(root, source.path));
+    const rawDigest = digestBytes(bytes);
+    const textExtensions = new Set([".json", ".md", ".toml", ".txt", ".yaml", ".yml"]);
+    const digest =
+      rawDigest === source.digest || !textExtensions.has(extname(source.path).toLowerCase())
+        ? rawDigest
+        : digestBytes(Buffer.from(bytes.toString("utf8").replace(/\r\n/gu, "\n"), "utf8"));
     if (digest !== source.digest)
       throw new Error(`OPERATING_CONTRACT_SOURCE_DIGEST_MISMATCH:${source.path}`);
     return { path: source.path, digest };
