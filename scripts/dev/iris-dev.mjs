@@ -3,9 +3,13 @@
 import { execFile } from "node:child_process";
 import { Buffer } from "node:buffer";
 import { createHash } from "node:crypto";
-import { resolve } from "node:path";
+import { readFileSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import { promisify } from "node:util";
+
+import { loadCompiledOperatingContract } from "../../packages/contracts/dist/index.js";
+import { z } from "zod";
 
 const execute = promisify(execFile);
 
@@ -29,6 +33,7 @@ function help() {
   return `IRIS canonical read-only GitHub evidence helper
 
 Usage:
+  iris-dev contract inspect [--capability NAME] [--root PATH] [--json]
   iris-dev github preflight --repo core|command-center [--root PATH] [--json]
   iris-dev github pr inspect --repo core|command-center --pr NUMBER|URL [--root PATH] [--json]
   iris-dev github ci diagnose --repo core|command-center --pr NUMBER|URL [--root PATH] [--json]
@@ -49,7 +54,7 @@ function parse(tokens) {
       continue;
     }
     const key = token.slice(2);
-    if (!new Set(["repo", "root", "pr", "json", "help"]).has(key))
+    if (!new Set(["repo", "root", "pr", "capability", "json", "help"]).has(key))
       throw new Error(`Unknown option --${key}.`);
     if (Object.hasOwn(options, key)) throw new Error(`Duplicate option --${key}.`);
     if (new Set(["json", "help"]).has(key)) {
@@ -192,7 +197,75 @@ function validateChecks(checks) {
 }
 
 async function git(root, args) {
-  return run("git", ["-C", root, ...args]);
+  const result = await run("git", ["-C", root, ...args]);
+  if (result.code === 0) return result;
+
+  // A Git worktree created by Git for Windows records an absolute Windows
+  // gitdir. WSL Git otherwise treats that value as relative to the worktree.
+  // Retry only that exact cross-platform case; every other Git error remains
+  // unchanged and fail-closed.
+  if (!/^\/mnt\/[a-z]\//u.test(root)) return result;
+  const failureText = `${result.stderr}\n${result.stdout}`;
+  if (!/not a git repository:/iu.test(failureText) || !/[\\/][A-Za-z]:[\\/]/u.test(failureText))
+    return result;
+  let pointer;
+  try {
+    pointer = readFileSync(join(root, ".git"), "utf8").trim();
+  } catch {
+    return result;
+  }
+  const match = /^gitdir:\s*([A-Za-z]):[\\/](.+)$/u.exec(pointer);
+  if (match === null) return result;
+  const drive = match[1];
+  const remainder = match[2];
+  if (drive === undefined || remainder === undefined) return result;
+  const gitDirectory = `/mnt/${drive.toLowerCase()}/${remainder.replaceAll("\\", "/")}`;
+  return run("git", ["--git-dir", gitDirectory, "--work-tree", root, ...args]);
+}
+
+const contractInspectionSchema = z
+  .object({
+    ok: z.literal(true),
+    contract: z.literal("iris.stoic/operating-contract/v1"),
+    version: z.literal("1.0.0"),
+    digest: z.string().regex(/^sha256:[a-f0-9]{64}$/u),
+    authorityOrder: z.tuple([
+      z.literal("explicit-founder-instruction"),
+      z.literal("canonical-operating-contract"),
+      z.literal("contract-bound-canonical-sources"),
+      z.literal("verified-live-state"),
+      z.literal("supporting-context"),
+    ]),
+    coreRevision: z.string().regex(/^[a-f0-9]{40}$/u),
+    capability: z.string().nullable(),
+  })
+  .strict();
+
+async function inspectContract(options) {
+  const root = resolve(options.root || process.cwd());
+  const contract = loadCompiledOperatingContract(
+    join(root, "generated", "iris-operating-contract.compiled.json"),
+  );
+  const knownCapabilities = new Set([
+    ...contract.ordinaryCapabilities,
+    ...contract.protectedEffects,
+  ]);
+  const capability = options.capability ?? null;
+  if (capability !== null && !knownCapabilities.has(capability))
+    throw new Error(`Unknown operating-contract capability: ${capability}.`);
+  const coreRevision = requireOid(
+    mustText(await git(root, ["rev-parse", "HEAD"]), "Core revision"),
+    "Core revision",
+  );
+  return contractInspectionSchema.parse({
+    ok: true,
+    contract: contract.contract,
+    version: contract.version,
+    digest: contract.contractDigest,
+    authorityOrder: contract.authorityOrder,
+    coreRevision,
+    capability,
+  });
 }
 
 async function gh(args) {
@@ -551,14 +624,17 @@ export async function main(argv = process.argv.slice(2), injectedRun = runTool) 
   const expectedArity = first === "pr" || first === "ci" || first === "merged" ? 3 : 2;
   if (positional.length !== expectedArity) throw new Error("Unexpected positional argument.");
   let result;
-  if (command !== "github") throw new Error(`Unknown command.\n\n${help()}`);
   const requireOptions = (allowed, required) => {
     for (const key of Object.keys(options))
       if (!allowed.has(key)) throw new Error(`Option --${key} is not valid for this command.`);
     for (const key of required)
       if (!Object.hasOwn(options, key)) throw new Error(`Missing required option --${key}.`);
   };
-  if (first === "preflight") {
+  if (command === "contract" && first === "inspect") {
+    requireOptions(new Set(["root", "capability", "json"]), []);
+    result = await inspectContract(options);
+  } else if (command !== "github") throw new Error(`Unknown command.\n\n${help()}`);
+  else if (first === "preflight") {
     requireOptions(new Set(["repo", "root", "json"]), ["repo"]);
     result = await preflight(options);
   } else if (first === "pr" && second === "inspect") {

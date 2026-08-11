@@ -62,7 +62,7 @@ export const founderAccessRequestSchema = z
     capabilities: z.array(ordinaryCapabilitySchema).min(1).max(32),
     sessionBinding: founderSessionBindingSchema.optional(),
     issuedAt: timestampSchema,
-    expiresAt: timestampSchema,
+    expiresAt: timestampSchema.optional(),
   })
   .strict()
   .superRefine((request, context) => {
@@ -73,19 +73,31 @@ export const founderAccessRequestSchema = z
         message: "Founder Full access requires an authenticated session binding.",
       });
     }
+    if (request.profile === "restricted-full-access" && request.expiresAt === undefined) {
+      context.addIssue({
+        code: "custom",
+        path: ["expiresAt"],
+        message: "The legacy restricted access profile requires a bounded expiry.",
+      });
+    }
   });
 export type FounderAccessRequest = z.infer<typeof founderAccessRequestSchema>;
 
 export const founderAccessGrantSchema = founderAccessRequestSchema.extend({
   grantDigest: digestSchema,
+  lifecycle: z.enum(["time-bounded", "session-bound"]),
   revokedAt: timestampSchema.optional(),
+  invalidatedAt: timestampSchema.optional(),
+  invalidationReason: z
+    .enum(["logout", "emergency-stop", "session-invalidation", "gateway-replacement"])
+    .optional(),
 });
 export type FounderAccessGrant = z.infer<typeof founderAccessGrantSchema>;
 
 export const founderAccessAuditEventSchema = z
   .object({
     sequence: z.number().int().positive(),
-    event: z.enum(["issued", "authorized", "denied", "revoked", "expired"]),
+    event: z.enum(["issued", "authorized", "denied", "revoked", "expired", "invalidated"]),
     requestId: z.string().regex(/^access_[a-z0-9-]{8,100}$/u),
     capability: ordinaryCapabilitySchema.optional(),
     occurredAt: timestampSchema,
@@ -148,20 +160,37 @@ export class FounderAccessRegistry {
       throw new Error("FOUNDER_ACCESS_SESSION_MISMATCH");
     if (!unique(request.capabilities)) throw new Error("FOUNDER_ACCESS_CAPABILITY_DUPLICATE");
     const issuedAt = Date.parse(request.issuedAt);
-    const expiresAt = Date.parse(request.expiresAt);
     const now = this.#now().getTime();
-    if (issuedAt > now || expiresAt <= now) throw new Error("FOUNDER_ACCESS_TIME_INVALID");
-    if (expiresAt - issuedAt > this.#maximumDurationMs)
-      throw new Error("FOUNDER_ACCESS_DURATION_EXCEEDED");
+    if (issuedAt > now) throw new Error("FOUNDER_ACCESS_TIME_INVALID");
+    if (request.profile === "restricted-full-access") {
+      if (request.expiresAt === undefined) throw new Error("FOUNDER_ACCESS_TIME_INVALID");
+      const expiresAt = Date.parse(request.expiresAt);
+      if (expiresAt <= now) throw new Error("FOUNDER_ACCESS_TIME_INVALID");
+      if (expiresAt - issuedAt > this.#maximumDurationMs)
+        throw new Error("FOUNDER_ACCESS_DURATION_EXCEEDED");
+    }
     for (const capability of request.capabilities)
       if (!this.#registered.has(capability))
         throw new Error(`FOUNDER_ACCESS_CAPABILITY_NOT_REGISTERED:${capability}`);
+    if (
+      request.profile === "founder-full-access" &&
+      (request.capabilities.length !== this.#registered.size ||
+        [...this.#registered].some((capability) => !request.capabilities.includes(capability)))
+    )
+      throw new Error("FOUNDER_FULL_ACCESS_CAPABILITY_SET_INCOMPLETE");
     const grant = founderAccessGrantSchema.parse({
       ...request,
+      lifecycle: request.profile === "founder-full-access" ? "session-bound" : "time-bounded",
       grantDigest: digest(request),
     });
     this.#grants.set(grant.requestId, grant);
-    this.#record("issued", grant.requestId, "Restricted Founder Full access session issued.");
+    this.#record(
+      "issued",
+      grant.requestId,
+      grant.lifecycle === "session-bound"
+        ? "Founder Full access session issued."
+        : "Restricted time-bounded access session issued.",
+    );
     return structuredClone(grant);
   }
 
@@ -176,7 +205,23 @@ export class FounderAccessRegistry {
       this.#record("denied", requestId, "Access session is revoked.", parsedCapability);
       throw new Error("FOUNDER_ACCESS_REVOKED");
     }
-    if (Date.parse(grant.expiresAt) <= this.#now().getTime()) {
+    if (grant.invalidatedAt !== undefined) {
+      this.#record("denied", requestId, "Founder session is invalidated.", parsedCapability);
+      throw new Error("FOUNDER_ACCESS_SESSION_INVALIDATED");
+    }
+    if (
+      grant.lifecycle === "session-bound" &&
+      (grant.sessionBinding?.founderSessionId !== this.#founderSessionId ||
+        grant.sessionBinding?.gatewayBootId !== this.#gatewayBootId)
+    ) {
+      this.#record("denied", requestId, "Founder session binding changed.", parsedCapability);
+      throw new Error("FOUNDER_ACCESS_SESSION_MISMATCH");
+    }
+    if (
+      grant.lifecycle === "time-bounded" &&
+      grant.expiresAt !== undefined &&
+      Date.parse(grant.expiresAt) <= this.#now().getTime()
+    ) {
       this.#record("expired", requestId, "Access session expired.", parsedCapability);
       throw new Error("FOUNDER_ACCESS_EXPIRED");
     }
@@ -199,6 +244,22 @@ export class FounderAccessRegistry {
     if (grant.revokedAt === undefined) {
       grant.revokedAt = this.#now().toISOString();
       this.#record("revoked", requestId, "Founder revoked the access session.");
+    }
+    return structuredClone(founderAccessGrantSchema.parse(grant));
+  }
+
+  invalidateSession(
+    requestId: string,
+    reason: "logout" | "emergency-stop" | "session-invalidation" | "gateway-replacement",
+  ): FounderAccessGrant {
+    const grant = this.#grants.get(requestId);
+    if (grant === undefined) throw new Error("FOUNDER_ACCESS_NOT_FOUND");
+    if (grant.lifecycle !== "session-bound")
+      throw new Error("FOUNDER_ACCESS_SESSION_LIFECYCLE_REQUIRED");
+    if (grant.invalidatedAt === undefined) {
+      grant.invalidatedAt = this.#now().toISOString();
+      grant.invalidationReason = reason;
+      this.#record("invalidated", requestId, `Founder session invalidated: ${reason}.`);
     }
     return structuredClone(founderAccessGrantSchema.parse(grant));
   }

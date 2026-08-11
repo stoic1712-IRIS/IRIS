@@ -1,0 +1,139 @@
+{
+  "contract": "iris.stoic/operating-contract/v1",
+  "version": "1.0.0",
+  "authorityOrder": [
+    "explicit-founder-instruction",
+    "canonical-operating-contract",
+    "contract-bound-canonical-sources",
+    "verified-live-state",
+    "supporting-context"
+  ],
+  "ownership": {
+    "identity": "iris-core",
+    "policy": "iris-core",
+    "authority": "iris-core",
+    "approval": "founder",
+    "execution": "iris-controller",
+    "modelAuthority": "none",
+    "evidence": "iris-core",
+    "presentation": "iris"
+  },
+  "ordinaryCapabilities": [
+    "goal.manage",
+    "research.search",
+    "browser.inspect",
+    "connector.call-approved",
+    "repository.inspect",
+    "repository.edit-bounded",
+    "terminal.run-approved",
+    "dependencies.materialize-approved",
+    "verification.run",
+    "repair.execute-bounded",
+    "repository.commit-candidate",
+    "repository.push-branch",
+    "repository.create-pull-request",
+    "repository.monitor-ci",
+    "repository.address-review",
+    "repository.merge-reviewed-head",
+    "repository.verify-remote",
+    "repository.synchronize",
+    "repository.rollback-history-preserving",
+    "workspace.cleanup",
+    "runtime.manage-local",
+    "desktop.preview",
+    "desktop.operate-bounded",
+    "capability.acquire-approved",
+    "notification.local"
+  ],
+  "protectedEffects": [
+    "credential.read-secret",
+    "spending.authorize",
+    "deployment.execute",
+    "network.expose-public-or-lan",
+    "repository.administer",
+    "repository.force-push",
+    "repository.rewrite-history",
+    "data.destroy",
+    "phase-zero.graduate"
+  ],
+  "decisionOutcomes": [
+    "execute-now",
+    "acquire-capability",
+    "request-protected-approval",
+    "repair-runtime",
+    "report-terminal"
+  ],
+  "founderAccess": {
+    "lifecycle": "session-bound",
+    "invalidatedBy": [
+      "logout",
+      "revocation",
+      "emergency-stop",
+      "session-invalidation",
+      "gateway-replacement"
+    ]
+  },
+  "sources": [
+    {
+      "path": "docs/governance/constitution.md",
+      "digest": "sha256:1643c370f0d0505e6144d2f16659ba1047a28dd439c6ffc21d6e8677a414d997",
+      "role": "origin"
+    },
+    {
+      "path": "docs/governance/worker-reasoning-framework-and-cognitive-identity.md",
+      "digest": "sha256:c90e54cb3021dfa91803e125ece6eb086bd1e3c7abdd5673ea7935817da71157",
+      "role": "governance"
+    },
+    {
+      "path": "docs/governance/approval-and-authorization-policy.md",
+      "digest": "sha256:7dec3d8ed627ca7c2f05411bd59bbe3000a39654d5169f28ee326e88bc51a68c",
+      "role": "governance"
+    },
+    {
+      "path": "docs/governance/security-and-secrets-policy.md",
+      "digest": "sha256:10c8ce36dafa893044e36329b7fa25643642f233f85ed398f66171e8e5d86657",
+      "role": "governance"
+    },
+    {
+      "path": "docs/governance/licensing-and-dependency-policy.md",
+      "digest": "sha256:e007f6b566d272b8d19ffc89c7c2a1c7c4e2d5d4871d4594f99c66d1b42913a4",
+      "role": "governance"
+    },
+    {
+      "path": "docs/governance/protected-path-and-branch-policy.md",
+      "digest": "sha256:0bf748f9ebd28d07005690ed42665139acd3a93f2b77c22a4e9f1947063bdf87",
+      "role": "governance"
+    },
+    {
+      "path": "docs/governance/phase-2-3-sovereign-capability-evolution-charter.md",
+      "digest": "sha256:eeec453419d355dc4fd161f03c93b4ea836a2fe4532561eadccb64c2e74d7f70",
+      "role": "specification"
+    },
+    {
+      "path": "docs/architecture/decisions/ADR-007-local-workstation-capability-providers.md",
+      "digest": "sha256:394fa1084598fd17381abf4ad98f6beb275420e9aade13ae32bc59c0e30206cf",
+      "role": "architecture"
+    },
+    {
+      "path": "docs/architecture/decisions/ADR-008-governed-desktop-control.md",
+      "digest": "sha256:18fea815e98e6b3a2c889da533de89d46c9c59ff863409a4b576dacdd8229d2c",
+      "role": "architecture"
+    },
+    {
+      "path": "docs/registries/technology-and-platform-registry.md",
+      "digest": "sha256:4da79b5d63e3ee48499248ebb15e65e06136cce879406ca9103efcd28646e750",
+      "role": "registry"
+    },
+    {
+      "path": "docs/specifications/iris-self-repair-and-capability-acquisition.md",
+      "digest": "sha256:a4e5d322907f5fc5574fce89c03fb4b4c0c07b44ea9da7006f82dbf226bfe525",
+      "role": "specification"
+    }
+  ],
+  "legacyAliases": {
+    "capability-unavailable": "acquire-capability",
+    "full-access": "founder-full-access",
+    "model-authority": "modelAuthority:none",
+    "runtime-unavailable": "repair-runtime"
+  }
+}

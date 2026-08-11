@@ -65,8 +65,9 @@ describe("IRIS capability acquisition", () => {
     removalCommands: [["pnpm", "remove", "provider", "--offline"]],
     registryUpdates: ["desktop.window-screenshot -> provider@1.2.3"],
     objectiveDigest: `sha256:${"b".repeat(64)}`,
+    contractDigest: `sha256:${"c".repeat(64)}`,
+    canonicalRevision: "d".repeat(40),
     createdAt: "2026-08-08T12:00:00.000Z",
-    expiresAt: "2026-08-08T12:30:00.000Z",
   };
 
   it("binds the complete acquisition plan to an exact approval statement", () => {
@@ -76,29 +77,55 @@ describe("IRIS capability acquisition", () => {
       `I approve capability acquisition ${input.proposalId} at ${prepared.digest} exactly as proposed.`,
     );
     expect(
-      verifyCapabilityAcquisitionApproval(
-        prepared,
-        prepared.requiredApprovalStatement,
-        new Date("2026-08-08T12:10:00.000Z"),
-      ),
+      verifyCapabilityAcquisitionApproval(prepared, prepared.requiredApprovalStatement, {
+        lifecycle: "active",
+        contractDigest: input.contractDigest,
+        canonicalRevision: input.canonicalRevision,
+      }),
     ).toBe(true);
   });
 
-  it("rejects changed, expired, mutable, paid, or incomplete acquisition plans", () => {
+  it("rejects changed, consumed, replaced, revoked, drifted, mutable, paid, or incomplete plans", () => {
     const prepared = prepareCapabilityAcquisition(input);
     expect(
       verifyCapabilityAcquisitionApproval(
         prepared,
-        prepared.requiredApprovalStatement.replace("exactly", "generally"),
-        new Date("2026-08-08T12:10:00.000Z"),
+        prepared.requiredApprovalStatement,
+        undefined as never,
       ),
     ).toBe(false);
     expect(
       verifyCapabilityAcquisitionApproval(
         prepared,
-        prepared.requiredApprovalStatement,
-        new Date("2026-08-08T13:00:00.000Z"),
+        prepared.requiredApprovalStatement.replace("exactly", "generally"),
+        {
+          lifecycle: "active",
+          contractDigest: input.contractDigest,
+          canonicalRevision: input.canonicalRevision,
+        },
       ),
+    ).toBe(false);
+    for (const lifecycle of ["consumed", "replaced", "revoked"] as const)
+      expect(
+        verifyCapabilityAcquisitionApproval(prepared, prepared.requiredApprovalStatement, {
+          lifecycle,
+          contractDigest: input.contractDigest,
+          canonicalRevision: input.canonicalRevision,
+        }),
+      ).toBe(false);
+    expect(
+      verifyCapabilityAcquisitionApproval(prepared, prepared.requiredApprovalStatement, {
+        lifecycle: "active",
+        contractDigest: `sha256:${"e".repeat(64)}`,
+        canonicalRevision: input.canonicalRevision,
+      }),
+    ).toBe(false);
+    expect(
+      verifyCapabilityAcquisitionApproval(prepared, prepared.requiredApprovalStatement, {
+        lifecycle: "active",
+        contractDigest: input.contractDigest,
+        canonicalRevision: "f".repeat(40),
+      }),
     ).toBe(false);
     expect(() =>
       prepareCapabilityAcquisition({

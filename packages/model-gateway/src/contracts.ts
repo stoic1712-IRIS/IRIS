@@ -1,6 +1,16 @@
 import { z } from "zod";
 
-import { canonicalIdSchema, timestampSchema } from "@stoic-iris/contracts";
+import {
+  canonicalIdSchema,
+  createControllerDisposition,
+  operatingDecisionKindSchema,
+  timestampSchema,
+  verifyControllerDisposition,
+} from "@stoic-iris/contracts";
+import type { ControllerDisposition } from "@stoic-iris/contracts";
+
+export { createControllerDisposition, verifyControllerDisposition };
+export type { ControllerDisposition };
 
 export const modelMessageSchema = z
   .object({
@@ -47,10 +57,60 @@ export const modelGatewayResponseSchema = z
     output: z.unknown(),
     usage: modelUsageSchema,
     doneReason: z.string().min(1).max(200),
-    authority: z.literal("none"),
+    modelAuthority: z.literal("none"),
   })
   .strict();
 export type ModelGatewayResponse = z.infer<typeof modelGatewayResponseSchema>;
+
+export const controllerProjectionSchema = z
+  .object({
+    decision: operatingDecisionKindSchema,
+    executable: z.boolean(),
+    activeGrantId: z
+      .string()
+      .regex(/^access_[a-z0-9-]{8,100}$/u)
+      .nullable(),
+  })
+  .strict()
+  .superRefine((controller, context) => {
+    if (controller.executable !== (controller.decision === "execute-now"))
+      context.addIssue({
+        code: "custom",
+        path: ["executable"],
+        message: "CONTROLLER_EXECUTABLE_DECISION_MISMATCH",
+      });
+    if (controller.decision === "execute-now" && controller.activeGrantId === null)
+      context.addIssue({
+        code: "custom",
+        path: ["activeGrantId"],
+        message: "CONTROLLER_EXECUTION_GRANT_REQUIRED",
+      });
+  });
+export type ControllerProjection = z.infer<typeof controllerProjectionSchema>;
+
+export const controlledModelGatewayResponseSchema = modelGatewayResponseSchema
+  .extend({ controller: controllerProjectionSchema })
+  .strict();
+export type ControlledModelGatewayResponse = z.infer<typeof controlledModelGatewayResponseSchema>;
+
+export function attachControllerProjection<Output>(
+  responseInput: ModelGatewayResponse & { output: Output },
+  projectionInput: {
+    decision: ControllerProjection["decision"];
+    activeGrantId: string | null;
+  },
+): ControlledModelGatewayResponse & { output: Output } {
+  const response = modelGatewayResponseSchema.parse(responseInput);
+  const controller = controllerProjectionSchema.parse({
+    decision: projectionInput.decision,
+    executable: projectionInput.decision === "execute-now",
+    activeGrantId: projectionInput.activeGrantId,
+  });
+  return {
+    ...controlledModelGatewayResponseSchema.parse({ ...response, controller }),
+    output: responseInput.output,
+  };
+}
 
 export type StructuredOutputValidator<Output> = z.ZodType<Output>;
 

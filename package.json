@@ -13,6 +13,7 @@
   "scripts": {
     "build": "tsc -b && pnpm --filter @stoic-iris/visual-composer build:web",
     "clean": "tsc -b --clean",
+    "contract:compile": "node scripts/contracts/compile-operating-contract.mjs --check",
     "typecheck": "tsc -p tsconfig.check.json && tsc -p apps/visual-composer/tsconfig.check.json",
     "test": "vitest run",
     "lint": "eslint eslint.config.mjs prettier.config.mjs scripts/diagnostics/repository.mjs scripts/blueprints scripts/workflow scripts/dev apps packages tests --max-warnings 0",
@@ -22,7 +23,7 @@
     "blueprint:compile": "node scripts/blueprints/iris-blueprint-compile.mjs",
     "iris-dev": "node scripts/dev/iris-dev.mjs",
     "workflow": "node scripts/workflow/iris-workflow.mjs",
-    "verify": "pnpm format:check && pnpm build && pnpm lint && pnpm typecheck && pnpm test && pnpm diagnostics"
+    "verify": "pnpm format:check && pnpm contract:compile && pnpm build && pnpm lint && pnpm typecheck && pnpm test && pnpm diagnostics"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
