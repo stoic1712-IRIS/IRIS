@@ -1,16 +1,13 @@
 import { z } from "zod";
 
-const objectiveIdSchema = z.string().regex(/^objective_[a-z0-9-]{8,100}$/u);
-const capabilitySchema = z.string().regex(/^[a-z][a-z0-9.-]+$/u);
-const grantIdSchema = z.string().regex(/^access_[a-z0-9-]{8,100}$/u);
-
-const gapSchema = z
-  .object({
-    capability: capabilitySchema,
-    type: z.string().min(1).max(200),
-    evidence: z.array(z.string().min(1).max(2_000)).min(1).max(100),
-  })
-  .strict();
+import {
+  operatingCapabilityNameSchema as capabilitySchema,
+  operatingControllerDecisionSchema,
+  operatingGapSchema as gapSchema,
+  operatingGrantIdSchema as grantIdSchema,
+  operatingObjectiveIdSchema as objectiveIdSchema,
+  type OperatingControllerDecision,
+} from "@stoic-iris/contracts";
 
 export const operatingObjectiveSchema = z
   .object({
@@ -48,57 +45,8 @@ const decisionSnapshotSchema = z
   })
   .loose();
 
-export const operatingDecisionSchema = z.discriminatedUnion("kind", [
-  z
-    .object({
-      kind: z.literal("execute-now"),
-      objectiveId: objectiveIdSchema,
-      capabilities: z.array(capabilitySchema),
-      grantId: grantIdSchema,
-      nextAction: z.literal("dispatch-governed-controller"),
-    })
-    .strict(),
-  z
-    .object({
-      kind: z.literal("acquire-capability"),
-      objectiveId: objectiveIdSchema,
-      gap: gapSchema,
-      acquisitionRequired: z.literal(true),
-    })
-    .strict(),
-  z
-    .object({
-      kind: z.literal("request-protected-approval"),
-      objectiveId: objectiveIdSchema,
-      effect: capabilitySchema,
-      proposalRequired: z.literal(true),
-    })
-    .strict(),
-  z
-    .object({
-      kind: z.literal("repair-runtime"),
-      objectiveId: objectiveIdSchema,
-      capability: capabilitySchema,
-      gap: gapSchema,
-      repairRequired: z.literal(true),
-    })
-    .strict(),
-  z
-    .object({
-      kind: z.literal("report-terminal"),
-      objectiveId: objectiveIdSchema,
-      terminalState: z.enum([
-        "completed",
-        "failed",
-        "cancelled",
-        "unsupported",
-        "physically-impossible",
-      ]),
-      evidence: z.array(z.string().min(1).max(2_000)).min(1).max(100),
-    })
-    .strict(),
-]);
-export type OperatingDecision = z.infer<typeof operatingDecisionSchema>;
+export const operatingDecisionSchema = operatingControllerDecisionSchema;
+export type OperatingDecision = OperatingControllerDecision;
 
 function unique(values: readonly string[], label: string): void {
   if (new Set(values).size !== values.length)

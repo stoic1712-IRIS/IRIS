@@ -1,6 +1,10 @@
 import { z } from "zod";
 
-import { canonicalIdSchema } from "@stoic-iris/contracts";
+import {
+  canonicalIdSchema,
+  verifyControllerDisposition,
+  type ControllerDisposition,
+} from "@stoic-iris/contracts";
 
 import {
   attachControllerProjection,
@@ -25,7 +29,7 @@ export const founderDialogueRequestSchema = z
     utterance: z.string().trim().min(1).max(4_000),
     history: z.array(founderDialogueTurnSchema).max(24),
     stateSummary: z.string().trim().min(1).max(4_000),
-    controller: controllerProjectionSchema,
+    controllerDispositionId: z.string().regex(/^disposition_[a-z0-9-]{8,100}$/u),
     model: z.string().min(1).max(200).default("qwen3:8b"),
   })
   .strict();
@@ -55,7 +59,10 @@ export const founderDialogueResponseSchema = z
 export type FounderDialogueResponse = z.infer<typeof founderDialogueResponseSchema>;
 
 export const founderControlledDialogueResponseSchema = founderDialogueResponseSchema
-  .extend({ controller: controllerProjectionSchema })
+  .extend({
+    controller: controllerProjectionSchema,
+    controllerDispositionId: z.string().regex(/^disposition_[a-z0-9-]{8,100}$/u),
+  })
   .strict();
 export type FounderControlledDialogueResponse = z.infer<
   typeof founderControlledDialogueResponseSchema
@@ -97,7 +104,10 @@ repair-runtime identifies the failed dependency and recovery; report-terminal re
 terminal outcome. Never invent, widen, or override that disposition. Never reveal or repeat
 credential-like material. Return only the required structured JSON.`;
 
-function modelMessages(request: FounderDialogueRequest): ModelMessage[] {
+function modelMessages(
+  request: FounderDialogueRequest,
+  disposition: ControllerDisposition,
+): ModelMessage[] {
   return [
     { role: "system", content: identityPrompt },
     {
@@ -106,7 +116,7 @@ function modelMessages(request: FounderDialogueRequest): ModelMessage[] {
     },
     {
       role: "system",
-      content: `Validated IRIS controller disposition: ${JSON.stringify(request.controller)}`,
+      content: `Validated IRIS controller disposition: ${JSON.stringify(disposition.decision)}`,
     },
     ...request.history.map((turn) => ({
       role: turn.role === "founder" ? ("user" as const) : ("assistant" as const),
@@ -116,19 +126,43 @@ function modelMessages(request: FounderDialogueRequest): ModelMessage[] {
   ];
 }
 
+function controllerReply(disposition: ControllerDisposition): string {
+  const { decision } = disposition;
+  if (decision.kind === "execute-now")
+    return `I am dispatching the governed controller for ${decision.objectiveId} under active grant ${decision.grantId}.`;
+  if (decision.kind === "acquire-capability")
+    return `I am missing ${decision.gap.capability} because ${decision.gap.type}. I will prepare its digest-bound capability-acquisition proposal.`;
+  if (decision.kind === "request-protected-approval")
+    return `The protected effect ${decision.effect} requires your exact approval: ${disposition.protectedApproval?.exactStatement ?? ""}`.trim();
+  if (decision.kind === "repair-runtime")
+    return `The controller selected governed runtime repair for ${decision.capability} because ${decision.gap.type}.`;
+  return `The objective ${decision.objectiveId} is ${decision.terminalState}. Evidence: ${decision.evidence.join(" ")}`;
+}
+
+export interface FounderDialogueController {
+  resolve(dispositionId: string): unknown;
+}
+
 export class FounderDialogueService {
   readonly #runtime: ModelRuntimeAdapter;
+  readonly #controller: FounderDialogueController;
 
-  constructor(runtime: ModelRuntimeAdapter) {
+  constructor(runtime: ModelRuntimeAdapter, controller: FounderDialogueController) {
     this.#runtime = runtime;
+    this.#controller = controller;
   }
 
   async reply(candidate: unknown): Promise<FounderControlledDialogueResponse> {
     const request = founderDialogueRequestSchema.parse(candidate);
+    const disposition = verifyControllerDisposition(
+      this.#controller.resolve(request.controllerDispositionId),
+    );
+    if (disposition.dispositionId !== request.controllerDispositionId)
+      throw new Error("CONTROLLER_DISPOSITION_ID_MISMATCH");
     const gatewayRequest = modelGatewayRequestSchema.parse({
       requestId: request.requestId,
       model: request.model,
-      messages: modelMessages(request),
+      messages: modelMessages(request, disposition),
       outputSchema: dialogueOutputSchema,
       temperature: 0.3,
       seed: 17,
@@ -140,17 +174,20 @@ export class FounderDialogueService {
     const dialogue = founderDialogueResponseSchema.parse(response.output);
     if (dialogue.proposedAction === "mission-proposal" && !dialogue.requiresApproval)
       throw new Error("DIALOGUE_APPROVAL_REQUIRED");
-    if (request.controller.decision === "execute-now" && dialogue.requiresApproval)
+    if (disposition.decision.kind === "execute-now" && dialogue.requiresApproval)
       throw new Error("DIALOGUE_CONTROLLER_DECISION_MISMATCH");
-    if (request.controller.decision === "request-protected-approval" && !dialogue.requiresApproval)
+    if (disposition.decision.kind === "request-protected-approval" && !dialogue.requiresApproval)
       throw new Error("DIALOGUE_CONTROLLER_DECISION_MISMATCH");
     const controlled = attachControllerProjection(response, {
-      decision: request.controller.decision,
-      activeGrantId: request.controller.activeGrantId,
+      decision: disposition.decision.kind,
+      activeGrantId:
+        disposition.decision.kind === "execute-now" ? disposition.decision.grantId : null,
     });
     return founderControlledDialogueResponseSchema.parse({
       ...dialogue,
+      reply: controllerReply(disposition),
       controller: controlled.controller,
+      controllerDispositionId: disposition.dispositionId,
     });
   }
 }

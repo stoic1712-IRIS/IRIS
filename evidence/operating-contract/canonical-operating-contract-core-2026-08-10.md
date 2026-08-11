@@ -61,15 +61,15 @@ Offline dependency relinking used `COREPACK_ENABLE_NETWORK=0` and `CI=true`. The
 - TypeScript and visual-composer production build: passed. Vite emitted its pre-existing large-chunk advisory; the build still exited zero.
 - ESLint: passed with zero warnings.
 - Typecheck: passed.
-- Full Vitest suite after accepted review repairs: 65 test files passed; 533 tests passed and 1 test was intentionally skipped.
-- Full verification output digest: `sha256:23ea5f1d2db759ca8adb1702b0db0893ee88fdf1ae810793e0de647f837543c3`.
+- Full Vitest suite after accepted review repairs: 65 test files passed; 535 tests passed and 1 test was intentionally skipped.
+- Full verification output digest: `sha256:fbd0a20e06a057b0e7f1d5f1be8a9ca02acf7f284f2f994aea8de95b42ecb9ec`.
 - Repository diagnostics: passed and reported the expected implementation branch and local documentation/evidence changes.
 
 An earlier WSL full-suite attempt reached the tests after formatting, compilation, build, lint, and typecheck passed, but two unchanged GitHub CLI tests exceeded their short wall-clock timeouts on the Windows-mounted filesystem. Their assertions did not fail. The same two CLI suites then passed 19/19 under the exact native pinned toolchain, and the complete native gate passed.
 
 ## Review record
 
-Independent review identified six important gaps and no critical findings: approval-lifecycle fabrication, execute-now without an authenticated live grant, unsupported objectives being misrouted to capability acquisition, runtime source-digest drift not being checked, Founder dialogue bypassing the controller projection, and partial Founder Full-access grants being accepted as full access. All six were accepted, reproduced with failing tests, repaired, and covered by green regressions before the fresh full gate. A final exact-diff re-review remains required before publication.
+Independent review identified six important gaps and no critical findings: approval-lifecycle fabrication, execute-now without an authenticated live grant, unsupported objectives being misrouted to capability acquisition, runtime source-digest drift not being checked, Founder dialogue bypassing the controller projection, and partial Founder Full-access grants being accepted as full access. The first re-review confirmed five resolved and found that dialogue could still turn a typed execute-now outcome into a generic refusal. That remaining finding was accepted and repaired by resolving a controller-owned, evidence-carrying, digest-bound disposition by identifier and rendering the typed outcome deterministically rather than trusting the model's action wording. All findings have failing-then-green regression evidence and a fresh full gate. A final exact-diff re-review remains required before publication.
 
 ## Rollback
 

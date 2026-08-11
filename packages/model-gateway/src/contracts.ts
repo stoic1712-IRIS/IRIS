@@ -2,9 +2,15 @@ import { z } from "zod";
 
 import {
   canonicalIdSchema,
+  createControllerDisposition,
   operatingDecisionKindSchema,
   timestampSchema,
+  verifyControllerDisposition,
 } from "@stoic-iris/contracts";
+import type { ControllerDisposition } from "@stoic-iris/contracts";
+
+export { createControllerDisposition, verifyControllerDisposition };
+export type { ControllerDisposition };
 
 export const modelMessageSchema = z
   .object({

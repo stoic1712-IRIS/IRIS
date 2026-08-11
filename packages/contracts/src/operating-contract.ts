@@ -28,7 +28,121 @@ export const operatingActorOwnershipSchema = z
   })
   .strict();
 
-const capabilityNameSchema = z.string().regex(/^[a-z][a-z0-9.-]+$/u);
+export const operatingObjectiveIdSchema = z.string().regex(/^objective_[a-z0-9-]{8,100}$/u);
+export const operatingCapabilityNameSchema = z.string().regex(/^[a-z][a-z0-9.-]+$/u);
+export const operatingGrantIdSchema = z.string().regex(/^access_[a-z0-9-]{8,100}$/u);
+export const operatingGapSchema = z
+  .object({
+    capability: operatingCapabilityNameSchema,
+    type: z.string().min(1).max(200),
+    evidence: z.array(z.string().min(1).max(2_000)).min(1).max(100),
+  })
+  .strict();
+
+export const operatingControllerDecisionSchema = z.discriminatedUnion("kind", [
+  z
+    .object({
+      kind: z.literal("execute-now"),
+      objectiveId: operatingObjectiveIdSchema,
+      capabilities: z.array(operatingCapabilityNameSchema),
+      grantId: operatingGrantIdSchema,
+      nextAction: z.literal("dispatch-governed-controller"),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("acquire-capability"),
+      objectiveId: operatingObjectiveIdSchema,
+      gap: operatingGapSchema,
+      acquisitionRequired: z.literal(true),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("request-protected-approval"),
+      objectiveId: operatingObjectiveIdSchema,
+      effect: operatingCapabilityNameSchema,
+      proposalRequired: z.literal(true),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("repair-runtime"),
+      objectiveId: operatingObjectiveIdSchema,
+      capability: operatingCapabilityNameSchema,
+      gap: operatingGapSchema,
+      repairRequired: z.literal(true),
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("report-terminal"),
+      objectiveId: operatingObjectiveIdSchema,
+      terminalState: z.enum([
+        "completed",
+        "failed",
+        "cancelled",
+        "unsupported",
+        "physically-impossible",
+      ]),
+      evidence: z.array(z.string().min(1).max(2_000)).min(1).max(100),
+    })
+    .strict(),
+]);
+export type OperatingControllerDecision = z.infer<typeof operatingControllerDecisionSchema>;
+
+const protectedApprovalSchema = z
+  .object({
+    effect: operatingCapabilityNameSchema,
+    proposalId: z.string().regex(/^proposal_[a-z0-9-]{8,100}$/u),
+    proposalDigest: sha256DigestSchema,
+    exactStatement: z.string().trim().min(1).max(4_000),
+  })
+  .strict();
+
+export const controllerDispositionSchema = z
+  .object({
+    dispositionId: z.string().regex(/^disposition_[a-z0-9-]{8,100}$/u),
+    contractDigest: sha256DigestSchema,
+    decision: operatingControllerDecisionSchema,
+    exactEvidence: z
+      .array(
+        z
+          .object({
+            reference: z.string().min(1).max(2_048),
+            digest: sha256DigestSchema,
+          })
+          .strict(),
+      )
+      .max(100),
+    protectedApproval: protectedApprovalSchema.nullable(),
+    decisionDigest: sha256DigestSchema,
+  })
+  .strict()
+  .superRefine((disposition, context) => {
+    if (disposition.decision.kind === "request-protected-approval") {
+      if (disposition.protectedApproval === null)
+        context.addIssue({
+          code: "custom",
+          path: ["protectedApproval"],
+          message: "CONTROLLER_PROTECTED_APPROVAL_REQUIRED",
+        });
+      else if (disposition.protectedApproval.effect !== disposition.decision.effect)
+        context.addIssue({
+          code: "custom",
+          path: ["protectedApproval", "effect"],
+          message: "CONTROLLER_PROTECTED_APPROVAL_EFFECT_MISMATCH",
+        });
+    } else if (disposition.protectedApproval !== null)
+      context.addIssue({
+        code: "custom",
+        path: ["protectedApproval"],
+        message: "CONTROLLER_PROTECTED_APPROVAL_UNEXPECTED",
+      });
+  });
+export type ControllerDisposition = z.infer<typeof controllerDispositionSchema>;
+
+const capabilityNameSchema = operatingCapabilityNameSchema;
 const sourcePathSchema = z
   .string()
   .min(1)
@@ -151,6 +265,43 @@ export function canonicalizeOperatingContract(input: unknown): string {
 
 function digestBytes(value: string | Uint8Array): string {
   return `sha256:${createHash("sha256").update(value).digest("hex")}`;
+}
+
+function dispositionDigest(input: {
+  contractDigest: string;
+  decision: OperatingControllerDecision;
+  exactEvidence: ControllerDisposition["exactEvidence"];
+  protectedApproval: ControllerDisposition["protectedApproval"];
+}): string {
+  return digestBytes(JSON.stringify(canonicalValue(input)));
+}
+
+export function createControllerDisposition(
+  input: Omit<ControllerDisposition, "decisionDigest">,
+): ControllerDisposition {
+  const candidate = {
+    ...input,
+    decisionDigest: dispositionDigest({
+      contractDigest: input.contractDigest,
+      decision: input.decision,
+      exactEvidence: input.exactEvidence,
+      protectedApproval: input.protectedApproval,
+    }),
+  };
+  return controllerDispositionSchema.parse(candidate);
+}
+
+export function verifyControllerDisposition(input: unknown): ControllerDisposition {
+  const disposition = controllerDispositionSchema.parse(input);
+  const expected = dispositionDigest({
+    contractDigest: disposition.contractDigest,
+    decision: disposition.decision,
+    exactEvidence: disposition.exactEvidence,
+    protectedApproval: disposition.protectedApproval,
+  });
+  if (disposition.decisionDigest !== expected)
+    throw new Error("CONTROLLER_DISPOSITION_DIGEST_MISMATCH");
+  return disposition;
 }
 
 export function compileOperatingContract(input: unknown): CompiledIrisOperatingContract {

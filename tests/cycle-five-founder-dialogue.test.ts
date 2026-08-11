@@ -10,11 +10,35 @@ import type {
   StructuredOutputValidator,
 } from "../packages/model-gateway/src/index.js";
 import {
+  createControllerDisposition,
   FounderDialogueService,
+  type FounderDialogueController,
   type FounderDialogueResponse,
 } from "../packages/model-gateway/src/index.js";
 
 const requestId = "request_12345678-1234-4123-8123-123456789abc";
+const dispositionId = "disposition_founder-dialogue-0001";
+const sha = (character: string) => `sha256:${character.repeat(64)}`;
+
+class DialogueController implements FounderDialogueController {
+  disposition = createControllerDisposition({
+    dispositionId,
+    contractDigest: sha("a"),
+    decision: {
+      kind: "execute-now",
+      objectiveId: "objective_founder-dialogue-0001",
+      capabilities: ["repository.inspect"],
+      grantId: "access_contract-dialogue",
+      nextAction: "dispatch-governed-controller",
+    },
+    exactEvidence: [{ reference: "evidence/live-capability-snapshot", digest: sha("b") }],
+    protectedApproval: null,
+  });
+
+  resolve(candidateId: string) {
+    return candidateId === dispositionId ? this.disposition : undefined;
+  }
+}
 
 class DialogueRuntime implements ModelRuntimeAdapter {
   readonly provider = "ollama";
@@ -61,11 +85,7 @@ function request() {
       { role: "iris" as const, content: "The review found no blockers." },
     ],
     stateSummary: "Canonical main is synchronized. No workers are active.",
-    controller: {
-      decision: "execute-now" as const,
-      executable: true,
-      activeGrantId: "access_contract-dialogue",
-    },
+    controllerDispositionId: dispositionId,
     model: "qwen3:8b",
   };
 }
@@ -183,7 +203,9 @@ describe("Cycle Five Founder dialogue service", () => {
 
   it("preserves bounded multi-turn context with explicit model and controller separation", async () => {
     const runtime = new DialogueRuntime();
-    const result = await new FounderDialogueService(runtime).reply(request());
+    const result = await new FounderDialogueService(runtime, new DialogueController()).reply(
+      request(),
+    );
 
     expect(result.modelAuthority).toBe("none");
     expect(result.controller).toEqual({
@@ -191,6 +213,7 @@ describe("Cycle Five Founder dialogue service", () => {
       executable: true,
       activeGrantId: "access_contract-dialogue",
     });
+    expect(result.controllerDispositionId).toBe(dispositionId);
     expect(runtime.request?.messages).toEqual(
       expect.arrayContaining([
         { role: "user", content: "Review the repository." },
@@ -204,8 +227,7 @@ describe("Cycle Five Founder dialogue service", () => {
     expect(runtime.request?.messages[0]?.content).not.toContain("You have no execution authority");
     expect(
       runtime.request?.messages.some(
-        (message) =>
-          message.role === "system" && message.content.includes('"decision":"execute-now"'),
+        (message) => message.role === "system" && message.content.includes('"kind":"execute-now"'),
       ),
     ).toBe(true);
     expect(runtime.request?.messages[0]?.content).not.toContain(
@@ -222,15 +244,44 @@ describe("Cycle Five Founder dialogue service", () => {
       requiresApproval: false,
       modelAuthority: "none",
     };
-    await expect(new FounderDialogueService(runtime).reply(request())).rejects.toThrow(
-      /APPROVAL_REQUIRED/u,
+    await expect(
+      new FounderDialogueService(runtime, new DialogueController()).reply(request()),
+    ).rejects.toThrow(/APPROVAL_REQUIRED/u);
+  });
+
+  it("cannot turn an execute-now disposition into a generic refusal", async () => {
+    const runtime = new DialogueRuntime();
+    runtime.output = {
+      reply: "I cannot do that. Run these commands yourself.",
+      intent: "conversation",
+      proposedAction: "none",
+      requiresApproval: false,
+      modelAuthority: "none",
+    };
+    const result = await new FounderDialogueService(runtime, new DialogueController()).reply(
+      request(),
     );
+    expect(result.reply).toContain("dispatching the governed controller");
+    expect(result.reply).not.toMatch(/cannot|yourself/iu);
+  });
+
+  it("rejects a controller disposition whose digest no longer binds its decision", async () => {
+    const runtime = new DialogueRuntime();
+    const controller = new DialogueController();
+    controller.disposition = {
+      ...controller.disposition,
+      decisionDigest: sha("f"),
+    };
+    await expect(new FounderDialogueService(runtime, controller).reply(request())).rejects.toThrow(
+      "CONTROLLER_DISPOSITION_DIGEST_MISMATCH",
+    );
+    expect(runtime.request).toBeNull();
   });
 
   it("rejects oversized or unbounded conversation history", async () => {
     const runtime = new DialogueRuntime();
     await expect(
-      new FounderDialogueService(runtime).reply({
+      new FounderDialogueService(runtime, new DialogueController()).reply({
         ...request(),
         history: Array.from({ length: 25 }, () => ({
           role: "founder",
