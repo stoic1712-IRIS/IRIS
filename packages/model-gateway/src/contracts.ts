@@ -65,7 +65,21 @@ export const controllerProjectionSchema = z
       .regex(/^access_[a-z0-9-]{8,100}$/u)
       .nullable(),
   })
-  .strict();
+  .strict()
+  .superRefine((controller, context) => {
+    if (controller.executable !== (controller.decision === "execute-now"))
+      context.addIssue({
+        code: "custom",
+        path: ["executable"],
+        message: "CONTROLLER_EXECUTABLE_DECISION_MISMATCH",
+      });
+    if (controller.decision === "execute-now" && controller.activeGrantId === null)
+      context.addIssue({
+        code: "custom",
+        path: ["activeGrantId"],
+        message: "CONTROLLER_EXECUTION_GRANT_REQUIRED",
+      });
+  });
 export type ControllerProjection = z.infer<typeof controllerProjectionSchema>;
 
 export const controlledModelGatewayResponseSchema = modelGatewayResponseSchema

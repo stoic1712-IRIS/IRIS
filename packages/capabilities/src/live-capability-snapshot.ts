@@ -35,6 +35,16 @@ export const liveCapabilityProviderEvidenceSchema = z
   .strict();
 export type LiveCapabilityProviderEvidence = z.infer<typeof liveCapabilityProviderEvidenceSchema>;
 
+export const liveCapabilityGrantEvidenceSchema = z
+  .object({
+    grantId: z.string().regex(/^access_[a-z0-9-]{8,100}$/u),
+    authenticated: z.literal(true),
+    active: z.literal(true),
+    capabilities: z.array(capabilityNameSchema).min(1).max(32),
+  })
+  .strict();
+export type LiveCapabilityGrantEvidence = z.infer<typeof liveCapabilityGrantEvidenceSchema>;
+
 export const liveCapabilityEvidenceSchema = liveCapabilityProviderEvidenceSchema
   .extend({
     authorized: z.boolean(),
@@ -49,6 +59,10 @@ export type LiveCapabilityEvidence = z.infer<typeof liveCapabilityEvidenceSchema
 export const liveCapabilitySnapshotSchema = z
   .object({
     contractDigest: sha256DigestSchema,
+    activeGrantId: z
+      .string()
+      .regex(/^access_[a-z0-9-]{8,100}$/u)
+      .nullable(),
     capabilities: z.array(liveCapabilityEvidenceSchema).min(1),
     protectedEffects: z.array(capabilityNameSchema).min(1),
     capturedAt: timestampSchema,
@@ -76,12 +90,16 @@ function deriveStatus(
 export function buildLiveCapabilitySnapshot(input: {
   contract: unknown;
   providers: readonly LiveCapabilityProviderEvidence[];
-  activeGrant?: { capabilities: readonly string[] };
+  activeGrant?: unknown;
   capturedAt: string;
 }): LiveCapabilitySnapshot {
   const contract = compiledIrisOperatingContractSchema.parse(input.contract);
   const capturedAt = timestampSchema.parse(input.capturedAt);
   const providers = z.array(liveCapabilityProviderEvidenceSchema).parse(input.providers);
+  const activeGrant =
+    input.activeGrant === undefined
+      ? undefined
+      : liveCapabilityGrantEvidenceSchema.parse(input.activeGrant);
   const ordinary = new Set(contract.ordinaryCapabilities);
   const protectedEffects = new Set(contract.protectedEffects);
   const providerMap = new Map<string, LiveCapabilityProviderEvidence>();
@@ -99,7 +117,7 @@ export function buildLiveCapabilitySnapshot(input: {
   const missing = contract.ordinaryCapabilities.find((capability) => !providerMap.has(capability));
   if (missing !== undefined) throw new Error(`LIVE_CAPABILITY_EVIDENCE_MISSING:${missing}`);
 
-  const granted = new Set(input.activeGrant?.capabilities ?? []);
+  const granted = new Set(activeGrant?.capabilities ?? []);
   for (const capability of granted) {
     if (protectedEffects.has(capability))
       throw new Error(`LIVE_CAPABILITY_GRANT_PROTECTED:${capability}`);
@@ -133,6 +151,7 @@ export function buildLiveCapabilitySnapshot(input: {
 
   return liveCapabilitySnapshotSchema.parse({
     contractDigest: contract.contractDigest,
+    activeGrantId: activeGrant?.grantId ?? null,
     capabilities,
     protectedEffects: [...contract.protectedEffects],
     capturedAt,

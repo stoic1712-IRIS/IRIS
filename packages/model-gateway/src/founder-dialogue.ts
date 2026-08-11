@@ -3,6 +3,8 @@ import { z } from "zod";
 import { canonicalIdSchema } from "@stoic-iris/contracts";
 
 import {
+  attachControllerProjection,
+  controllerProjectionSchema,
   modelGatewayRequestSchema,
   type ModelMessage,
   type ModelRuntimeAdapter,
@@ -23,6 +25,7 @@ export const founderDialogueRequestSchema = z
     utterance: z.string().trim().min(1).max(4_000),
     history: z.array(founderDialogueTurnSchema).max(24),
     stateSummary: z.string().trim().min(1).max(4_000),
+    controller: controllerProjectionSchema,
     model: z.string().min(1).max(200).default("qwen3:8b"),
   })
   .strict();
@@ -50,6 +53,13 @@ export const founderDialogueResponseSchema = z
   })
   .strict();
 export type FounderDialogueResponse = z.infer<typeof founderDialogueResponseSchema>;
+
+export const founderControlledDialogueResponseSchema = founderDialogueResponseSchema
+  .extend({ controller: controllerProjectionSchema })
+  .strict();
+export type FounderControlledDialogueResponse = z.infer<
+  typeof founderControlledDialogueResponseSchema
+>;
 
 const dialogueOutputSchema = {
   type: "object",
@@ -79,10 +89,12 @@ const dialogueOutputSchema = {
 const identityPrompt = `You are IRIS, the Founder-facing cognitive coordinator for STOIC-IRIS.
 Hold a natural, coherent conversation and use the supplied recent turns for continuity.
 Be concise, truthful, evidence-led, warm, and direct. Never claim that a worker ran or a
-repository changed unless the supplied state says so. You do not own authority; the IRIS controller may execute the supplied validated decision.
-If the Founder requests an action, explain the proposed next step. Repository mutation,
-worker activation, publication, deployment, credentials, spending, or provider changes
-must remain a proposal requiring the governed approval path. Never reveal or repeat
+repository changed unless the supplied state says so. You do not own authority. Follow the
+supplied validated IRIS controller disposition exactly: execute-now means ordinary bounded
+execution is already authorized by its active grant; acquire-capability identifies the missing
+capability; request-protected-approval presents the exact protected approval need;
+repair-runtime identifies the failed dependency and recovery; report-terminal reports the
+terminal outcome. Never invent, widen, or override that disposition. Never reveal or repeat
 credential-like material. Return only the required structured JSON.`;
 
 function modelMessages(request: FounderDialogueRequest): ModelMessage[] {
@@ -91,6 +103,10 @@ function modelMessages(request: FounderDialogueRequest): ModelMessage[] {
     {
       role: "system",
       content: `Current governed IRIS state: ${request.stateSummary}`,
+    },
+    {
+      role: "system",
+      content: `Validated IRIS controller disposition: ${JSON.stringify(request.controller)}`,
     },
     ...request.history.map((turn) => ({
       role: turn.role === "founder" ? ("user" as const) : ("assistant" as const),
@@ -107,7 +123,7 @@ export class FounderDialogueService {
     this.#runtime = runtime;
   }
 
-  async reply(candidate: unknown): Promise<FounderDialogueResponse> {
+  async reply(candidate: unknown): Promise<FounderControlledDialogueResponse> {
     const request = founderDialogueRequestSchema.parse(candidate);
     const gatewayRequest = modelGatewayRequestSchema.parse({
       requestId: request.requestId,
@@ -124,6 +140,17 @@ export class FounderDialogueService {
     const dialogue = founderDialogueResponseSchema.parse(response.output);
     if (dialogue.proposedAction === "mission-proposal" && !dialogue.requiresApproval)
       throw new Error("DIALOGUE_APPROVAL_REQUIRED");
-    return dialogue;
+    if (request.controller.decision === "execute-now" && dialogue.requiresApproval)
+      throw new Error("DIALOGUE_CONTROLLER_DECISION_MISMATCH");
+    if (request.controller.decision === "request-protected-approval" && !dialogue.requiresApproval)
+      throw new Error("DIALOGUE_CONTROLLER_DECISION_MISMATCH");
+    const controlled = attachControllerProjection(response, {
+      decision: request.controller.decision,
+      activeGrantId: request.controller.activeGrantId,
+    });
+    return founderControlledDialogueResponseSchema.parse({
+      ...dialogue,
+      controller: controlled.controller,
+    });
   }
 }

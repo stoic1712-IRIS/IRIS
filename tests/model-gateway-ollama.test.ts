@@ -98,6 +98,13 @@ describe("Ollama model gateway adapter", () => {
       executable: true,
       activeGrantId: "access_contract-test",
     });
+
+    expect(() =>
+      attachControllerProjection(providerResult, {
+        decision: "execute-now",
+        activeGrantId: null,
+      }),
+    ).toThrow("CONTROLLER_EXECUTION_GRANT_REQUIRED");
   });
 
   it("rejects malformed JSON and structured output that fails its schema", async () => {

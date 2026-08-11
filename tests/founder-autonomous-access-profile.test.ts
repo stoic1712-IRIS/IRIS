@@ -125,4 +125,17 @@ describe("Founder autonomous Full access", () => {
     delete unbound.sessionBinding;
     expect(founderAccessRequestSchema.safeParse(unbound).success).toBe(false);
   });
+
+  it("rejects a partial capability set labeled as Founder Full access", () => {
+    const registry = new FounderAccessRegistry({
+      registeredCapabilities: ordinary,
+      founderSessionId: "session_founder-0001",
+      gatewayBootId: "boot_gateway-0001",
+      now: () => now,
+    });
+
+    expect(() => registry.issue(request({ capabilities: ["goal.manage"] }))).toThrow(
+      "FOUNDER_FULL_ACCESS_CAPABILITY_SET_INCOMPLETE",
+    );
+  });
 });

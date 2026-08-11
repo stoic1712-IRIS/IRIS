@@ -54,7 +54,15 @@ function snapshot(
   return buildLiveCapabilitySnapshot({
     contract,
     providers,
-    activeGrant: { capabilities: [...granted] },
+    activeGrant:
+      granted.length === 0
+        ? undefined
+        : {
+            grantId: "access_contract-test",
+            authenticated: true,
+            active: true,
+            capabilities: [...granted],
+          },
     capturedAt: "2026-08-10T18:00:00.000Z",
   });
 }
@@ -68,7 +76,6 @@ describe("operating decision engine", () => {
       decideOperatingAction({
         objective: { objectiveId, requiredCapabilities: [capability], protectedEffects: [] },
         snapshot: snapshot(),
-        activeGrantId: "access_contract-test",
       }),
     ).toEqual({
       kind: "execute-now",
@@ -79,13 +86,21 @@ describe("operating decision engine", () => {
     });
   });
 
+  it("never fabricates execution authority when an active grant identifier is absent", () => {
+    expect(() =>
+      decideOperatingAction({
+        objective: { objectiveId, requiredCapabilities: [capability], protectedEffects: [] },
+        snapshot: { ...snapshot(), activeGrantId: null },
+      }),
+    ).toThrow("OPERATING_EXECUTION_ACTIVE_GRANT_REQUIRED");
+  });
+
   it("acquires an absent provider or ordinary access instead of refusing", () => {
     const absent = decideOperatingAction({
       objective: { objectiveId, requiredCapabilities: [capability], protectedEffects: [] },
       snapshot: snapshot((providers) => {
         providers[0] = { ...providerAt(providers, 0), providerInstalled: false };
       }),
-      activeGrantId: "access_contract-test",
     });
     const needsAccess = decideOperatingAction({
       objective: { objectiveId, requiredCapabilities: [capability], protectedEffects: [] },
@@ -102,7 +117,6 @@ describe("operating decision engine", () => {
       snapshot: snapshot((providers) => {
         providers[0] = { ...providerAt(providers, 0), providerRunning: false };
       }),
-      activeGrantId: "access_contract-test",
     });
     expect(decision.kind).toBe("repair-runtime");
   });
@@ -119,7 +133,6 @@ describe("operating decision engine", () => {
         providers[0] = { ...providerAt(providers, 0), providerInstalled: false };
         providers[1] = { ...providerAt(providers, 1), providerRunning: false };
       }),
-      activeGrantId: "access_contract-test",
     });
 
     expect(decision.kind).toBe("acquire-capability");
@@ -163,12 +176,31 @@ describe("operating decision engine", () => {
     });
   });
 
+  it("reports unsupported work as terminal instead of proposing acquisition", () => {
+    const decision = decideOperatingAction({
+      objective: { objectiveId, requiredCapabilities: [capability], protectedEffects: [] },
+      snapshot: snapshot((providers) => {
+        providers[0] = {
+          ...providerAt(providers, 0),
+          providerInstalled: false,
+          supportedAfterResearch: false,
+        };
+      }),
+    });
+
+    expect(decision).toEqual({
+      kind: "report-terminal",
+      objectiveId,
+      terminalState: "unsupported",
+      evidence: [`verified:${capability}`],
+    });
+  });
+
   it("never produces a generic refusal for an actionable evidence state", () => {
     const decisions = [
       decideOperatingAction({
         objective: { objectiveId, requiredCapabilities: [capability], protectedEffects: [] },
         snapshot: snapshot(),
-        activeGrantId: "access_contract-test",
       }),
       decideOperatingAction({
         objective: { objectiveId, requiredCapabilities: [capability], protectedEffects: [] },

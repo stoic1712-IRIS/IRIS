@@ -1,7 +1,7 @@
 import { execFile } from "node:child_process";
-import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { promisify } from "node:util";
 
 import { describe, expect, it } from "vitest";
@@ -69,5 +69,22 @@ describe("iris-dev canonical contract inspection", () => {
       "utf8",
     );
     await expect(inspect([], invalid)).rejects.toMatchObject({ code: 1 });
+  });
+
+  it("fails nonzero when a contract-bound source drifts", async () => {
+    const driftedRoot = await mkdtemp(join(tmpdir(), "iris-contract-source-drift-cli-"));
+    const compiledPath = join(driftedRoot, "generated", "iris-operating-contract.compiled.json");
+    await mkdir(dirname(compiledPath), { recursive: true });
+    await writeFile(compiledPath, JSON.stringify(compiled), "utf8");
+    for (const source of compiled.sources) {
+      const target = join(driftedRoot, source.path);
+      await mkdir(dirname(target), { recursive: true });
+      await writeFile(target, await readFile(resolve(source.path)));
+    }
+    const [drifted] = compiled.sources;
+    if (drifted === undefined) throw new Error("Expected one bound source.");
+    await writeFile(join(driftedRoot, drifted.path), "drifted canonical bytes\n", "utf8");
+
+    await expect(inspect([], driftedRoot)).rejects.toMatchObject({ code: 1 });
   });
 });

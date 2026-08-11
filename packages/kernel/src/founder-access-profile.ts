@@ -172,6 +172,12 @@ export class FounderAccessRegistry {
     for (const capability of request.capabilities)
       if (!this.#registered.has(capability))
         throw new Error(`FOUNDER_ACCESS_CAPABILITY_NOT_REGISTERED:${capability}`);
+    if (
+      request.profile === "founder-full-access" &&
+      (request.capabilities.length !== this.#registered.size ||
+        [...this.#registered].some((capability) => !request.capabilities.includes(capability)))
+    )
+      throw new Error("FOUNDER_FULL_ACCESS_CAPABILITY_SET_INCOMPLETE");
     const grant = founderAccessGrantSchema.parse({
       ...request,
       lifecycle: request.profile === "founder-full-access" ? "session-bound" : "time-bounded",

@@ -30,7 +30,12 @@ describe("live capability snapshot", () => {
     const snapshot = buildLiveCapabilitySnapshot({
       contract,
       providers,
-      activeGrant: { capabilities: [...contract.ordinaryCapabilities] },
+      activeGrant: {
+        grantId: "access_contract-snapshot",
+        authenticated: true,
+        active: true,
+        capabilities: [...contract.ordinaryCapabilities],
+      },
       capturedAt,
     });
 
@@ -38,6 +43,7 @@ describe("live capability snapshot", () => {
       contract.ordinaryCapabilities,
     );
     expect(snapshot.protectedEffects).toEqual(contract.protectedEffects);
+    expect(snapshot.activeGrantId).toBe("access_contract-snapshot");
     expect(snapshot.capabilities.map((entry) => entry.protected)).toEqual(
       snapshot.capabilities.map(() => false),
     );
@@ -60,7 +66,12 @@ describe("live capability snapshot", () => {
     const snapshot = buildLiveCapabilitySnapshot({
       contract,
       providers,
-      activeGrant: { capabilities: contract.ordinaryCapabilities.slice(0, 3) },
+      activeGrant: {
+        grantId: "access_contract-snapshot",
+        authenticated: true,
+        active: true,
+        capabilities: contract.ordinaryCapabilities.slice(0, 3),
+      },
       capturedAt,
     });
 
@@ -78,7 +89,6 @@ describe("live capability snapshot", () => {
       throw new Error("Expected contract capabilities.");
     const input = {
       contract,
-      activeGrant: { capabilities: [] },
       capturedAt,
     };
 
@@ -100,5 +110,30 @@ describe("live capability snapshot", () => {
         providers: [readyEvidence(protectedEffect), ...providers.slice(1)],
       }),
     ).toThrow("LIVE_CAPABILITY_EVIDENCE_PROTECTED");
+  });
+
+  it("rejects an unauthenticated or inactive grant before any capability becomes ready", () => {
+    const providers = contract.ordinaryCapabilities.map((capability) => readyEvidence(capability));
+    const grant = {
+      grantId: "access_contract-snapshot",
+      capabilities: [...contract.ordinaryCapabilities],
+    };
+
+    expect(() =>
+      buildLiveCapabilitySnapshot({
+        contract,
+        providers,
+        activeGrant: { ...grant, authenticated: false, active: true },
+        capturedAt,
+      }),
+    ).toThrow();
+    expect(() =>
+      buildLiveCapabilitySnapshot({
+        contract,
+        providers,
+        activeGrant: { ...grant, authenticated: true, active: false },
+        capturedAt,
+      }),
+    ).toThrow();
   });
 });

@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 
 import { z } from "zod";
 
@@ -160,13 +161,24 @@ export function compileOperatingContract(input: unknown): CompiledIrisOperatingC
   });
 }
 
-export function loadCompiledOperatingContract(input: unknown): CompiledIrisOperatingContract {
+export function loadCompiledOperatingContract(
+  input: unknown,
+  options: { sourceRoot?: string; verifySources?: boolean } = {},
+): CompiledIrisOperatingContract {
   const raw =
     typeof input === "string" ? (JSON.parse(readFileSync(input, "utf8")) as unknown) : input;
   const compiled = compiledIrisOperatingContractSchema.parse(raw);
   const { contractDigest, ...contract } = compiled;
   const expected = compileOperatingContract(contract).contractDigest;
   if (contractDigest !== expected) throw new Error("OPERATING_CONTRACT_DIGEST_MISMATCH");
+  const verifySources = options.verifySources ?? typeof input === "string";
+  const sourceRoot =
+    options.sourceRoot ??
+    (typeof input === "string" ? dirname(dirname(resolve(input))) : undefined);
+  if (verifySources) {
+    if (sourceRoot === undefined) throw new Error("OPERATING_CONTRACT_SOURCE_ROOT_REQUIRED");
+    verifyOperatingContractSources(contract, sourceRoot);
+  }
   return compiled;
 }
 
@@ -176,7 +188,7 @@ export function verifyOperatingContractSources(
 ): readonly { path: string; digest: string }[] {
   const contract = irisOperatingContractSchema.parse(contractInput);
   return contract.sources.map((source) => {
-    const digest = digestBytes(readFileSync(`${root}/${source.path}`));
+    const digest = digestBytes(readFileSync(resolve(root, source.path)));
     if (digest !== source.digest)
       throw new Error(`OPERATING_CONTRACT_SOURCE_DIGEST_MISMATCH:${source.path}`);
     return { path: source.path, digest };

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import type { CapabilityAcquisitionApprovalLifecycle } from "../packages/capabilities/src/index.js";
+
 import {
   MemorySelfRepairStore,
   SelfRepairRuntime,
@@ -116,13 +118,21 @@ class FixtureAdapter implements SelfRepairAdapter {
   }
 }
 
-function runtime(adapter = new FixtureAdapter()) {
+function runtime(
+  adapter = new FixtureAdapter(),
+  approvalLifecycle: () => CapabilityAcquisitionApprovalLifecycle = () => ({
+    lifecycle: "active" as const,
+    contractDigest: sha("b"),
+    canonicalRevision: "c".repeat(40),
+  }),
+) {
   return {
     adapter,
     runtime: new SelfRepairRuntime({
       adapter,
       access: { authorize: () => ({}) },
       store: new MemorySelfRepairStore(),
+      approvalLifecycle,
       now: () => now,
     }),
   };
@@ -171,6 +181,40 @@ describe("governed IRIS self-repair runtime", () => {
     await expect(repair.approveAcquisition(pending.objective.repairId, "approved")).rejects.toThrow(
       "SELF_REPAIR_ACQUISITION_APPROVAL_INVALID",
     );
+    expect(adapter.calls).not.toContain("workspace");
+  });
+
+  it("rejects consumed, revoked, replaced, or canonical-drifted acquisition approval state", async () => {
+    for (const lifecycle of ["consumed", "revoked", "replaced"] as const) {
+      const { runtime: repair, adapter } = runtime(new FixtureAdapter(), () => ({
+        lifecycle,
+        contractDigest: sha("b"),
+        canonicalRevision: "c".repeat(40),
+      }));
+      const pending = await repair.start(
+        objective({ repairId: `repair_founder-${lifecycle}-0001` }),
+      );
+      await expect(
+        repair.approveAcquisition(
+          pending.objective.repairId,
+          pending.acquisition?.requiredApprovalStatement ?? "",
+        ),
+      ).rejects.toThrow("SELF_REPAIR_ACQUISITION_APPROVAL_INVALID");
+      expect(adapter.calls).not.toContain("workspace");
+    }
+
+    const { runtime: drifted, adapter } = runtime(new FixtureAdapter(), () => ({
+      lifecycle: "active",
+      contractDigest: sha("9"),
+      canonicalRevision: "8".repeat(40),
+    }));
+    const pending = await drifted.start(objective({ repairId: "repair_founder-drifted-0001" }));
+    await expect(
+      drifted.approveAcquisition(
+        pending.objective.repairId,
+        pending.acquisition?.requiredApprovalStatement ?? "",
+      ),
+    ).rejects.toThrow("SELF_REPAIR_ACQUISITION_APPROVAL_INVALID");
     expect(adapter.calls).not.toContain("workspace");
   });
 

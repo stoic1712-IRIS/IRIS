@@ -77,16 +77,23 @@ describe("IRIS capability acquisition", () => {
       `I approve capability acquisition ${input.proposalId} at ${prepared.digest} exactly as proposed.`,
     );
     expect(
-      verifyCapabilityAcquisitionApproval(
-        prepared,
-        prepared.requiredApprovalStatement,
-        new Date("2036-08-08T12:10:00.000Z"),
-      ),
+      verifyCapabilityAcquisitionApproval(prepared, prepared.requiredApprovalStatement, {
+        lifecycle: "active",
+        contractDigest: input.contractDigest,
+        canonicalRevision: input.canonicalRevision,
+      }),
     ).toBe(true);
   });
 
   it("rejects changed, consumed, replaced, revoked, drifted, mutable, paid, or incomplete plans", () => {
     const prepared = prepareCapabilityAcquisition(input);
+    expect(
+      verifyCapabilityAcquisitionApproval(
+        prepared,
+        prepared.requiredApprovalStatement,
+        undefined as never,
+      ),
+    ).toBe(false);
     expect(
       verifyCapabilityAcquisitionApproval(
         prepared,

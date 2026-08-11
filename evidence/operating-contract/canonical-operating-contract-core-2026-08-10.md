@@ -16,7 +16,7 @@
 
 ## Founder mandate
 
-The Founder authorized exact-path local staging and commits for the four approved design/plan files, followed by inline Core implementation and local verification. Push, merge, retirement deletion, IRIS restart, and protected provider operations were explicitly excluded.
+The Founder subsequently authorized completion through independent review, accepted repairs, fresh local verification, non-force publication, pull-request integration, and canonical-main synchronization. Retirement deletion, Phase 0 graduation execution, spending, credentials, destructive operations, repository administration, history rewriting, and public or LAN exposure remain excluded.
 
 ## Local commits
 
@@ -53,7 +53,7 @@ Offline dependency relinking used `COREPACK_ENABLE_NETWORK=0` and `CI=true`. The
 
 ## Verification record
 
-- Expanded operating-contract acceptance command: exit `0`; 13 test files passed, 67 tests passed.
+- Independent-review repair acceptance command: exit `0`; 9 test files passed, 61 tests passed, and 1 platform test was intentionally skipped.
 - Native agent CLI regression command: exit `0`; 2 test files passed, 19 tests passed.
 - `pnpm verify` with Node.js `24.19.0`, pnpm `11.20.0`, `COREPACK_ENABLE_NETWORK=0`, and `CI=true`: exit `0`.
 - Formatting: passed.
@@ -61,14 +61,15 @@ Offline dependency relinking used `COREPACK_ENABLE_NETWORK=0` and `CI=true`. The
 - TypeScript and visual-composer production build: passed. Vite emitted its pre-existing large-chunk advisory; the build still exited zero.
 - ESLint: passed with zero warnings.
 - Typecheck: passed.
-- Full Vitest suite: 65 test files passed; 526 tests passed and 1 test was intentionally skipped.
+- Full Vitest suite after accepted review repairs: 65 test files passed; 533 tests passed and 1 test was intentionally skipped.
+- Full verification output digest: `sha256:23ea5f1d2db759ca8adb1702b0db0893ee88fdf1ae810793e0de647f837543c3`.
 - Repository diagnostics: passed and reported the expected implementation branch and local documentation/evidence changes.
 
 An earlier WSL full-suite attempt reached the tests after formatting, compilation, build, lint, and typecheck passed, but two unchanged GitHub CLI tests exceeded their short wall-clock timeouts on the Windows-mounted filesystem. Their assertions did not fail. The same two CLI suites then passed 19/19 under the exact native pinned toolchain, and the complete native gate passed.
 
 ## Review record
 
-No independent review is claimed in this local implementation tranche. Independent review remains a publication prerequisite under the approved design. Local self-review checks authority widening, capability loss, source drift, digest instability, generic refusal paths, and hidden protected effects.
+Independent review identified six important gaps and no critical findings: approval-lifecycle fabrication, execute-now without an authenticated live grant, unsupported objectives being misrouted to capability acquisition, runtime source-digest drift not being checked, Founder dialogue bypassing the controller projection, and partial Founder Full-access grants being accepted as full access. All six were accepted, reproduced with failing tests, repaired, and covered by green regressions before the fresh full gate. A final exact-diff re-review remains required before publication.
 
 ## Rollback
 

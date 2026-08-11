@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto";
-import { readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join } from "node:path";
 
 import { describe, expect, it } from "vitest";
 
@@ -76,5 +78,31 @@ describe("canonical operating contract", () => {
     expect(() =>
       loadCompiledOperatingContract({ ...compiled, contractDigest: `sha256:${"0".repeat(64)}` }),
     ).toThrow("OPERATING_CONTRACT_DIGEST_MISMATCH");
+  });
+
+  it("fails closed when a source bound by the compiled artifact drifts", () => {
+    const compiled = loadCompiledOperatingContract(
+      "generated/iris-operating-contract.compiled.json",
+    );
+    const fixtureRoot = mkdtempSync(join(tmpdir(), "iris-contract-source-drift-"));
+    try {
+      const compiledPath = join(fixtureRoot, "generated", "iris-operating-contract.compiled.json");
+      mkdirSync(dirname(compiledPath), { recursive: true });
+      writeFileSync(compiledPath, JSON.stringify(compiled), "utf8");
+      for (const source of compiled.sources) {
+        const target = join(fixtureRoot, source.path);
+        mkdirSync(dirname(target), { recursive: true });
+        writeFileSync(target, readFileSync(source.path));
+      }
+      const [drifted] = compiled.sources;
+      if (drifted === undefined) throw new Error("Expected one bound source.");
+      writeFileSync(join(fixtureRoot, drifted.path), "drifted canonical bytes\n", "utf8");
+
+      expect(() => loadCompiledOperatingContract(compiledPath)).toThrow(
+        `OPERATING_CONTRACT_SOURCE_DIGEST_MISMATCH:${drifted.path}`,
+      );
+    } finally {
+      rmSync(fixtureRoot, { force: true, recursive: true });
+    }
   });
 });

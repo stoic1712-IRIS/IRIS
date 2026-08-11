@@ -77,18 +77,13 @@ export function prepareCapabilityAcquisition(input: unknown): PreparedCapability
 export function verifyCapabilityAcquisitionApproval(
   input: unknown,
   statement: string,
-  lifecycleInput?: CapabilityAcquisitionApprovalLifecycle | Date,
+  lifecycleInput: CapabilityAcquisitionApprovalLifecycle,
 ): boolean {
   const prepared = preparedCapabilityAcquisitionSchema.parse(input);
   const { digest, requiredApprovalStatement, ...proposal } = prepared;
-  const lifecycle =
-    lifecycleInput instanceof Date || lifecycleInput === undefined
-      ? {
-          lifecycle: "active" as const,
-          contractDigest: prepared.contractDigest,
-          canonicalRevision: prepared.canonicalRevision,
-        }
-      : capabilityAcquisitionApprovalLifecycleSchema.parse(lifecycleInput);
+  const parsedLifecycle = capabilityAcquisitionApprovalLifecycleSchema.safeParse(lifecycleInput);
+  if (!parsedLifecycle.success) return false;
+  const lifecycle = parsedLifecycle.data;
   return (
     digest === sha256Digest(capabilityAcquisitionProposalSchema.parse(proposal)) &&
     statement === requiredApprovalStatement &&

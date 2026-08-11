@@ -37,7 +37,12 @@ describe("operating context", () => {
     const snapshot = buildLiveCapabilitySnapshot({
       contract,
       providers: contract.ordinaryCapabilities.map((capability) => provider(capability)),
-      activeGrant: { capabilities: [...contract.ordinaryCapabilities] },
+      activeGrant: {
+        grantId: "access_context-test",
+        authenticated: true,
+        active: true,
+        capabilities: [...contract.ordinaryCapabilities],
+      },
       capturedAt: "2026-08-10T18:00:00.000Z",
     });
     const objective = {
@@ -77,7 +82,12 @@ describe("operating context", () => {
     const snapshot = buildLiveCapabilitySnapshot({
       contract,
       providers: contract.ordinaryCapabilities.map((capability) => provider(capability)),
-      activeGrant: { capabilities: [...contract.ordinaryCapabilities] },
+      activeGrant: {
+        grantId: "access_context-test",
+        authenticated: true,
+        active: true,
+        capabilities: [...contract.ordinaryCapabilities],
+      },
       capturedAt: "2026-08-10T18:00:00.000Z",
     });
     const objective = {

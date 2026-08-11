@@ -6,6 +6,7 @@ import {
   prepareCapabilityAcquisition,
   verifyCapabilityAcquisitionApproval,
   type CapabilityAcquisitionProposal,
+  type CapabilityAcquisitionApprovalLifecycle,
   type CapabilityGap,
   type CapabilityGapEvidence,
   type PreparedCapabilityAcquisition,
@@ -168,17 +169,24 @@ export class SelfRepairRuntime {
   readonly #adapter: SelfRepairAdapter;
   readonly #access: SelfRepairAccessAuthorizer;
   readonly #store: SelfRepairStore;
+  readonly #approvalLifecycle: (
+    proposal: PreparedCapabilityAcquisition,
+  ) => CapabilityAcquisitionApprovalLifecycle;
   readonly #now: () => Date;
 
   constructor(options: {
     adapter: SelfRepairAdapter;
     access: SelfRepairAccessAuthorizer;
     store: SelfRepairStore;
+    approvalLifecycle: (
+      proposal: PreparedCapabilityAcquisition,
+    ) => CapabilityAcquisitionApprovalLifecycle;
     now?: () => Date;
   }) {
     this.#adapter = options.adapter;
     this.#access = options.access;
     this.#store = options.store;
+    this.#approvalLifecycle = options.approvalLifecycle;
     this.#now = options.now ?? (() => new Date());
   }
 
@@ -264,7 +272,13 @@ export class SelfRepairRuntime {
       throw new Error("SELF_REPAIR_EVENT_CHAIN_INVALID");
     if (session.state !== "acquisition-awaiting-approval" || session.acquisition === undefined)
       throw new Error("SELF_REPAIR_NOT_AWAITING_ACQUISITION_APPROVAL");
-    if (!verifyCapabilityAcquisitionApproval(session.acquisition, statement, this.#now()))
+    if (
+      !verifyCapabilityAcquisitionApproval(
+        session.acquisition,
+        statement,
+        this.#approvalLifecycle(session.acquisition),
+      )
+    )
       throw new Error("SELF_REPAIR_ACQUISITION_APPROVAL_INVALID");
     if (session.acquisition.objectiveDigest !== session.objective.objectiveDigest)
       throw new Error("SELF_REPAIR_OBJECTIVE_DIGEST_MISMATCH");

@@ -61,6 +61,11 @@ function request() {
       { role: "iris" as const, content: "The review found no blockers." },
     ],
     stateSummary: "Canonical main is synchronized. No workers are active.",
+    controller: {
+      decision: "execute-now" as const,
+      executable: true,
+      activeGrantId: "access_contract-dialogue",
+    },
     model: "qwen3:8b",
   };
 }
@@ -181,6 +186,11 @@ describe("Cycle Five Founder dialogue service", () => {
     const result = await new FounderDialogueService(runtime).reply(request());
 
     expect(result.modelAuthority).toBe("none");
+    expect(result.controller).toEqual({
+      decision: "execute-now",
+      executable: true,
+      activeGrantId: "access_contract-dialogue",
+    });
     expect(runtime.request?.messages).toEqual(
       expect.arrayContaining([
         { role: "user", content: "Review the repository." },
@@ -188,10 +198,19 @@ describe("Cycle Five Founder dialogue service", () => {
       ]),
     );
     expect(runtime.request?.messages.at(-1)?.content).toMatch(/what should we do next/iu);
-    expect(runtime.request?.messages[0]?.content).toContain(
-      "You do not own authority; the IRIS controller may execute the supplied validated decision.",
+    expect(runtime.request?.messages[0]?.content).toMatch(
+      /You do not own authority\. Follow the\s+supplied validated IRIS controller disposition exactly/iu,
     );
     expect(runtime.request?.messages[0]?.content).not.toContain("You have no execution authority");
+    expect(
+      runtime.request?.messages.some(
+        (message) =>
+          message.role === "system" && message.content.includes('"decision":"execute-now"'),
+      ),
+    ).toBe(true);
+    expect(runtime.request?.messages[0]?.content).not.toContain(
+      "Repository mutation, worker activation, publication, deployment, credentials, spending, or provider changes must remain a proposal",
+    );
   });
 
   it("fails closed if a mission proposal omits approval", async () => {

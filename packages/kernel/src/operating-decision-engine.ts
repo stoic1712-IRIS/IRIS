@@ -19,7 +19,7 @@ export const operatingObjectiveSchema = z
     protectedEffects: z.array(capabilitySchema),
     terminal: z
       .object({
-        state: z.enum(["completed", "failed", "cancelled"]),
+        state: z.enum(["completed", "failed", "cancelled", "unsupported", "physically-impossible"]),
         evidence: z.array(z.string().min(1).max(2_000)).min(1).max(100),
       })
       .strict()
@@ -30,6 +30,7 @@ export type OperatingObjective = z.infer<typeof operatingObjectiveSchema>;
 
 const decisionSnapshotSchema = z
   .object({
+    activeGrantId: grantIdSchema.nullable(),
     capabilities: z.array(
       z.looseObject({
         capability: capabilitySchema,
@@ -86,7 +87,13 @@ export const operatingDecisionSchema = z.discriminatedUnion("kind", [
     .object({
       kind: z.literal("report-terminal"),
       objectiveId: objectiveIdSchema,
-      terminalState: z.enum(["completed", "failed", "cancelled"]),
+      terminalState: z.enum([
+        "completed",
+        "failed",
+        "cancelled",
+        "unsupported",
+        "physically-impossible",
+      ]),
       evidence: z.array(z.string().min(1).max(2_000)).min(1).max(100),
     })
     .strict(),
@@ -147,6 +154,13 @@ export function decideOperatingAction(input: {
         gap: entry.gap,
         repairRequired: true,
       });
+    if (entry.status === "unsupported")
+      return operatingDecisionSchema.parse({
+        kind: "report-terminal",
+        objectiveId: objective.objectiveId,
+        terminalState: "unsupported",
+        evidence: entry.gap.evidence,
+      });
     return operatingDecisionSchema.parse({
       kind: "acquire-capability",
       objectiveId: objective.objectiveId,
@@ -155,11 +169,14 @@ export function decideOperatingAction(input: {
     });
   }
 
+  if (snapshot.activeGrantId === null) throw new Error("OPERATING_EXECUTION_ACTIVE_GRANT_REQUIRED");
+  if (input.activeGrantId !== undefined && input.activeGrantId !== snapshot.activeGrantId)
+    throw new Error("OPERATING_EXECUTION_ACTIVE_GRANT_MISMATCH");
   return operatingDecisionSchema.parse({
     kind: "execute-now",
     objectiveId: objective.objectiveId,
     capabilities: orderedRequired.map((entry) => entry.capability),
-    grantId: input.activeGrantId ?? "access_not-required",
+    grantId: snapshot.activeGrantId,
     nextAction: "dispatch-governed-controller",
   });
 }
