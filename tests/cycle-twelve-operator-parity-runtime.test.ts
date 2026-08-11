@@ -3,9 +3,11 @@ import { describe, expect, it, vi } from "vitest";
 import {
   MemoryOperatorSessionStore,
   OperatorParityRuntime,
+  operatorProtectedEffectSchema,
   type OperatorExecutionAdapter,
   type OperatorObjective,
 } from "../packages/development/src/index.js";
+import { loadCompiledOperatingContract } from "../packages/contracts/src/operating-contract.js";
 
 const now = new Date("2026-08-07T14:40:00.000Z");
 
@@ -84,6 +86,13 @@ function runtime(
 }
 
 describe("Cycle Twelve operator parity runtime", () => {
+  it("binds protected operator effects to the canonical operating contract", () => {
+    const contract = loadCompiledOperatingContract(
+      "generated/iris-operating-contract.compiled.json",
+    );
+    expect(operatorProtectedEffectSchema.options).toEqual(contract.protectedEffects);
+  });
+
   it("routes, repairs, independently verifies, and completes with an evidence chain", async () => {
     const adapter = new FixtureOperatorAdapter();
     const result = await runtime(adapter).start(objective());
@@ -100,11 +109,13 @@ describe("Cycle Twelve operator parity runtime", () => {
     const result = await runtime(adapter).start(
       objective({
         operatorId: "operator_cycle-twelve-0002",
-        protectedEffects: ["deployment", "credentials"],
+        protectedEffects: ["deployment.execute", "credential.read-secret"],
       }),
     );
     expect(result.state).toBe("protected-stop");
-    expect(result.protectedApprovalStatement).toContain("deployment, credentials");
+    expect(result.protectedApprovalStatement).toContain(
+      "deployment.execute, credential.read-secret",
+    );
     expect(adapter.calls).toEqual([]);
   });
 
