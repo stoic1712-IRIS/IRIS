@@ -1,0 +1,112 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "canonical-operating-contract-command-center",
+  "objective": "Integrate the merged IRIS Core Canonical Operating Contract into the Founder Command Center so conversation, command, capability, operator, repair, and worker surfaces consume one validated Core contract and one live five-outcome decision controller without removing existing capabilities or weakening protected-effect boundaries.",
+  "issuer": "Founder Cristofer Stoic Arellano",
+  "executor": "Codex",
+  "assigned_role": "producer",
+  "created_at": "2026-08-10T23:45:00.000Z",
+  "status": "in_progress",
+  "risk_class": "R3",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "Founder mandate: complete the Canonical Operating Contract consolidation through independent review, accepted repairs, local verification, non-force publication and pull-request integration of the Core implementation, synchronization of Core main, implementation and verification of the approved Founder Command Center plan in an isolated worktree, non-force publication and pull-request integration of that implementation, synchronization of both main branches, IRIS restart, and live smoke testing of all five operating outcomes. Produce a no-deletion retirement inventory, but do not delete anything. Do not execute Phase 0 graduation, spend money, expose public or LAN ports, disclose credentials, perform destructive operations, administer repositories, force-push, or rewrite history.",
+  "completion_actions": [
+    "edit",
+    "verify",
+    "repair",
+    "stage",
+    "commit",
+    "push_branch",
+    "create_pull_request",
+    "independent_review",
+    "merge",
+    "synchronize"
+  ],
+  "completion_exclusions": [
+    "Deletion or retirement of compatibility paths, historical governance, source documents, tests, evidence, workers, models, providers, approvals, rollback artifacts, or Phase 0 records",
+    "Dependency or lockfile changes, credentials, spending, deployment, public or LAN exposure, provider-resource creation, or repository administration",
+    "Force-push, history rewriting, destructive data operations, Phase 0 execution, approval, or completion claims",
+    "Granting model authority or silently including protected effects in Founder Full access"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "602a84c628f8f4cfb6090f656f2b51b2d08f18eb"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "iris/canonical-operating-contract-command-center",
+      "commit": "9368c3c4588946af8e741e4f5c7f1ee8bcaccf71"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/tasks/canonical-operating-contract-command-center.json",
+    "docs/superpowers/plans/2026-08-10-canonical-operating-contract-command-center.md",
+    "evidence/operating-contract/canonical-operating-contract-command-center-2026-08-10.md",
+    "scripts/operating-contract-runtime.mjs",
+    "scripts/operating-decision-controller.mjs",
+    "scripts/local-gateway.mjs",
+    "scripts/conversation-tools.mjs",
+    "scripts/conversation-operator-tools.mjs",
+    "src/operating-contract-client.ts",
+    "src/live-capability-tree.ts",
+    "src/conversation-client.ts",
+    "src/views/Presence.tsx",
+    "src/voice-interface.ts",
+    "src/capability-tree.ts",
+    "tests/operating-contract-runtime.test.mjs",
+    "tests/operating-decision-controller.test.mjs",
+    "tests/operating-contract-client.test.ts",
+    "tests/live-capability-tree.test.ts",
+    "tests/conversation-client.test.ts",
+    "tests/conversation-tools.test.mjs",
+    "tests/conversation-operator-tools.test.mjs",
+    "tests/local-gateway.test.ts",
+    "tests/presence.test.tsx",
+    "tests/voice-interface.test.ts"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    "package.json",
+    "pnpm-lock.yaml",
+    "credentials/**",
+    "C:/Projects/STOIC-IRIS-source-library/**"
+  ],
+  "permitted_actions": [
+    "Consume only the exact merged Core operating contract at 602a84c628f8f4cfb6090f656f2b51b2d08f18eb through the existing IRIS_ROOT boundary",
+    "Implement the approved Command Center plan in the isolated worktree and preserve every existing route until compatibility tests pass",
+    "Reuse already materialized pinned dependencies without changing versions or lockfiles",
+    "Run focused and full verification with network access disabled",
+    "Publish non-force, independently review the exact patch, merge after checks pass, synchronize canonical main, restart loopback-only IRIS, and smoke-test all five outcomes"
+  ],
+  "prohibited_actions": [
+    "Delete or retire compatibility paths, evidence, history, models, providers, workers, approvals, rollback records, or worktrees",
+    "Reimplement Core authority or allow browser or model output to decide authorization",
+    "Grant protected effects through Full Access or expose raw credentials, tokens, approval codes, source files, or internal paths",
+    "Install dependencies, change the lockfile, spend, deploy, expose non-loopback ports, administer repositories, force-push, rewrite history, or perform destructive data work",
+    "Approve, execute, or claim Phase 0 graduation"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm exec vitest run tests/operating-contract-runtime.test.mjs tests/operating-decision-controller.test.mjs tests/operating-contract-client.test.ts tests/live-capability-tree.test.ts tests/conversation-client.test.ts tests/conversation-tools.test.mjs tests/conversation-operator-tools.test.mjs tests/local-gateway.test.ts tests/presence.test.tsx tests/voice-interface.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "Exact merged Core revision and compiled operating-contract digest",
+    "Fail-closed gateway startup on missing module, altered contract, or digest mismatch",
+    "One Core-owned decision controller produces exactly five outcomes while modelAuthority remains none",
+    "Conversation and Command modes use the same live controller and persistent state survives navigation and restart",
+    "Capability tree is derived from live Core evidence without authored static capability loss",
+    "Full Access remains active-session ordinary-only and protected effects remain separately digest-bound",
+    "Focused and full verification, independent review, PR and merge identifiers, remote equality, restart, five-outcome smoke evidence, rollback, and no-deletion retirement inventory"
+  ],
+  "publisher": "Codex after independent review and fresh verification",
+  "approval_reference": "founder-canonical-operating-contract-consolidation-2026-08-10",
+  "phase0_graduation": false
+}
