@@ -1,0 +1,5 @@
+interface:
+  display_name: "Setup STOIC-IRIS Engineering Skills"
+  short_description: "Bind the engineering skills to the canonical tracker, doc map, and change lifecycle"
+policy:
+  allow_implicit_invocation: false

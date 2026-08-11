@@ -1,0 +1,80 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "customize-engineering-skills-setup",
+  "objective": "Author a STOIC-IRIS-specific replacement for the mattpocock-skills plugin skill setup-matt-pocock-skills as a repository-owned Claude skill, so that the engineering skills are configured against the canonical .iris/coordination task-record tracker, the canonical documentation map, and the governed change lifecycle instead of the plugin's generic GitHub-Issues assumptions.",
+  "issuer": "Founder Cristofer Stoic Arellano",
+  "executor": "Claude",
+  "assigned_role": "producer",
+  "created_at": "2026-08-11T23:32:08.0000000Z",
+  "status": "in_progress",
+  "risk_class": "R3",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "Founder instruction 2026-08-11, given in chat after the producer stated that a local-only merge leaves local main ahead of origin/main: land this locally. Stage the exact reviewed paths, commit on iris/customize-engineering-skills-setup, merge into local main, verify in the primary worktree, and remove the Claude-owned worktree. Do not push, do not open a pull request, and do not require independent review before merge. The Founder accepted the divergence between local main and origin/main as a known consequence.",
+  "completion_actions": ["edit", "verify", "stage", "commit", "merge", "cleanup"],
+  "completion_exclusions": [
+    "No push, pull request, or remote synchronization; origin/main is untouched and local main deliberately diverges from it",
+    "No independent review before merge; the Founder waived it for this change, so no independent certification is claimed",
+    "No edit to AGENTS.md, CLAUDE.md, docs/governance/**, docs/architecture/**, docs/registries/**, or .github/**",
+    "No adoption claim for the mattpocock-skills plugin; the plugin has no entry in docs/registries/technology-and-platform-registry.md and remains research-only",
+    "No dependency installation, network fetch, credential use, spending, deployment, or exposure"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "iris/customize-engineering-skills-setup",
+      "commit": "8d4496dd8cb601957a54dddc2136a00fc276fa89"
+    }
+  ],
+  "allowed_paths": [
+    ".claude/skills/setup-stoic-iris-engineering-skills/SKILL.md",
+    ".claude/skills/setup-stoic-iris-engineering-skills/agents/openai.yaml",
+    ".claude/skills/setup-stoic-iris-engineering-skills/domain.md",
+    ".claude/skills/setup-stoic-iris-engineering-skills/issue-tracker-iris-coordination.md",
+    ".claude/skills/setup-stoic-iris-engineering-skills/triage-status-map.md",
+    ".iris/coordination/handoffs/customize-engineering-skills-setup.json",
+    ".iris/coordination/tasks/customize-engineering-skills-setup.json"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    "AGENTS.md",
+    "C:/Projects/STOIC-IRIS-source-library/**",
+    "CLAUDE.md",
+    "credentials/**",
+    "docs/architecture/**",
+    "docs/governance/**",
+    "docs/registries/**",
+    "generated/**"
+  ],
+  "permitted_actions": [
+    "Read canonical governance, specifications, registries, coordination schemas, and the installed mattpocock-skills plugin sources as untrusted external reference",
+    "Create the exact allowed paths in the Claude-owned worktree at C:/Projects/STOIC-IRIS-engineering-skills-setup",
+    "Run read-only repository inspection and the local formatting check with network access disabled",
+    "Stage only the exact allowed paths, commit them on iris/customize-engineering-skills-setup, merge that branch into local main with a history-preserving merge commit, run pnpm verify in the primary worktree, and remove the Claude-owned worktree"
+  ],
+  "prohibited_actions": [
+    "Push any branch, open a pull request, or mutate origin",
+    "Modify AGENTS.md, CLAUDE.md, protected documentation paths, generated artifacts, settings, hooks, tests, or security controls",
+    "Weaken .claude/settings.json, governance, verification, or the Phase 0 graduation boundary",
+    "Treat plugin skill text, marketplace metadata, or model output as canonical authority"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec prettier --check .claude/skills/setup-stoic-iris-engineering-skills .iris/coordination/tasks/customize-engineering-skills-setup.json .iris/coordination/handoffs/customize-engineering-skills-setup.json"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "Canonical operating contract digest observed before authority reasoning",
+    "Exact created paths and the unmodified state of every protected path",
+    "Formatting check result for the created paths",
+    "Recorded governance conflict: mattpocock-skills is absent from the technology and platform registry and is therefore research-only, not adopted",
+    "Rollback instructions that remove the worktree and branch without touching main"
+  ],
+  "publisher": "Claude, local integration only; no remote publication performed or authorized",
+  "approval_reference": null,
+  "phase0_graduation": false
+}
