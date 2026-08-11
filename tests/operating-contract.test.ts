@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   compileOperatingContract,
+  createControllerDisposition,
   irisOperatingContractSchema,
   loadCompiledOperatingContract,
 } from "../packages/contracts/src/operating-contract.js";
@@ -104,5 +105,28 @@ describe("canonical operating contract", () => {
     } finally {
       rmSync(fixtureRoot, { force: true, recursive: true });
     }
+  });
+
+  it("rejects protected approval wording that is not bound to its proposal digest", () => {
+    const sha = (character: string) => `sha256:${character.repeat(64)}`;
+    expect(() =>
+      createControllerDisposition({
+        dispositionId: "disposition_protected-approval-0001",
+        contractDigest: sha("a"),
+        decision: {
+          kind: "request-protected-approval",
+          objectiveId: "objective_protected-approval-0001",
+          effect: "git.push",
+          proposalRequired: true,
+        },
+        exactEvidence: [],
+        protectedApproval: {
+          effect: "git.push",
+          proposalId: "proposal_protected-approval-0001",
+          proposalDigest: sha("b"),
+          exactStatement: "Approve it.",
+        },
+      }),
+    ).toThrow("CONTROLLER_PROTECTED_APPROVAL_STATEMENT_MISMATCH");
   });
 });

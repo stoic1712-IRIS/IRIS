@@ -91,7 +91,15 @@ export const operatingControllerDecisionSchema = z.discriminatedUnion("kind", [
 ]);
 export type OperatingControllerDecision = z.infer<typeof operatingControllerDecisionSchema>;
 
-const protectedApprovalSchema = z
+export function formatProtectedApprovalStatement(input: {
+  effect: string;
+  proposalId: string;
+  proposalDigest: string;
+}): string {
+  return `I approve ${input.proposalId} at ${input.proposalDigest} for protected effect ${input.effect} exactly as proposed.`;
+}
+
+export const operatingProtectedApprovalSchema = z
   .object({
     effect: operatingCapabilityNameSchema,
     proposalId: z.string().regex(/^proposal_[a-z0-9-]{8,100}$/u),
@@ -115,7 +123,7 @@ export const controllerDispositionSchema = z
           .strict(),
       )
       .max(100),
-    protectedApproval: protectedApprovalSchema.nullable(),
+    protectedApproval: operatingProtectedApprovalSchema.nullable(),
     decisionDigest: sha256DigestSchema,
   })
   .strict()
@@ -132,6 +140,15 @@ export const controllerDispositionSchema = z
           code: "custom",
           path: ["protectedApproval", "effect"],
           message: "CONTROLLER_PROTECTED_APPROVAL_EFFECT_MISMATCH",
+        });
+      else if (
+        disposition.protectedApproval.exactStatement !==
+        formatProtectedApprovalStatement(disposition.protectedApproval)
+      )
+        context.addIssue({
+          code: "custom",
+          path: ["protectedApproval", "exactStatement"],
+          message: "CONTROLLER_PROTECTED_APPROVAL_STATEMENT_MISMATCH",
         });
     } else if (disposition.protectedApproval !== null)
       context.addIssue({

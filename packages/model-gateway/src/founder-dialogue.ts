@@ -2,6 +2,7 @@ import { z } from "zod";
 
 import {
   canonicalIdSchema,
+  operatingProtectedApprovalSchema,
   verifyControllerDisposition,
   type ControllerDisposition,
 } from "@stoic-iris/contracts";
@@ -62,6 +63,7 @@ export const founderControlledDialogueResponseSchema = founderDialogueResponseSc
   .extend({
     controller: controllerProjectionSchema,
     controllerDispositionId: z.string().regex(/^disposition_[a-z0-9-]{8,100}$/u),
+    protectedApproval: operatingProtectedApprovalSchema.nullable(),
   })
   .strict();
 export type FounderControlledDialogueResponse = z.infer<
@@ -188,6 +190,7 @@ export class FounderDialogueService {
       reply: controllerReply(disposition),
       controller: controlled.controller,
       controllerDispositionId: disposition.dispositionId,
+      protectedApproval: disposition.protectedApproval,
     });
   }
 }
