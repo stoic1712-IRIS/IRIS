@@ -7,14 +7,15 @@ import { sha256Schema } from "./contracts.js";
 const timestampSchema = z.iso.datetime();
 
 export const operatorProtectedEffectSchema = z.enum([
-  "credentials",
-  "spending",
-  "deployment",
-  "public-or-lan-exposure",
-  "repository-administration",
-  "force-push-or-history-rewrite",
-  "destructive-data-operation",
-  "phase-zero-graduation",
+  "credential.read-secret",
+  "spending.authorize",
+  "deployment.execute",
+  "network.expose-public-or-lan",
+  "repository.administer",
+  "repository.force-push",
+  "repository.rewrite-history",
+  "data.destroy",
+  "phase-zero.graduate",
 ]);
 
 export const operatorObjectiveSchema = z
