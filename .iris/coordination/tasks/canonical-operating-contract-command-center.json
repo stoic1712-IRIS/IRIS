@@ -32,7 +32,7 @@
     {
       "repository": "stoic1712-IRIS/IRIS",
       "branch": "main",
-      "commit": "602a84c628f8f4cfb6090f656f2b51b2d08f18eb"
+      "commit": "aa5e4313f44aa0bf825a1e76d377d29d121d9c9c"
     },
     {
       "repository": "stoic1712-IRIS/iris-founder-command-center",
@@ -74,7 +74,7 @@
     "C:/Projects/STOIC-IRIS-source-library/**"
   ],
   "permitted_actions": [
-    "Consume only the exact merged Core operating contract at 602a84c628f8f4cfb6090f656f2b51b2d08f18eb through the existing IRIS_ROOT boundary",
+    "Consume only the exact merged Core operating contract at aa5e4313f44aa0bf825a1e76d377d29d121d9c9c through the existing IRIS_ROOT boundary",
     "Implement the approved Command Center plan in the isolated worktree and preserve every existing route until compatibility tests pass",
     "Reuse already materialized pinned dependencies without changing versions or lockfiles",
     "Run focused and full verification with network access disabled",
