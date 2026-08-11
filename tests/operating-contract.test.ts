@@ -57,15 +57,14 @@ describe("canonical operating contract", () => {
     ).toThrow();
   });
 
-  it("binds every declared source to its current bytes", () => {
+  it("binds every declared source to its canonical text content", () => {
     const contract = irisOperatingContractSchema.parse(
       readJson("config/iris-operating-contract.v1.json"),
     );
 
     for (const source of contract.sources) {
-      const digest = `sha256:${createHash("sha256")
-        .update(readFileSync(source.path))
-        .digest("hex")}`;
+      const canonicalText = readFileSync(source.path, "utf8").replace(/\r\n/gu, "\n");
+      const digest = `sha256:${createHash("sha256").update(canonicalText).digest("hex")}`;
       expect(digest, source.path).toBe(source.digest);
     }
   });
@@ -102,6 +101,28 @@ describe("canonical operating contract", () => {
       expect(() => loadCompiledOperatingContract(compiledPath)).toThrow(
         `OPERATING_CONTRACT_SOURCE_DIGEST_MISMATCH:${drifted.path}`,
       );
+    } finally {
+      rmSync(fixtureRoot, { force: true, recursive: true });
+    }
+  });
+
+  it("accepts canonical text sources checked out with Windows line endings", () => {
+    const compiled = loadCompiledOperatingContract(
+      readJson("generated/iris-operating-contract.compiled.json"),
+    );
+    const fixtureRoot = mkdtempSync(join(tmpdir(), "iris-contract-source-crlf-"));
+    try {
+      const compiledPath = join(fixtureRoot, "generated", "iris-operating-contract.compiled.json");
+      mkdirSync(dirname(compiledPath), { recursive: true });
+      writeFileSync(compiledPath, JSON.stringify(compiled), "utf8");
+      for (const source of compiled.sources) {
+        const target = join(fixtureRoot, source.path);
+        mkdirSync(dirname(target), { recursive: true });
+        const canonicalText = readFileSync(source.path, "utf8").replace(/\r\n/gu, "\n");
+        writeFileSync(target, canonicalText.replace(/\n/gu, "\r\n"), "utf8");
+      }
+
+      expect(() => loadCompiledOperatingContract(compiledPath)).not.toThrow();
     } finally {
       rmSync(fixtureRoot, { force: true, recursive: true });
     }
