@@ -1,0 +1,65 @@
+{
+  "schema_version": "1.0.0",
+  "handoff_id": "claude-code-remote-control-operator-channel",
+  "task_id": "claude-code-remote-control-operator-channel",
+  "producer": "Claude",
+  "recipient": "Founder Cristofer Stoic Arellano as independent reviewer",
+  "created_at": "2026-08-12T06:47:05Z",
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "08f69f82846e40d1a428f4238da5f14918965fa1"
+    }
+  ],
+  "result_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "claude/remote-control-v1owqp",
+      "commit": "326cc04a165fb2133eac430a0c78c1cf2c97be74",
+      "patch_digest": null
+    }
+  ],
+  "changed_paths": [
+    ".iris/coordination/tasks/claude-code-remote-control-operator-channel.json",
+    ".iris/coordination/handoffs/claude-code-remote-control-operator-channel.json",
+    "docs/operations/founder-remote-control-channel.md",
+    "docs/registries/technology-and-platform-registry.md",
+    "docs/registries/dependency-attribution-registry.md",
+    "evidence/remote-control/claude-code-remote-control-adoption.md"
+  ],
+  "commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "node -e \"structural validation of the task record against .iris/coordination/task.schema.json\"",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "claude --version",
+      "exit_code": 0
+    }
+  ],
+  "evidence": [
+    "Official documentation code.claude.com/docs/en/remote-control was the sole external source, fetched read-only on 2026-08-12 against Claude Code baseline 2.1.228.",
+    "Both registry rows record identity, version baseline, terms, data flow, security posture, adoption boundaries, and next review, per the registry update rule.",
+    "The operations document pins the workstation-only start rule, the no-new-authority rule, the explicit-invocation and no-checked-in-auto-connect rule, the no-secrets rule, and the Founder-only organization-settings rule, with removal and replacement paths.",
+    "No Remote Control session was started from the cloud research environment; no dependency was installed; no secret was read or stored; no organization setting was viewed or changed.",
+    "The task record is marked approved with approval_reference founder-remote-control-record-approval-2026-08-12, recording the Founder's 2026-08-12 in-session approval.",
+    "Only the six task-allowed paths were changed; staging used exact paths only."
+  ],
+  "limitations": [
+    "pnpm verify did not run: the cloud research environment has no installed workspace dependencies and the task prohibits dependency installation. It must pass on the Founder workstation before merge.",
+    "The contract inspect CLI could not run for the same reason; generated/iris-operating-contract.compiled.json was validated directly at version 1.0.0, digest sha256:9ba317acac51f3592fb16db0f7c1beef49b867eb5759f5803230964753b1327a.",
+    "Prettier formatting of the changed Markdown and JSON could not be machine-checked in this environment; formatting follows the existing file conventions and pnpm verify on the workstation is the authoritative check.",
+    "The hash-bound workstation source library was unreachable from the cloud environment; this task is coordination- and registry-scoped and no foundation-source claim was made.",
+    "This work is uncertified by the producer: Claude cannot independently certify its own material output. The Founder is the independent reviewer."
+  ],
+  "rollback": "Before merge: close any pull request and delete branch claude/remote-control-v1owqp without force. To undo only the implementation, history-preservingly revert commit 326cc04a165fb2133eac430a0c78c1cf2c97be74; to undo the whole objective, also revert 283ce9d53df9a4ab5e535bb6cfd18e1a0ac35183. All changes are additive documentation and coordination records; no service, dependency, credential, provider resource, or deployed state requires cleanup.",
+  "protected_actions_remaining": [
+    "Founder independent review of the registry rows and operations document",
+    "pnpm verify on the Founder workstation",
+    "Pull-request creation, merge to main, provider-equality verification, and branch cleanup under explicit Founder instruction"
+  ],
+  "ready_for_review": true
+}
