@@ -60,6 +60,52 @@ describe("IRIS governed model router", () => {
     });
   });
 
+  it("routes by the capability the controller resolved, before any keyword match", () => {
+    expect(
+      routeIrisModel({
+        utterance: "Tell me about this.",
+        availableModels: allModels,
+        requiredCapabilities: ["repository.inspect"],
+      }),
+    ).toMatchObject({ model: "qwen3-coder:30b", purpose: "agentic-coding" });
+
+    expect(
+      routeIrisModel({
+        utterance: "Research the official release and compare sources.",
+        availableModels: allModels,
+        requiredCapabilities: ["repository.inspect"],
+      }),
+    ).toMatchObject({ purpose: "agentic-coding" });
+
+    expect(
+      routeIrisModel({
+        utterance: "Refactor this TypeScript repository.",
+        availableModels: allModels,
+        requiredCapabilities: ["research.search"],
+      }),
+    ).toMatchObject({ purpose: "research-review" });
+  });
+
+  it("keeps an explicit Founder model override above a resolved capability", () => {
+    expect(
+      routeIrisModel({
+        utterance: "Use GPT OSS for this.",
+        availableModels: allModels,
+        requiredCapabilities: ["repository.inspect"],
+      }),
+    ).toMatchObject({ model: "gpt-oss:20b", explicitOverride: true });
+  });
+
+  it("falls back to keyword routing when no capability was resolved", () => {
+    expect(
+      routeIrisModel({
+        utterance: "Refactor this TypeScript repository and run the test suite.",
+        availableModels: allModels,
+        requiredCapabilities: [],
+      }),
+    ).toMatchObject({ purpose: "agentic-coding" });
+  });
+
   // Objective chain seam corpus. The Founder Command Center asserts the same
   // objectives reach a repository tool intent and the repository.inspect
   // capability in tests/objective-chain-seam.test.mjs. Core owns the routing

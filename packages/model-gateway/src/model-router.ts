@@ -34,6 +34,29 @@ export interface ModelRoutingRequest {
   utterance: string;
   availableModels: ReadonlySet<string>;
   hasImage?: boolean;
+  requiredCapabilities?: readonly string[];
+}
+
+const capabilityPurposes: readonly (readonly [string, ModelRoutePurpose])[] = [
+  ["repository.inspect", "agentic-coding"],
+  ["repository.edit-bounded", "agentic-coding"],
+  ["repository.commit-candidate", "agentic-coding"],
+  ["repository.address-review", "agentic-coding"],
+  ["repair.execute-bounded", "agentic-coding"],
+  ["verification.run", "agentic-coding"],
+  ["terminal.run-approved", "agentic-coding"],
+  ["research.search", "research-review"],
+  ["browser.inspect", "research-review"],
+];
+
+function resolvedCapabilityPurpose(
+  requiredCapabilities: readonly string[] | undefined,
+): ModelRoutePurpose | null {
+  if (requiredCapabilities === undefined || requiredCapabilities.length === 0) return null;
+  const required = new Set(requiredCapabilities);
+  for (const [capability, purpose] of capabilityPurposes)
+    if (required.has(capability)) return purpose;
+  return null;
 }
 
 const overridePatterns: readonly (readonly [RegExp, IrisModelName])[] = [
@@ -88,6 +111,14 @@ function intendedRoute(request: ModelRoutingRequest): {
       model: "qwen3.6:27b",
       purpose: "vision",
       reason: "The request includes visual input and requires the multimodal model.",
+      explicitOverride: false,
+    };
+  const capabilityPurpose = resolvedCapabilityPurpose(request.requiredCapabilities);
+  if (capabilityPurpose !== null)
+    return {
+      model: capabilityPurpose === "agentic-coding" ? "qwen3-coder:30b" : "gpt-oss:20b",
+      purpose: capabilityPurpose,
+      reason: "The controller already resolved the capability this objective requires.",
       explicitOverride: false,
     };
   if (codingPattern.test(request.utterance))
