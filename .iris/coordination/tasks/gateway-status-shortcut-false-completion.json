@@ -37,7 +37,9 @@
     "scripts/local-gateway.mjs",
     "tests/local-gateway.test.ts",
     "src/conversation-client.ts",
-    "tests/conversation-client.test.ts"
+    "tests/conversation-client.test.ts",
+    "scripts/operating-contract-runtime.mjs",
+    "tests/operating-decision-controller.test.mjs"
   ],
   "excluded_paths": [
     ".github/**",
@@ -61,7 +63,8 @@
     "Amend tests/local-gateway.test.ts around line 4177, which pins the defect by asserting that the structured four-part request for status, active model, capabilities, and restrictions yields decision report-terminal with zero model invocations; this is the Command Center counterpart of the Core test already inverted at tests/operating-decision-engine.test.ts, and amending it removes an assertion of the defect rather than weakening a guard. Justify it explicitly in the handoff",
     "Add regression tests in tests/local-gateway.test.ts covering at minimum: a structured multi-item objective containing the token status does not short-circuit; a bare status request still returns a useful answer; no shortcut path emits completed; and an emergency stop still both revokes access and returns a Founder-visible acknowledgement",
     "Report any change that would require a path outside allowed_paths rather than silently expanding scope",
-    "AMENDMENT 2026-08-12, authorized by explicit Founder instruction in session after Claude reported the conflict under the preceding action: src/conversation-client.ts and tests/conversation-client.test.ts are added to allowed_paths for a strictly additive change. The browser reply contract required controller.decision to be one of the five canonical decision outcomes and controllerDispositionId to be a non-null disposition identifier on every conversation reply, so a turn answered before objective construction could not be represented truthfully. Permitted change: add one further controller.decision value meaning no controller decision was made, and make controllerDispositionId nullable. The five canonical decision outcomes, the operating contract, its digest, and protected-effect boundaries are unchanged; no guard, fail-closed path, or existing assertion is weakened"
+    "AMENDMENT 2026-08-12, authorized by explicit Founder instruction in session after Claude reported the conflict under the preceding action: src/conversation-client.ts and tests/conversation-client.test.ts are added to allowed_paths for a strictly additive change. The browser reply contract required controller.decision to be one of the five canonical decision outcomes and controllerDispositionId to be a non-null disposition identifier on every conversation reply, so a turn answered before objective construction could not be represented truthfully. Permitted change: add one further controller.decision value meaning no controller decision was made, and make controllerDispositionId nullable. The five canonical decision outcomes, the operating contract, its digest, and protected-effect boundaries are unchanged; no guard, fail-closed path, or existing assertion is weakened",
+    "AMENDMENT TWO, 2026-08-12, RETROSPECTIVE, authorized by explicit Founder instruction in session after the independent review raised it as finding 4: scripts/operating-contract-runtime.mjs and tests/operating-decision-controller.test.mjs are added to allowed_paths. Unlike amendment one, which preceded the change it authorized, this ratifies work already delivered and merged; it is authorization after the fact and is recorded as such, not as prior approval. Both paths were reached through the Founder instruction to rebind the stale kernel module-tree digest at Command Center be79a7d, and correcting that pin unmasked a stale completed fixture in the controller suite that had never run while the contract failed to load. The reviewer judged both edits benign, the test file a net strengthening, and objected to authority provenance rather than to the code. This supplies that provenance so the decision is reproducible from the record"
   ],
   "prohibited_actions": [
     "Delete or weaken an existing test, guard, fail-closed path, or governance control to make the repair pass",
