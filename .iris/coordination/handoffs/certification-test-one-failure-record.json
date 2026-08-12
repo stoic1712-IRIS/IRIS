@@ -1,0 +1,75 @@
+{
+  "schema_version": "1.0.0",
+  "handoff_id": "certification-test-one-failure-record",
+  "task_id": "certification-test-one-failure-record",
+  "producer": "Claude",
+  "recipient": "Codex",
+  "created_at": "2026-08-12T00:44:06.0000000Z",
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "iris/certification-test-one-failure-record",
+      "commit": "33d928256e78b5e753d7ffd7699d6dbc4a7e520c"
+    }
+  ],
+  "result_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "iris/certification-test-one-failure-record",
+      "commit": null,
+      "patch_digest": "sha256:9ce0ca603d237ae5b9d4983a668fd37d334522fd72904d7d915a15384e1d922a"
+    }
+  ],
+  "changed_paths": [
+    ".iris/coordination/handoffs/certification-test-one-failure-record.json",
+    ".iris/coordination/tasks/certification-test-one-failure-record.json",
+    ".iris/coordination/tasks/gateway-status-shortcut-false-completion.json",
+    "evidence/cycle-twelve/certification-test-one-2026-08-11.md"
+  ],
+  "commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "node scripts/dev/iris-dev.mjs github preflight --repo core --json",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "node scripts/workflow/iris-workflow.mjs status --json",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "node node_modules/prettier/bin/prettier.cjs --config prettier.config.mjs --check evidence/cycle-twelve/certification-test-one-2026-08-11.md .iris/coordination/tasks/certification-test-one-failure-record.json .iris/coordination/tasks/gateway-status-shortcut-false-completion.json",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "node <scratchpad>/check-task-record.mjs .iris/coordination/task.schema.json <each new task record>",
+      "exit_code": 0
+    }
+  ],
+  "evidence": [
+    "Preconditions before the run were verified, not assumed: preflight ok true with local, origin, and provider main all 33d928256e78b5e753d7ffd7699d6dbc4a7e520c and equal true; both working trees clean; gateway, voice, search, and Ollama ready; gateway health state ready",
+    "Test One graded zero of seven required items reported; the single reported fact, the operating contract digest, is correct and matches iris-dev contract inspect",
+    "Root cause traced to two exact sites: scripts/local-gateway.mjs:3296 keyword classification matching the token status, and scripts/local-gateway.mjs:3303 returning terminal state completed; packages/kernel/src/operating-decision-engine.ts:66 then short-circuits to report-terminal before any capability or model evaluation",
+    "Misclassification reproduced independently of the runtime by evaluating the gateway regular expression directly against the submitted objective, returning true on the token status",
+    "Material finding recorded: a deterministic shortcut declared terminal state completed for an objective whose seven stated requirements were never addressed, contradicting Core Reasoning Principle 12, Completion Integrity",
+    "Both new task records conform to .iris/coordination/task.schema.json; formatting passes for all created paths under the repository-pinned Prettier configuration",
+    "The failed run is recorded as permanent; no attempt was made to retry, soften, or reclassify it"
+  ],
+  "limitations": [
+    "This is producer-authored evidence of a run the producer also designed the objective for; the submitted wording contained the trigger token, which determined which run failed but not whether the defect exists",
+    "Only the gateway classification path was traced. The remaining deterministic shortcuts in scripts/local-gateway.mjs were not surveyed for the same false-completion pattern; that survey is required evidence in the repair task record",
+    "IRIS's reasoning capability was not exercised by this run and is therefore neither demonstrated nor disproved",
+    "The repair task record is status draft with executor unassigned; it grants no authority until the Founder assigns and approves it",
+    "No independent review has been performed on this record; the pull request is deliberately left open for it"
+  ],
+  "rollback": "The change is additive documentation on a feature branch with no merge. To discard: close the pull request, then run `git worktree remove C:/Projects/STOIC-IRIS-cert-test-one-record` and `git push origin --delete iris/certification-test-one-failure-record` from C:/Projects/STOIC-IRIS. Canonical main is untouched at 33d928256e78b5e753d7ffd7699d6dbc4a7e520c. If the branch is later merged, revert with `git revert -m 1 <merge-commit>`, which preserves history.",
+  "protected_actions_remaining": [
+    "Independent Codex review of this record at the exact reviewed revision",
+    "Merge of the pull request into main, which this task record explicitly excludes",
+    "Founder assignment, bounding, and approval of the gateway repair task record before any repair work begins",
+    "A fresh Test One attempt from a new exact proposal after the repair is verified"
+  ],
+  "ready_for_review": true
+}
