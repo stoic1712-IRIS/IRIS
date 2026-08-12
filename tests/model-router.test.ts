@@ -60,6 +60,38 @@ describe("IRIS governed model router", () => {
     });
   });
 
+  // Objective chain seam corpus. The Founder Command Center asserts the same
+  // objectives reach a repository tool intent and the repository.inspect
+  // capability in tests/objective-chain-seam.test.mjs. Core owns the routing
+  // layer, which the Command Center tests cannot exercise because their gateway
+  // loads a stubbed router from a Core fixture. Keep the two corpora in step.
+  it("routes the objective chain seam corpus to the coding role", () => {
+    for (const utterance of [
+      `Objective: Canonical inspection and truthful status report of the IRIS Core repository. Read-only.
+
+Report exactly these seven items for the Git repository at "C:\\Projects\\STOIC-IRIS".
+
+1. Current branch
+2. Exact HEAD revision, full 40-character SHA
+
+Constraints:
+- Cite the exact source for each fact: the command run, the file path, or the endpoint.`,
+      `Inspect the Git repository at C:\\Projects\\STOIC-IRIS:
+1. Current branch
+2. Whether the working tree is clean`,
+      "Read the Git repository at C:\\Projects\\STOIC-IRIS. Report the current branch and the exact HEAD revision, and cite the exact source for each fact.",
+      `Objective: verify and audit the repository state. Read-only.
+
+Inspect the Git repository at "C:\\Projects\\STOIC-IRIS" and report the branch and commit.
+
+Constraints:
+- Every finding must cite its source and supporting evidence.`,
+    ])
+      expect(routeIrisModel({ utterance, availableModels: allModels })).toMatchObject({
+        purpose: "agentic-coding",
+      });
+  });
+
   it("routes Git inspection vocabulary to the coding role even when evidence words appear", () => {
     for (const utterance of [
       'Report the current branch, HEAD revision, and whether the working tree is clean for "C:\\Projects\\STOIC-IRIS". Cite the exact source for each fact.',
