@@ -1,0 +1,75 @@
+name: Verify
+run-name: Verify ${{ github.event_name }} on ${{ github.ref_name }}
+
+# Pre-flight only. This runs the environment-independent portion of `pnpm verify` so a pull
+# request cannot silently skip verification. It is deliberately NOT the authoritative full
+# check: two test files need the sibling Founder Command Center workspace or the GitHub CLI,
+# and are excluded below. A workstation `pnpm verify` remains the authoritative run.
+#
+# Its most important job is `contract:compile`, which catches an edited digest-bound
+# operating-contract source. That failure took the Founder runtime down in commit 52b0c41 and
+# was reproduced once since, both times because a Markdown-only change looked like it did not
+# need verification.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out the exact revision
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      # Pinned explicitly rather than read from the engines range, so the CI runtime matches the
+      # workstation evidence exactly. Keep in sync with the engines.node pin in package.json.
+      - name: Use the repository-pinned Node version
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.19.0
+
+      - name: Activate the repository-pinned pnpm
+        run: corepack enable
+
+      - name: Materialize dependencies without changing the lockfile
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Formatting
+        run: pnpm format:check
+
+      - name: Operating contract source digests and compiled output
+        run: pnpm contract:compile
+
+      - name: Build
+        run: pnpm build
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Type check
+        run: pnpm typecheck
+
+      # Excludes the two environment-dependent files. tests/founder-windows-startup.test.ts
+      # requires the canonical Founder Command Center workspace; tests/iris-dev-github.test.ts
+      # requires the GitHub CLI and network preconditions. Both fail identically at clean main
+      # in a bare container, so excluding them hides no regression introduced by a change.
+      - name: Tests, excluding environment-dependent files
+        run: >-
+          pnpm exec vitest run
+          --exclude tests/founder-windows-startup.test.ts
+          --exclude tests/iris-dev-github.test.ts
+
+      - name: Repository diagnostics
+        run: pnpm diagnostics
