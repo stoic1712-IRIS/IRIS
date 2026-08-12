@@ -1,0 +1,82 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "gateway-status-shortcut-false-completion",
+  "objective": "Repair the Founder Command Center gateway defect that collapses a structured multi-requirement objective into a canned deterministic report and marks it terminal state completed. A keyword shortcut must not claim completion for requirements it never addressed, and an ordinary objective containing a common word such as status, health, or active workers must reach normal objective construction, capability evaluation, and model routing.",
+  "issuer": "Founder Cristofer Stoic Arellano",
+  "executor": "unassigned",
+  "assigned_role": "producer",
+  "created_at": "2026-08-12T00:44:06.0000000Z",
+  "status": "draft",
+  "risk_class": "R2",
+  "authorization_mode": "single_action",
+  "completion_mandate_text": null,
+  "completion_actions": [],
+  "completion_exclusions": [
+    "No change to the seven certification tests, their pass conditions, or the recorded Test One failure",
+    "No change to the canonical operating contract, its digest, the five decision outcomes, or protected-effect boundaries",
+    "No weakening of fail-closed behavior, secret filtering, approval consumption, or protected-path enforcement",
+    "No Phase 0 graduation execution, approval, or completion claim"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "33d928256e78b5e753d7ffd7699d6dbc4a7e520c"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "main",
+      "commit": "dd098893c66c1aba4297fca4fbb85ee4feb44a92"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/tasks/gateway-status-shortcut-false-completion.json",
+    "scripts/local-gateway.mjs",
+    "tests/local-gateway.test.ts"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    "config/iris-operating-contract.v1.json",
+    "docs/governance/**",
+    "docs/operations/cycle-twelve-founder-certification-program.md",
+    "evidence/**",
+    "generated/**",
+    "packages/kernel/src/operating-decision-engine.ts"
+  ],
+  "permitted_actions": [
+    "Narrow the deterministic shortcut classification in scripts/local-gateway.mjs so it fires only for a genuine short unstructured status, capability, or emergency-stop request, and not for a structured objective that carries enumerated requirements or explicit constraints",
+    "Ensure no deterministic shortcut returns terminal state completed for an objective whose stated requirements were not addressed",
+    "Survey the remaining deterministic shortcut paths in the same file for the same false-completion pattern and report every instance found",
+    "Add regression tests in tests/local-gateway.test.ts covering at minimum: a structured multi-item objective containing the token status must not short-circuit; a bare status request must still short-circuit; and no shortcut path may emit completed for unaddressed requirements"
+  ],
+  "prohibited_actions": [
+    "Delete or weaken an existing test, guard, fail-closed path, or governance control to make the repair pass",
+    "Change the certification program, the recorded Test One failure evidence, or the canonical operating contract",
+    "Force-push, rewrite history, bypass branch protection, or administer repositories",
+    "Claim the repair certifies Test One; the repair only permits a fresh Test One attempt from a new exact proposal"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm exec vitest run tests/local-gateway.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm verify"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "Exact reproduction of the pre-repair misclassification and its absence after the repair",
+    "A regression test that fails against the pre-repair gateway and passes after it",
+    "A survey result naming every remaining deterministic shortcut and whether it can emit completed without addressing stated requirements",
+    "Confirmation that the canonical operating contract digest, the five decision outcomes, and protected-effect boundaries are unchanged",
+    "Focused and full verification results for both repositories, exact changed paths, and rollback instructions"
+  ],
+  "publisher": null,
+  "approval_reference": null,
+  "phase0_graduation": false
+}

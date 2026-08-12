@@ -1,0 +1,78 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "certification-test-one-failure-record",
+  "objective": "Record the first Cycle Twelve Certification Test One run as permanent held-out evidence with its independent audit, root cause, and material completion-integrity finding, and open the bounded repair task record for the Founder Command Center gateway defect that caused it. Documentation only; the repair itself is out of scope.",
+  "issuer": "Founder Cristofer Stoic Arellano",
+  "executor": "Claude",
+  "assigned_role": "producer",
+  "created_at": "2026-08-12T00:44:06.0000000Z",
+  "status": "in_progress",
+  "risk_class": "R3",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "Founder instruction 2026-08-11, given in chat after the producer proposed recording the failure as evidence and opening a repair task record and stated that the repair warrants independent Codex review: do both. Author the evidence and task records, verify, stage the exact paths, commit, push the branch non-force, and open a draft pull request. Leave the pull request for independent Codex review; do not merge.",
+  "completion_actions": ["edit", "verify", "stage", "commit", "push_branch", "create_pull_request"],
+  "completion_exclusions": [
+    "No merge; the pull request stays open for independent Codex review at the exact reviewed revision",
+    "No implementation of the gateway repair; this record authorizes documentation only",
+    "No change to the certification program, its pass conditions, the canonical operating contract, or any protected documentation path",
+    "No claim that Test One passed, was retried, or was certified"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "iris/certification-test-one-failure-record",
+      "commit": "33d928256e78b5e753d7ffd7699d6dbc4a7e520c"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/handoffs/certification-test-one-failure-record.json",
+    ".iris/coordination/tasks/certification-test-one-failure-record.json",
+    ".iris/coordination/tasks/gateway-status-shortcut-false-completion.json",
+    "evidence/cycle-twelve/certification-test-one-2026-08-11.md"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "C:/Projects/STOIC-IRIS-source-library/**",
+    "credentials/**",
+    "docs/architecture/**",
+    "docs/governance/**",
+    "docs/operations/**",
+    "docs/registries/**",
+    "generated/**"
+  ],
+  "permitted_actions": [
+    "Read the certification program, canonical governance, both repository states, the live runtime status, and the Command Center gateway source as reference",
+    "Create only the exact allowed paths in the Claude-owned worktree at C:/Projects/STOIC-IRIS-cert-test-one-record",
+    "Run local formatting and schema conformance checks with network access disabled, and full verification in the primary worktree",
+    "Stage only the exact allowed paths, commit them, push the branch non-force, and open one draft pull request"
+  ],
+  "prohibited_actions": [
+    "Merge the pull request, bypass review, or synchronize main under this record",
+    "Modify the gateway, the decision engine, tests, governance, generated artifacts, or any protected path",
+    "Alter or soften the recorded failure result, or present the repair as satisfying Test One",
+    "Force-push, rewrite history, administer repositories, or disclose credentials"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec prettier --check evidence/cycle-twelve/certification-test-one-2026-08-11.md .iris/coordination/tasks/certification-test-one-failure-record.json .iris/coordination/tasks/gateway-status-shortcut-false-completion.json .iris/coordination/handoffs/certification-test-one-failure-record.json"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "Preconditions verified before the run: preflight equality, clean trees, provider readiness, gateway health",
+    "Independent audit values for all seven required items and the graded result",
+    "Exact root-cause file and line references with a reproduction independent of the runtime",
+    "The completion-integrity finding stated against the named canonical principle",
+    "Both task records conform to .iris/coordination/task.schema.json",
+    "Formatting and full verification results, exact changed paths, and rollback instructions"
+  ],
+  "publisher": "Claude for branch push and draft pull request only; merge authority not granted",
+  "approval_reference": null,
+  "phase0_graduation": false
+}
