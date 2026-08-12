@@ -76,10 +76,11 @@
     "The CI-equivalent test command is fully green: 63 files, 524 passed, 1 pre-existing skip, exit 0.",
     "The compiled operating contract digest is unchanged at sha256:9ba317acac51f3592fb16db0f7c1beef49b867eb5759f5803230964753b1327a, confirming no digest-bound source was touched by this task.",
     "The existing wave-10-resource-proof.yml workflow is unmodified.",
-    "pnpm diagnostics was confirmed standalone at exit 0, because it never executes inside a pnpm verify run that fails at the test step."
+    "pnpm diagnostics was confirmed standalone at exit 0, because it never executes inside a pnpm verify run that fails at the test step.",
+    "The workflow executed for real on GitHub: run 31596726784 on PR #109 at head 9d02f053aa22e260aa71c391b1687b1e03ab9fb1 concluded success in 88 seconds with all twelve steps green, including the contract source digest step that would have caught both recorded outages."
   ],
   "limitations": [
-    "The workflow has never executed on GitHub. Its first real run occurs when this branch's pull request updates; any syntax or runner-environment defect surfaces there and is not yet proven.",
+    "Only the pull_request trigger has executed. The push-to-main trigger fires for the first time at merge and is not yet proven.",
     "$CLAUDE_PROJECT_DIR expansion in the hook command is unverified on the Founder's Windows workstation. The operations document records the repository-relative fallback if it does not expand.",
     "The pre-flight excludes tests/founder-windows-startup.test.ts and tests/iris-dev-github.test.ts, which require the sibling Command Center workspace and the GitHub CLI. Both fail identically at clean main in the same container, so no regression is hidden, but CI is therefore not full verification and a workstation pnpm verify is still required before merge.",
     "Making those two tests environment-independent would let CI run the complete suite. That is a separate objective and was not authorized here.",

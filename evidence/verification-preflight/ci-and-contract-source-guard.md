@@ -69,9 +69,27 @@ Both were executed against clean `main` @ `08f69f82846e40d1a428f4238da5f14918965
 - No dependency was added, removed, or updated.
 - The existing graduation-resource workflow was not modified.
 
-## Limitations
+## First live workflow execution
 
-- The workflow has not executed on GitHub. Its first real run happens when this branch's pull request updates. Any syntax or runner-environment defect will surface there and is not yet proven.
+Run `31596726784`, triggered by `pull_request` on PR #109 at head `9d02f053aa22e260aa71c391b1687b1e03ab9fb1`, **concluded `success`** in 88 seconds (12:30:05Z to 12:31:33Z). Every step passed:
+
+| # | Step | Result |
+| - | --- | --- |
+| 2 | Check out the exact revision | success |
+| 3 | Use the repository-pinned Node version | success |
+| 4 | Activate the repository-pinned pnpm | success |
+| 5 | Materialize dependencies without changing the lockfile | success |
+| 6 | Formatting | success |
+| 7 | Operating contract source digests and compiled output | success |
+| 8 | Build | success |
+| 9 | Lint | success |
+| 10 | Type check | success |
+| 11 | Tests, excluding environment-dependent files | success |
+| 12 | Repository diagnostics | success |
+
+Step 7 is the control that would have caught both recorded outages. The workflow is therefore proven end to end on GitHub's runner, not only reasoned about.
+
+## Limitations
 - `$CLAUDE_PROJECT_DIR` expansion in the hook command is unverified on the Founder's Windows workstation. The operations document records the repository-relative fallback.
 - GitHub Actions consumption for this workflow is assumed free under public-repository terms, consistent with the repository's Founder-approved public visibility. No billing state was inspected.
 - The guard covers Claude Code tool calls only. It does not intercept edits made by Codex, a shell command, an editor, or any other path. CI is the control that catches those.
