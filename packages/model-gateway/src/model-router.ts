@@ -50,7 +50,7 @@ const overridePatterns: readonly (readonly [RegExp, IrisModelName])[] = [
 ];
 
 const codingPattern =
-  /\b(code|coding|program|repository|repo|refactor|debug|bug|typescript|javascript|python|rust|function|class|api|database|sql|test suite|pull request|implementation|website|frontend|backend|compile|build error)\b/iu;
+  /\b(code|coding|program|repository|repo|refactor|debug|bug|typescript|javascript|python|rust|function|class|api|database|sql|test suite|pull request|implementation|website|frontend|backend|compile|build error|git|worktree|working tree|branch|commit|revision|head sha|checkout|rebase|merge conflict|untracked|staged)\b/iu;
 const researchPattern =
   /\b(research|sources?|citations?|evidence|fact[- ]?check|verify|audit|review|compare|comparison|investigate)\b/iu;
 const reasoningPattern =
