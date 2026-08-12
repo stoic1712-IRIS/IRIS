@@ -5,7 +5,10 @@ import {
   type LiveCapabilityProviderEvidence,
 } from "../packages/capabilities/src/live-capability-snapshot.js";
 import { loadCompiledOperatingContract } from "../packages/contracts/src/operating-contract.js";
-import { decideOperatingAction } from "../packages/kernel/src/operating-decision-engine.js";
+import {
+  decideOperatingAction,
+  type OperatingObjective,
+} from "../packages/kernel/src/operating-decision-engine.js";
 
 const contract = loadCompiledOperatingContract("generated/iris-operating-contract.compiled.json");
 
@@ -157,21 +160,58 @@ describe("operating decision engine", () => {
     });
   });
 
-  it("reports a terminal objective before considering any requested effect", () => {
+  // Previously asserted that a caller-supplied `completed` was reported verbatim. That behavior
+  // was the defect behind the Certification Test One false completion, so the assertion is
+  // inverted rather than removed: the guard it now protects is stronger than the one it replaced.
+  it("refuses a caller-asserted completion instead of reporting it", () => {
+    expect(() =>
+      decideOperatingAction({
+        objective: {
+          objectiveId,
+          requiredCapabilities: [capability],
+          protectedEffects: [protectedEffect(0)],
+          terminal: {
+            state: "completed",
+            evidence: ["evidence:verified"],
+          } as unknown as OperatingObjective["terminal"],
+        },
+        snapshot: snapshot(),
+      }),
+    ).toThrow("OPERATING_OBJECTIVE_TERMINAL_COMPLETION_NOT_ASSERTABLE");
+  });
+
+  it("refuses an asserted completion even when every requirement is unaddressed", () => {
+    expect(() =>
+      decideOperatingAction({
+        objective: {
+          objectiveId,
+          requiredCapabilities: [],
+          protectedEffects: [],
+          terminal: {
+            state: "completed",
+            evidence: ["Canonical operating contract is loaded."],
+          } as unknown as OperatingObjective["terminal"],
+        },
+        snapshot: snapshot(),
+      }),
+    ).toThrow("OPERATING_OBJECTIVE_TERMINAL_COMPLETION_NOT_ASSERTABLE");
+  });
+
+  it("reports a caller-asserted non-success terminal before considering any requested effect", () => {
     expect(
       decideOperatingAction({
         objective: {
           objectiveId,
           requiredCapabilities: [capability],
           protectedEffects: [protectedEffect(0)],
-          terminal: { state: "completed", evidence: ["evidence:verified"] },
+          terminal: { state: "cancelled", evidence: ["evidence:verified"] },
         },
         snapshot: snapshot(),
       }),
     ).toEqual({
       kind: "report-terminal",
       objectiveId,
-      terminalState: "completed",
+      terminalState: "cancelled",
       evidence: ["evidence:verified"],
     });
   });

@@ -3,10 +3,10 @@
   "task_id": "core-terminal-completion-verification",
   "objective": "Close the false-completion class at its source in IRIS Core rather than at one caller. packages/kernel/src/operating-decision-engine.ts line 66 short-circuits to report-terminal on a caller-supplied objective.terminal field, and no code in Core verifies that claim; the sibling task gateway-status-shortcut-false-completion explicitly excludes this file, so no record currently covers it. Core therefore delegates the determination of completion to an untrusted caller, which is how Certification Test One reported state completed for seven requirements it never addressed. Establish and enforce the invariant that IRIS Core never emits terminal state completed on the strength of an unverified caller assertion. Core-derived terminal outcomes, such as the unsupported result at line 105 that draws its evidence from the capability snapshot, remain legitimate and must be preserved. The producer must choose and state an exact design satisfying the invariant, survey every terminal emission site in Core, and record the chosen design and its rationale for independent review.",
   "issuer": "Founder Cristofer Stoic Arellano through Claude",
-  "executor": "unassigned",
+  "executor": "Claude",
   "assigned_role": "producer",
   "created_at": "2026-08-12T06:58:38Z",
-  "status": "ready_for_review",
+  "status": "approved",
   "risk_class": "R3",
   "authorization_mode": "single_action",
   "completion_mandate_text": null,
@@ -92,7 +92,7 @@
     "An explicit interaction statement describing how this repair composes with gateway-status-shortcut-false-completion and confirming neither task weakens the other",
     "Focused and full verification results, exact changed paths, limitations, and rollback instructions"
   ],
-  "publisher": null,
-  "approval_reference": null,
+  "publisher": "Claude on branch claude/remote-control-v1owqp with the Founder as independent reviewer",
+  "approval_reference": "founder-core-terminal-repair-approval-2026-08-12",
   "phase0_graduation": false
 }
