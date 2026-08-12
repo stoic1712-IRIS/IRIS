@@ -3,10 +3,10 @@
   "task_id": "gateway-status-shortcut-false-completion",
   "objective": "Repair the Founder Command Center gateway defect that collapses a structured multi-requirement objective into a canned deterministic report and marks it terminal state completed. RE-SCOPED AND SURVEYED 2026-08-12 against Command Center dd9b222. Verified: scripts/local-gateway.mjs has exactly one deterministic shortcut return, at lines 3311 to 3324, serving three triggers — showCapabilities, showStatus, and emergencyStop — and all three emit terminal state completed. IRIS Core now rejects any caller-asserted completed with OPERATING_OBJECTIVE_TERMINAL_COMPLETION_NOT_ASSERTABLE, so all three break once that repair merges, not only status. The emergency-stop effect itself survives, because deleteOperatorEntry and deleteDesktopControlEntry run at lines 3608 to 3611 before objective construction; what breaks is the Founder's acknowledgement, which is a real hazard on a safety path because the operator cannot tell whether the stop took effect. Root design flaw: the shortcut stuffs canned text into terminal.evidence and controllerReply at line 3417 renders it back, so completion state is being used as a transport for presentation. The repair must stop every shortcut from emitting completed, keep the emergency-stop acknowledgement working, narrow the classification so a structured objective never short-circuits, and let a genuine bare status or capability request either reach normal objective construction or be rendered locally. The existing rendering path at line 3617 already carries show-status, show-capabilities, and emergency-stop intents and is the natural seam. PRECONDITION: produce and verify against a Core revision containing the terminal repair. Coordination records and evidence live in IRIS Core; gateway sources and tests live in the Command Center.",
   "issuer": "Founder Cristofer Stoic Arellano",
-  "executor": "unassigned",
+  "executor": "Claude",
   "assigned_role": "producer",
   "created_at": "2026-08-12T00:44:06.0000000Z",
-  "status": "draft",
+  "status": "approved",
   "risk_class": "R2",
   "authorization_mode": "single_action",
   "completion_mandate_text": null,
@@ -93,7 +93,7 @@
     "Confirmation that the canonical operating contract digest, the five decision outcomes, and protected-effect boundaries are unchanged",
     "Focused and full verification results for both repositories, exact changed paths, limitations, and rollback instructions"
   ],
-  "publisher": null,
-  "approval_reference": null,
+  "publisher": "Claude, with the Founder as independent reviewer",
+  "approval_reference": "founder-gateway-repair-approval-2026-08-12",
   "phase0_graduation": false
 }
