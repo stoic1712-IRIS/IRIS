@@ -1,0 +1,94 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "verification-preflight-ci-and-contract-source-guard",
+  "objective": "Make skipped verification impossible to ship silently, and make contract-bound source coupling visible at edit time. Two outages in two days share one cause: a Markdown-only change to a digest-bound operating-contract source was delivered without running pnpm verify, which runs contract:compile and checks exactly that binding. Commit 52b0c41 records the first, where the Founder runtime would not start; the remote-control delivery reproduced it. Nothing currently verifies a pull request, because the only workflow is a manual graduation-resource job. Add a provider-side pre-flight that runs the environment-independent portion of the verification suite on every pull request and on push to main, with read-only permissions and no secrets. Add a repository-owned Claude Code PreToolUse guard that reads the bound source list from config/iris-operating-contract.v1.json at runtime and prompts before an edit to any of those files, naming the rebind procedure. The guard must fail open so a malformed input, missing file, or unexpected error never blocks ordinary work. Neither control may weaken any existing permission, deny rule, test, or governance boundary.",
+  "issuer": "Founder Cristofer Stoic Arellano through Claude",
+  "executor": "Claude",
+  "assigned_role": "producer",
+  "created_at": "2026-08-12T12:22:30Z",
+  "status": "approved",
+  "risk_class": "R2",
+  "authorization_mode": "single_action",
+  "completion_mandate_text": null,
+  "completion_actions": [],
+  "completion_exclusions": [
+    "No change to branch protection, rulesets, repository or organization settings, or required-check configuration",
+    "No secret, variable, token, or credential creation, reading, or reference",
+    "No change to the canonical operating contract, its digest-bound sources, config/iris-operating-contract.v1.json, or generated/**",
+    "No change to any registry, since docs/registries/technology-and-platform-registry.md is itself a digest-bound contract source",
+    "No weakening of any existing allow, ask, or deny permission rule",
+    "No dependency addition, removal, or update",
+    "No Phase 0 graduation execution, approval, or completion claim"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "08f69f82846e40d1a428f4238da5f14918965fa1"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/tasks/verification-preflight-ci-and-contract-source-guard.json",
+    ".iris/coordination/handoffs/verification-preflight-ci-and-contract-source-guard.json",
+    ".github/workflows/verify.yml",
+    ".claude/settings.json",
+    "scripts/hooks/contract-bound-source-guard.mjs",
+    "docs/operations/verification-preflight.md",
+    "evidence/verification-preflight/ci-and-contract-source-guard.md"
+  ],
+  "excluded_paths": [
+    "config/iris-operating-contract.v1.json",
+    "generated/**",
+    "docs/governance/**",
+    "docs/registries/**",
+    "docs/operations/cycle-twelve-founder-certification-program.md",
+    "evidence/cycle-twelve/**",
+    "packages/**",
+    "apps/**",
+    "tests/**",
+    "package.json",
+    "pnpm-lock.yaml",
+    ".github/workflows/wave-10-resource-proof.yml",
+    "C:/Projects/STOIC-IRIS-source-library/**"
+  ],
+  "permitted_actions": [
+    "Add .github/workflows/verify.yml running on pull_request and on push to main, with permissions contents: read, no secrets, a concurrency group that cancels superseded runs, and an explicit timeout",
+    "Run in that workflow the environment-independent verification steps: format:check, contract:compile, build, lint, typecheck, and the test suite excluding the two test files that require the sibling Founder Command Center workspace or the GitHub CLI",
+    "Record in the workflow and the operations document that the excluded tests keep the workstation pnpm verify as the authoritative full check, so the pre-flight is never mistaken for full verification",
+    "Add scripts/hooks/contract-bound-source-guard.mjs, which reads the bound source list from config/iris-operating-contract.v1.json at runtime rather than hardcoding paths, so it stays correct as the contract evolves",
+    "Register that script as a PreToolUse hook for Edit, Write, and NotebookEdit in .claude/settings.json, additively, leaving every existing permission rule byte-identical",
+    "Emit a permission prompt naming the file, the pinned digest, and the rebind procedure recorded in commit 52b0c41, so the operator makes a conscious decision rather than being blocked",
+    "Author an operations document describing both controls, their limits, and how to remove either"
+  ],
+  "prohibited_actions": [
+    "Block, deny, or hard-fail any tool call from the guard; it must fail open on malformed input, missing configuration, or unexpected error",
+    "Hardcode the digest-bound source list in the guard script",
+    "Modify, reorder, or remove any existing entry in the allow, ask, or deny arrays of .claude/settings.json",
+    "Add any secret, token, credential, environment variable, or third-party action beyond first-party actions/checkout and actions/setup-node",
+    "Change branch protection, required checks, rulesets, or any repository or organization setting",
+    "Edit any digest-bound contract source, the contract config, or generated output",
+    "Force-push, rewrite history, or use broad staging",
+    "Claim the pre-flight constitutes full verification or Phase 0 progress"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run --exclude tests/founder-windows-startup.test.ts --exclude tests/iris-dev-github.test.ts"
+    }
+  ],
+  "required_evidence": [
+    "The guard invoked against a digest-bound path returns a prompt decision naming that path, and against an ordinary path returns no decision",
+    "The guard fails open on malformed JSON, absent file_path, and missing contract configuration, each demonstrated",
+    "A byte-level confirmation that no existing allow, ask, or deny entry in .claude/settings.json changed, and that only an additive hooks key was introduced",
+    "The excluded-test rationale, with proof that both excluded files fail identically at clean main in the same environment",
+    "Workflow permissions are contents: read, no secrets are referenced, and only first-party actions are used",
+    "Focused and full verification results, exact changed paths, limitations, and rollback instructions"
+  ],
+  "publisher": "Claude on branch claude/remote-control-v1owqp with the Founder as independent reviewer",
+  "approval_reference": "founder-ci-and-hook-approval-2026-08-12",
+  "phase0_graduation": false
+}

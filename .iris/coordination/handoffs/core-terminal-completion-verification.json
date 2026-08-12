@@ -1,0 +1,87 @@
+{
+  "schema_version": "1.0.0",
+  "handoff_id": "core-terminal-completion-verification",
+  "task_id": "core-terminal-completion-verification",
+  "producer": "Claude",
+  "recipient": "Founder Cristofer Stoic Arellano as independent reviewer",
+  "created_at": "2026-08-12T12:52:00Z",
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "08f69f82846e40d1a428f4238da5f14918965fa1"
+    }
+  ],
+  "result_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "claude/remote-control-v1owqp",
+      "commit": "19332579d057150ed00d311189773ede129279b3",
+      "patch_digest": null
+    }
+  ],
+  "changed_paths": [
+    ".iris/coordination/tasks/core-terminal-completion-verification.json",
+    ".iris/coordination/handoffs/core-terminal-completion-verification.json",
+    "docs/specifications/core-terminal-completion-verification.md",
+    "evidence/operating-contract/core-terminal-completion-verification.md",
+    "packages/kernel/src/operating-decision-engine.ts",
+    "tests/operating-decision-engine.test.ts"
+  ],
+  "commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run tests/operating-decision-engine.test.ts tests/operating-context.test.ts",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run tests/operating-decision-engine.test.ts (against pre-repair engine restored from main, to prove the regression)",
+      "exit_code": 1
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run --exclude tests/founder-windows-startup.test.ts --exclude tests/iris-dev-github.test.ts",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify (2 pre-existing environmental test failures remain, identical at clean main)",
+      "exit_code": 1
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify (Founder workstation, WSL; 546/547, one slow-filesystem timeout flake that passes in isolation)",
+      "exit_code": 1
+    }
+  ],
+  "evidence": [
+    "Survey of every report-terminal occurrence in packages/ found exactly two emission sites: the caller-asserted short-circuit at operating-decision-engine.ts:66 and the Core-derived unsupported outcome at line 105. The occurrences in contracts, operating-context, and founder-dialogue declare, validate, or describe the outcome but originate nothing.",
+    "Nothing in Core verified a terminal claim before this change; a search for verification of terminal returned only the unrelated capability name terminal.run-approved.",
+    "Chosen design: completed is removed from the terminal states a caller may express, leaving failed, cancelled, unsupported, and physically-impossible. Core derives completed from execution alone. An asserted completion throws OPERATING_OBJECTIVE_TERMINAL_COMPLETION_NOT_ASSERTABLE before parsing, with the narrowed schema as the backstop.",
+    "Rationale for the cut: completed is the only terminal state that claims the objective's requirements were satisfied. The other four report non-performance, which is honest by default and visible to the operator, so only the success claim needs to be unforgeable.",
+    "Alternatives are recorded in the specification. Removing caller-supplied terminal entirely was rejected as over-broad because a caller holds real information about genuine cancellation. Core-verified per-requirement evidence is strictly stronger and is recorded as the follow-on; the chosen design is a strict subset of it and does not have to be undone first.",
+    "Both new refusal tests fail against the pre-repair engine restored from main (2 failed, 9 passed) and pass after the repair. The engine was restored byte-identically afterward, confirmed by matching SHA-256 2b137adba7abacbbd48166374251c9a13ea6f593f612fdc27a0dead63f5ffc77.",
+    "The Core-derived unsupported path and its snapshot evidence are unchanged; its existing test passes untouched.",
+    "The compiled operating contract digest is unchanged at sha256:9ba317acac51f3592fb16db0f7c1beef49b867eb5759f5803230964753b1327a; the five decision outcomes and nine protected effects are untouched, and no digest-bound source, contract config, or generated output was modified.",
+    "Exactly one existing test was amended: tests/operating-decision-engine.test.ts, which asserted that a caller-supplied completed was relayed verbatim. It is inverted rather than deleted, so the assertion that replaced it is stronger than the one it replaced. Two cases were added. Net test count rose from 545 to 547.",
+    "Interaction with gateway-status-shortcut-false-completion: the two repairs compose and neither weakens the other. That task excludes this file; this task excludes scripts/local-gateway.mjs and that task's record.",
+    "Founder workstation verification 2026-08-12 on branch claude/remote-control-v1owqp: pnpm verify under WSL Node 24.19.0 and pnpm 11.20.0 passed format:check, contract:compile, build, lint, and typecheck, printed the unchanged contract digest sha256:9ba317acac51f3592fb16db0f7c1beef49b867eb5759f5803230964753b1327a, and returned 546 of 547 tests passing. tests/founder-windows-startup.test.ts passed there, confirming it was environmental in the producing container. The single failure, tests/iris-dev-github.test.ts \"redacts credential-bearing URI schemes without hiding declared log truncation\", was a 15000ms timeout, not an assertion failure, and passed on an isolated re-run. It is a slow-filesystem flake on /mnt/c, unrelated to any change in this branch, and no test timeout was altered to accommodate it."
+  ],
+  "limitations": [
+    "MERGE ORDER DECISION REQUIRED. This repair converts a silent false completion into a loud failure. Until the sibling gateway repair ships, an utterance containing status, health, what are you doing, or active workers still reaches the shortcut, which still asserts terminal completed, and Core will now throw instead of returning a canned report. This is the intended fail-closed direction and matches the behavior the Founder recorded as correct in 52b0c41, but it is a visible runtime change and the Founder should choose the merge order.",
+    "The follow-on design, Core-verified per-requirement evidence before accepting a completion, is not implemented and requires a stated-requirements representation in the objective contract.",
+    "packages/kernel/src/operating-context.ts parses the same objective schema, so an asserted completion is rejected there as a Zod enum mismatch rather than the named error. Fail-closed in both paths; only the message differs.",
+    "The repair is proven by test, not by a live runtime exercise. A rerun of Certification Test One after the gateway repair is the real confirmation and is out of scope here.",
+    "Two test files fail in the producing container and are unrelated to this change: tests/founder-windows-startup.test.ts requires the sibling Command Center workspace and tests/iris-dev-github.test.ts requires the GitHub CLI. Both fail identically at clean main here.",
+    "Claude authored the diagnosis, the task record, and this implementation. The Founder was advised that a different producer would preserve an independent technical view and directed Claude to proceed. This work is uncertified by the producer."
+  ],
+  "rollback": "History-preservingly revert commit 19332579d057150ed00d311189773ede129279b3. The change is confined to one kernel module, one test file, and additive documentation; no state, migration, provider resource, credential, or persisted artifact requires cleanup. Reverting restores the pre-repair relay behavior, including the false-completion path, so it should only be done together with a decision about Certification Test One.",
+  "protected_actions_remaining": [
+    "Founder independent review of the chosen design and the amended test",
+    "Founder decision on merge order relative to gateway-status-shortcut-false-completion",
+    "Merge to main, provider-equality verification, and branch cleanup under explicit Founder instruction",
+    "Rerun of Certification Test One from a new exact proposal after the gateway repair"
+  ],
+  "ready_for_review": true
+}

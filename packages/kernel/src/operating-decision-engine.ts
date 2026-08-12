@@ -9,6 +9,25 @@ import {
   type OperatingControllerDecision,
 } from "@stoic-iris/contracts";
 
+/**
+ * Terminal states a caller may assert on an objective.
+ *
+ * `completed` is deliberately absent. Completion Integrity, Core Reasoning Principle 12, is
+ * enforced here rather than trusted upstream: a caller may report that work stopped, but it may
+ * never assert that work finished. Core derives `completed` from execution alone.
+ *
+ * Certification Test One reported `completed` for seven requirements it never addressed, because
+ * a Command Center keyword shortcut asserted that state and Core relayed the claim verbatim. Core
+ * owns the completion decision, so the unverifiable claim is made unrepresentable rather than
+ * filtered at one caller.
+ */
+export const assertableTerminalStateSchema = z.enum([
+  "failed",
+  "cancelled",
+  "unsupported",
+  "physically-impossible",
+]);
+
 export const operatingObjectiveSchema = z
   .object({
     objectiveId: objectiveIdSchema,
@@ -16,7 +35,7 @@ export const operatingObjectiveSchema = z
     protectedEffects: z.array(capabilitySchema),
     terminal: z
       .object({
-        state: z.enum(["completed", "failed", "cancelled", "unsupported", "physically-impossible"]),
+        state: assertableTerminalStateSchema,
         evidence: z.array(z.string().min(1).max(2_000)).min(1).max(100),
       })
       .strict()
@@ -58,6 +77,13 @@ export function decideOperatingAction(input: {
   snapshot: unknown;
   activeGrantId?: string;
 }): OperatingDecision {
+  // Checked before parsing so an asserted completion reports as a named contract violation
+  // rather than an opaque enum mismatch. The schema is the backstop; this is the diagnosis.
+  const assertedTerminalState = (input.objective as { terminal?: { state?: string } }).terminal
+    ?.state;
+  if (assertedTerminalState === "completed")
+    throw new Error("OPERATING_OBJECTIVE_TERMINAL_COMPLETION_NOT_ASSERTABLE");
+
   const objective = operatingObjectiveSchema.parse(input.objective);
   const snapshot = decisionSnapshotSchema.parse(input.snapshot);
   unique(objective.requiredCapabilities, "requiredCapabilities");

@@ -1,0 +1,98 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "core-terminal-completion-verification",
+  "objective": "Close the false-completion class at its source in IRIS Core rather than at one caller. packages/kernel/src/operating-decision-engine.ts line 66 short-circuits to report-terminal on a caller-supplied objective.terminal field, and no code in Core verifies that claim; the sibling task gateway-status-shortcut-false-completion explicitly excludes this file, so no record currently covers it. Core therefore delegates the determination of completion to an untrusted caller, which is how Certification Test One reported state completed for seven requirements it never addressed. Establish and enforce the invariant that IRIS Core never emits terminal state completed on the strength of an unverified caller assertion. Core-derived terminal outcomes, such as the unsupported result at line 105 that draws its evidence from the capability snapshot, remain legitimate and must be preserved. The producer must choose and state an exact design satisfying the invariant, survey every terminal emission site in Core, and record the chosen design and its rationale for independent review.",
+  "issuer": "Founder Cristofer Stoic Arellano through Claude",
+  "executor": "Claude",
+  "assigned_role": "producer",
+  "created_at": "2026-08-12T06:58:38Z",
+  "status": "approved",
+  "risk_class": "R3",
+  "authorization_mode": "single_action",
+  "completion_mandate_text": null,
+  "completion_actions": [],
+  "completion_exclusions": [
+    "No change to the seven certification tests, their pass conditions, or the recorded Test One failure",
+    "No change to the canonical operating contract digest, its five decision outcomes, or protected-effect boundaries",
+    "No change to scripts/local-gateway.mjs or to the scope of the sibling task gateway-status-shortcut-false-completion",
+    "No weakening of fail-closed behavior, approval consumption, protected-path enforcement, or secret filtering",
+    "No Phase 0 graduation execution, approval, or completion claim"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "08f69f82846e40d1a428f4238da5f14918965fa1"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/tasks/core-terminal-completion-verification.json",
+    ".iris/coordination/handoffs/core-terminal-completion-verification.json",
+    "docs/specifications/core-terminal-completion-verification.md",
+    "evidence/operating-contract/core-terminal-completion-verification.md",
+    "packages/kernel/src/operating-decision-engine.ts",
+    "packages/contracts/src/operating-contract.ts",
+    "tests/operating-decision-engine.test.ts",
+    "tests/operating-context.test.ts",
+    "tests/cycle-nine-goal-multi-agent-orchestration.test.ts",
+    "tests/cycle-eleven-complete-software-delivery.test.ts",
+    "tests/cycle-ten-founder-full-access-profile.test.ts",
+    "tests/cycle-twelve-operator-parity-runtime.test.ts",
+    "tests/founder-autonomous-access-profile.test.ts",
+    "tests/founder-live-desktop-control.test.ts",
+    "tests/qwen-primary-cognitive-orchestration-runtime.test.ts"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    ".claude/**",
+    "config/iris-operating-contract.v1.json",
+    "generated/**",
+    "docs/governance/**",
+    "docs/operations/cycle-twelve-founder-certification-program.md",
+    "evidence/cycle-twelve/certification-test-one-2026-08-11.md",
+    "scripts/local-gateway.mjs",
+    ".iris/coordination/tasks/gateway-status-shortcut-false-completion.json",
+    "C:/Projects/STOIC-IRIS-source-library/**"
+  ],
+  "permitted_actions": [
+    "Survey and report every site in IRIS Core that can emit a report-terminal decision, distinguishing Core-derived outcomes from caller-asserted ones",
+    "Choose and implement one exact design that satisfies the invariant, and state the choice and rationale in the specification; candidate designs include removing caller-supplied terminal entirely so Core derives every terminal outcome, restricting caller assertions to non-success states so completed can never be asserted, or requiring per-requirement evidence that Core verifies against the objective's stated requirements before accepting a completed claim",
+    "Extend the objective contract with an explicit stated-requirements representation if the chosen design needs Core to verify requirement coverage",
+    "Amend tests/operating-decision-engine.test.ts line 160, which currently pins the defective behavior by asserting that a caller-supplied terminal completed claim is reported verbatim; this amendment removes an assertion of the defect and is not test weakening, and the producer must justify it explicitly in the handoff",
+    "Make the minimum conforming updates to the other listed test files where they construct caller-asserted terminal objectives, reporting each amended test and its justification",
+    "Add regression tests covering at minimum: an unverified caller-asserted completed claim is rejected or cannot be expressed; a Core-derived unsupported outcome still reports correctly with snapshot evidence; and a structured objective with unaddressed requirements never yields terminal completed"
+  ],
+  "prohibited_actions": [
+    "Delete, skip, or loosen any existing test, guard, or fail-closed path to make the repair pass, other than the explicitly authorized amendments to tests that assert the defect",
+    "Change the canonical operating contract digest, the five decision outcomes, or the protected-effect set",
+    "Modify the certification program, the recorded Test One failure evidence, or any historical result",
+    "Repair the Command Center gateway or otherwise absorb the sibling task's scope",
+    "Claim this repair certifies Test One; it only removes one precondition for a fresh attempt from a new exact proposal",
+    "Force-push, rewrite history, bypass branch protection, administer repositories, or use broad staging",
+    "Install or update any dependency"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run tests/operating-decision-engine.test.ts tests/operating-context.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "A survey naming every report-terminal emission site in Core and classifying each as Core-derived or caller-asserted",
+    "The chosen design, the alternatives considered, and why the chosen one closes the class rather than the instance",
+    "A regression test that fails against the pre-repair engine and passes after it",
+    "Proof that Core cannot emit terminal state completed from an unverified caller assertion under the chosen design",
+    "Proof that the Core-derived unsupported path and its snapshot evidence are unchanged in behavior",
+    "The exact list of existing tests amended, each with a justification that it asserted the defect rather than protected a guard",
+    "Confirmation that the compiled operating contract digest, the five decision outcomes, and the protected-effect set are unchanged",
+    "An explicit interaction statement describing how this repair composes with gateway-status-shortcut-false-completion and confirming neither task weakens the other",
+    "Focused and full verification results, exact changed paths, limitations, and rollback instructions"
+  ],
+  "publisher": "Claude on branch claude/remote-control-v1owqp with the Founder as independent reviewer",
+  "approval_reference": "founder-core-terminal-repair-approval-2026-08-12",
+  "phase0_graduation": false
+}

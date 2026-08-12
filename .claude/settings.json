@@ -135,5 +135,18 @@
       "PowerShell(gh variable *)",
       "PowerShell(gh ruleset *)"
     ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/scripts/hooks/contract-bound-source-guard.mjs\""
+          }
+        ]
+      }
+    ]
   }
 }

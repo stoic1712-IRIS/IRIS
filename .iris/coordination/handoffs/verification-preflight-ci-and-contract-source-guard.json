@@ -1,0 +1,106 @@
+{
+  "schema_version": "1.0.0",
+  "handoff_id": "verification-preflight-ci-and-contract-source-guard",
+  "task_id": "verification-preflight-ci-and-contract-source-guard",
+  "producer": "Claude",
+  "recipient": "Founder Cristofer Stoic Arellano as independent reviewer",
+  "created_at": "2026-08-12T12:28:17Z",
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "08f69f82846e40d1a428f4238da5f14918965fa1"
+    }
+  ],
+  "result_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "claude/remote-control-v1owqp",
+      "commit": "77f18f2bd65714f71a3902bcb06e6a1f1683dfe8",
+      "patch_digest": null
+    }
+  ],
+  "changed_paths": [
+    ".iris/coordination/tasks/verification-preflight-ci-and-contract-source-guard.json",
+    ".iris/coordination/handoffs/verification-preflight-ci-and-contract-source-guard.json",
+    ".github/workflows/verify.yml",
+    ".claude/settings.json",
+    "scripts/hooks/contract-bound-source-guard.mjs",
+    "docs/operations/verification-preflight.md",
+    "evidence/verification-preflight/ci-and-contract-source-guard.md"
+  ],
+  "commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm install --frozen-lockfile --ignore-scripts",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "guard behavior matrix: 8 payloads piped to scripts/hooks/contract-bound-source-guard.mjs",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "node -e \"byte comparison of .claude/settings.json permissions against main\"",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm diagnostics",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec prettier --write scripts/hooks/contract-bound-source-guard.mjs",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run --exclude tests/founder-windows-startup.test.ts --exclude tests/iris-dev-github.test.ts",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify (2 pre-existing environmental test failures remain, identical at clean main)",
+      "exit_code": 1
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify (Founder workstation, WSL; 546/547, one slow-filesystem timeout flake that passes in isolation)",
+      "exit_code": 1
+    }
+  ],
+  "evidence": [
+    "The guard returns an ask decision for a digest-bound path by relative and absolute form, naming role and pinned digest, and stays silent for ordinary paths.",
+    "The discriminating case passes: docs/registries/dependency-attribution-registry.md is not contract-bound and the guard stays silent, so it matches the exact bound source list rather than a directory.",
+    "The guard fails open on malformed JSON, absent file_path, empty stdin, and a path outside the repository; all four exit 0 with no decision and no blocking behavior.",
+    "The guard reads the bound source list from config/iris-operating-contract.v1.json at runtime, so it needs no update when the eleven-source set changes.",
+    "Byte comparison against main proves permissions.allow (24), permissions.ask (36), and permissions.deny (65) are identical, defaultMode, disableBypassPermissionsMode, and autoMemoryEnabled are identical, the only key added is hooks, and no key was removed.",
+    "The workflow declares permissions contents: read, sets persist-credentials false, references no secret or variable, uses only first-party actions/checkout@v4 and actions/setup-node@v4, cancels superseded runs, and carries a 20-minute timeout.",
+    "The CI-equivalent test command is fully green: 63 files, 524 passed, 1 pre-existing skip, exit 0.",
+    "The compiled operating contract digest is unchanged at sha256:9ba317acac51f3592fb16db0f7c1beef49b867eb5759f5803230964753b1327a, confirming no digest-bound source was touched by this task.",
+    "The existing wave-10-resource-proof.yml workflow is unmodified.",
+    "pnpm diagnostics was confirmed standalone at exit 0, because it never executes inside a pnpm verify run that fails at the test step.",
+    "The workflow executed for real on GitHub: run 31596726784 on PR #109 at head 9d02f053aa22e260aa71c391b1687b1e03ab9fb1 concluded success in 88 seconds with all twelve steps green, including the contract source digest step that would have caught both recorded outages.",
+    "Founder workstation verification 2026-08-12 on branch claude/remote-control-v1owqp: pnpm verify under WSL Node 24.19.0 and pnpm 11.20.0 passed format:check, contract:compile, build, lint, and typecheck, printed the unchanged contract digest sha256:9ba317acac51f3592fb16db0f7c1beef49b867eb5759f5803230964753b1327a, and returned 546 of 547 tests passing. tests/founder-windows-startup.test.ts passed there, confirming it was environmental in the producing container. The single failure, tests/iris-dev-github.test.ts \"redacts credential-bearing URI schemes without hiding declared log truncation\", was a 15000ms timeout, not an assertion failure, and passed on an isolated re-run. It is a slow-filesystem flake on /mnt/c, unrelated to any change in this branch, and no test timeout was altered to accommodate it."
+  ],
+  "limitations": [
+    "Only the pull_request trigger has executed. The push-to-main trigger fires for the first time at merge and is not yet proven.",
+    "$CLAUDE_PROJECT_DIR expansion in the hook command is unverified on the Founder's Windows workstation. The operations document records the repository-relative fallback if it does not expand.",
+    "The pre-flight excludes tests/founder-windows-startup.test.ts and tests/iris-dev-github.test.ts, which require the sibling Command Center workspace and the GitHub CLI. Both fail identically at clean main in the same container, so no regression is hidden, but CI is therefore not full verification. The workstation pnpm verify has since been performed; see the evidence entry for its result.",
+    "Making those two tests environment-independent would let CI run the complete suite. That is a separate objective and was not authorized here.",
+    "The guard covers Claude Code Edit, Write, and NotebookEdit calls only. It does not intercept Codex, shell, or editor edits; CI is the control that catches those.",
+    "GitHub Actions consumption is assumed free under public-repository terms consistent with the repository's approved public visibility. No billing state was inspected.",
+    "This work is uncertified by the producer: Claude cannot independently certify its own material output. The Founder is the independent reviewer.",
+    "Follow-up worth its own record, not addressed here: tests/iris-dev-github.test.ts \"redacts credential-bearing URI schemes without hiding declared log truncation\" completed in 14676ms against a 15000ms limit on the Founder workstation, a 324ms margin. It will keep flaking on /mnt/c. The fix is to make the test cheaper or the filesystem faster, not to raise the timeout."
+  ],
+  "rollback": "Delete .github/workflows/verify.yml to remove the pre-flight. Delete the additive hooks key from .claude/settings.json to remove the guard; the script is inert unless registered. To undo the whole objective, history-preservingly revert the commit that introduced these paths. Neither control owns state, creates a resource, or holds a credential, so no destructive cleanup is required.",
+  "protected_actions_remaining": [
+    "Founder independent review of both controls",
+    "First live workflow execution on the pull request, and review of its result",
+    "Confirmation of hook behavior on the Founder Windows workstation",
+    "Merge to main, provider-equality verification, and branch cleanup under explicit Founder instruction"
+  ],
+  "ready_for_review": true
+}
