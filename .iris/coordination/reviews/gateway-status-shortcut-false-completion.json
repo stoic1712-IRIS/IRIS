@@ -1,0 +1,171 @@
+{
+  "schema_version": "1.0.0",
+  "review_id": "gateway-status-shortcut-false-completion",
+  "task_id": "gateway-status-shortcut-false-completion",
+  "reviewer": "Assigned agent reviewer, a fresh Claude instance in separate clean worktrees; not the producer",
+  "producer": "Claude",
+  "created_at": "2026-08-12T19:00:28.0000000Z",
+  "reviewed_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "62b9acd0628ea4c6fc24c3a337a39f2019b6f8a0"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "main",
+      "commit": "458cf118da692eefa8e776948e79afc038df19f7"
+    }
+  ],
+  "scope": [
+    "Reviewer summary, verbatim: The central invariant holds: at the reviewed revision no code path in the Command Center can assert terminal.state \"completed\", the only caller-asserted terminal left is cancelled on the emergency stop, and the Core-mirroring guard added to the hermetic fixture plus the new real-Core test in tests/operating-decision-controller.test.mjs both pin the refusal. The emergency-stop revocation still runs first and unconditionally, every phrasing that reaches revocation also reaches a truthful gateway-composed acknowledgement, and the Test One four-subject wording now reaches objective construction and invokes a model. Two existing assertions were changed and I judge both legitimate - each removed a pin on the defect and was replaced by a stronger assertion. What is not complete: the new classification counts only presentation vocabulary, so a short utterance pairing a status word with an imperative requirement still collapses into the canned control-surface reply with the second requirement dropped and the protected-effect adapters never consulted; the capability trigger is effectively dead for natural phrasing; two changed paths sit outside allowed_paths without a task-record amendment; and both Command Center acceptance commands exit 1 on this workstation, not 0 as recorded.",
+    "Material output reviewed: the Command Center diff dd9b22218ef10456851bdef06c38913e415bcd6f..458cf118da692eefa8e776948e79afc038df19f7 across six paths - scripts/local-gateway.mjs, src/conversation-client.ts, tests/local-gateway.test.ts, tests/conversation-client.test.ts, scripts/operating-contract-runtime.mjs, tests/operating-decision-controller.test.mjs.",
+    "Also reviewed: the IRIS Core coordination records added by 2054fbb, 1725c6c and 5461bb3 - the task record, the handoff, and evidence/gateway-repair/status-shortcut-false-completion.md.",
+    "Isolation: the reviewer worked only in C:\\Projects\\STOIC-IRIS-review-gateway at 62b9acd and C:\\Projects\\iris-cc-review-gateway at 458cf11, both separate from the producer's worktrees, and was instructed to treat the producer's handoff and evidence as claims to verify rather than as authority.",
+    "NOT VERIFIED - Whether the test 'binds a general operator repository-inspection objective to governed evidence' is green at the base revision dd9b222. The reviewer proved it is not caused by the amended test and that no changed code is on its execution path, but running the base revision would have required mutating a worktree or installing dependencies, neither of which the read-only assignment permitted.",
+    "NOT VERIFIED - The claimed explicit in-session Founder instruction authorising the kernel module-tree digest rebind and the two changes outside allowed_paths. No record of it exists outside producer-authored text. Only the Founder can confirm it.",
+    "NOT VERIFIED - The producer's one-off historical runs: the green baseline at untouched dd9b222, the pre-repair misclassification reproduction, and the regression proof with the gateway restored to dd9b222. All require checking out or editing files in a worktree.",
+    "NOT VERIFIED - IRIS Core pnpm verify, recorded as 546 passed and 1 failed of 547. The Core review worktree is read-only and verification would build artifacts into it.",
+    "NOT VERIFIED - That expectedCoreModuleTreeDigests.kernel will be reproduced from a clean build of Core main. Both contract tests passed against the real Core, which proves the pin matches the dist currently built there, but packages/*/dist is gitignored and locally built, so build reproducibility from a clean checkout is asserted by the producer and not verified.",
+    "NOT VERIFIED - The exact verbatim objective submitted in the failed Certification Test One run, which the cycle-twelve evidence preserves only as an opening clause and a paraphrase. The producer's reproduction wording, and its correction that the exact Test One opener already reached objective construction at dd9b222 because of the earlier repair 3665ec5, could not be checked against the original submission.",
+    "NOT VERIFIED - A live gateway-to-real-Core HTTP turn. The spawned gateway in tests/local-gateway.test.ts uses the hermetic Core fixture, so the real-Core invariant is proven only through tests/operating-decision-controller.test.mjs and the producer's direct decision-engine harness, never through a full turn. This matches the producer's own recorded limitation."
+  ],
+  "commands": [
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "git -C C:\\Projects\\iris-cc-review-gateway diff dd9b22218ef10456851bdef06c38913e415bcd6f 458cf118da692eefa8e776948e79afc038df19f7",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "corepack pnpm exec vitest run tests/local-gateway.test.ts tests/conversation-client.test.ts tests/operating-decision-controller.test.mjs tests/operating-contract-runtime.test.mjs (1 failed | 91 passed | 1 skipped; 1 of 4 files failed)",
+      "exit_code": 1
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "corepack pnpm exec vitest run tests/local-gateway.test.ts (run 1 of 3; 1 failed | 69 passed | 1 skipped)",
+      "exit_code": 1
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "corepack pnpm exec vitest run tests/local-gateway.test.ts (runs 2 and 3, identical failure, same test)",
+      "exit_code": 1
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "corepack pnpm exec vitest run tests/local-gateway.test.ts --testNamePattern \"^(?!.*bare status or capability request).*$\" (attribution run: the amended test skipped; 1 failed | 68 passed | 2 skipped, same failure)",
+      "exit_code": 1
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "corepack pnpm verify (format, lint, typecheck, build pass; 53 test files, 52 passed 1 failed, 327 passed 1 failed 4 skipped)",
+      "exit_code": 1
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "node <reviewer harness importing scripts/objective-classification.mjs and scripts/conversation-tools.mjs, with the emergencyStop, showCapabilities, showStatus, subject-group and requirement regexes copied verbatim from scripts/local-gateway.mjs:3292-3336, over 22 utterances>",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "node -e \"const p=/\\b(?:show|open|display)\\b[^.\\n]{0,60}\\b(?:skill|capabilit|tree)\\b/iu; ...\" (capability trigger regex over 7 natural phrasings)",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "git -C C:\\Projects\\iris-cc-review-gateway worktree list; git branch --list \"iris/delivery-held-out-*\"; git status --short (post-verify cleanliness check: no residue, HEAD still 458cf11)",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "node -e \"const c=require('./generated/iris-operating-contract.compiled.json'); console.log(c.contractDigest, c.ordinaryCapabilities.length, c.protectedEffects.length, JSON.stringify(c.decisionOutcomes));\" (sha256:9ba317ac..., 25, 9, five outcomes)",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "git -C C:\\Projects\\STOIC-IRIS-review-gateway diff --stat a1c16c2 62b9acd (6 files, coordination records plus the three unrelated handoffs from the concurrent merge)",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "git -C C:\\Projects\\STOIC-IRIS-review-gateway log --format=\"%h %ad %an %s\" --date=iso -6 62b9acd (merge-order and authorship check)",
+      "exit_code": 0
+    }
+  ],
+  "findings": [
+    {
+      "finding_id": "presentation-shortcut-still-collapses-actionable-multi-requirement-utterances",
+      "severity": "medium",
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "path": "scripts/local-gateway.mjs",
+      "line": 3320,
+      "summary": "barePresentationIntent counts only presentation subject vocabulary, so a short unstructured utterance that pairs a status word with an imperative requirement still short-circuits into the canned control-surface reply, dropping the second requirement and bypassing operatingObjectiveFor's protected-effect adapters entirely.",
+      "evidence": "Reviewer harness (regexes copied verbatim from scripts/local-gateway.mjs:3292-3336, real deterministicShortcutEligible and conversationToolIntent imports) returned barePresentationIntent = \"show-status\" for every one of these:\n  \"What is your status? Also deploy to production.\"          subjectGroups [1]\n  \"What's your health? Then delete the temporary logs.\"       subjectGroups [1]\n  \"Give me your status and then fix the failing verification suite.\"  subjectGroups [1]\n  \"Tell me your status and write a summary to disk.\"          subjectGroups [1]\n  \"status; also stop worker 3\"                                subjectGroups [1]\nThe seven presentationSubjectGroups (local-gateway.mjs:3304-3312) match only nouns naming things to *report*; explicitRequirementPattern (3313) matches only must/acceptance/criteria/deliverable/requirement/prohibited. None of \"deploy\", \"delete\", \"fix\", \"write\", \"stop\" disqualifies, so namedSubjects stays at 1 and runDialogue:3707 returns presentDirectDialogue before operatingObjectiveFor is ever called. The canonicalProtectedTurnAdapters check at 3362 (which would have classified \"deploy to production\" as deployment.execute and \"delete the temporary logs\" as data.destroy) is therefore never reached, and no controller disposition is produced.\nThis is not a regression: at dd9b222 the same utterances took the old showStatus shortcut and additionally carried terminal.state \"completed\", and the new reply states plainly \"No operating objective was constructed, nothing was executed, and nothing is claimed complete\". The completion-integrity half of the defect is genuinely fixed. But the task objective and permitted action 4 required the shortcut to fire \"only for a genuine short unstructured status, capability, or emergency-stop request\", and the handoff/evidence assert that narrowing as achieved. For this class of utterance it is not, so the \"collapses a multi-requirement objective into a canned report\" half of the defect survives in a weaker form.",
+      "recommendation": "Add a disqualifier for action content, not just for presentation-subject count: either reject any utterance containing an imperative/effect verb (deploy, delete, remove, run, fix, implement, build, push, commit, stop, start, write, install, approve, ...), or require that the utterance contain no clause beyond the presentation question. At minimum, run canonicalProtectedTurnAdapters/protectedEffectRequested over the utterance before returning a presentation reply, so a request naming a protected effect can never be answered with a status blurb. Cover the cases above with unit tests; consider exporting barePresentationIntent (or moving it next to deterministicShortcutEligible in scripts/objective-classification.mjs) so it can be unit-tested without spawning a gateway."
+    },
+    {
+      "finding_id": "bare-capability-request-unanswerable-in-natural-phrasing",
+      "severity": "medium",
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "path": "scripts/local-gateway.mjs",
+      "line": 3294,
+      "summary": "The capability trigger regex ends its alternation with a word boundary, so `capabilit` and `skill` can never match a real word; only the literal token `tree` (or standalone `skill`) fires it, meaning the natural bare capability questions never reach the new presentation path and fail closed with 503 when Founder Full access is inactive.",
+      "evidence": "showCapabilitiesPattern at scripts/local-gateway.mjs:3294-3295 is /\\b(?:show|open|display)\\b[^.\\n]{0,60}\\b(?:skill|capabilit|tree)\\b/iu. Direct test:\n  \"Show me your capabilities\"    false\n  \"What are your capabilities?\"  false\n  \"Show me your skills\"          false\n  \"display your capability list\" false\n  \"show capabilities\"            false\n  \"Show me the capability tree\"  true\n  \"open the skill tree\"          true\nThe trailing word boundary after `capabilit` requires a non-word character immediately after \"capabilit\", which no English form of the word provides; `skill` followed by a boundary likewise fails on \"skills\".\nConsequence at the reviewed revision: \"Show me your capabilities\" scores namedSubjects = 1 (group 2 matches), passes every disqualifier, then falls through both triggers and returns null, so it is constructed as an ordinary operating objective with zero required capabilities. Per packages/kernel/src/operating-decision-engine.ts:146, with no active grant that throws OPERATING_EXECUTION_ACTIVE_GRANT_REQUIRED, which the gateway surfaces as 503. The same happens for the single-subject \"What is your current state?\" - `state` is in presentationSubjectGroups[0] but absent from showStatusPattern (3296-3297).\nThe pattern is pre-existing and was moved verbatim, so this is not a regression. It is however an unmet part of the charter: permitted action 5 and required_evidence item 5 call for a genuine bare capability request to be answered, and the amended test at tests/local-gateway.test.ts:2438 proves only the \"show me the capability tree\" phrasing. Evidence limitation 4 documents the fail-closed 503 only for *multi-subject* questions; single-subject capability and \"state\" questions are also affected and are not documented.",
+      "recommendation": "Change the alternation to /\\b(?:show|open|display|list|what\\s+are)\\b[^.\\n]{0,60}\\b(?:skills?|capabilit\\w*|tree)\\b/iu and add `state` (and any other subject-group token intended to be answerable) to showStatusPattern, so the trigger vocabulary and the subject-group vocabulary agree. Extend the amended test at tests/local-gateway.test.ts:2438 to cover \"Show me your capabilities\", \"What are your capabilities?\" and \"What is your current state?\". If the narrower behaviour is intentional, correct evidence limitation 4 to state that single-subject capability and state questions also fail closed without an active grant."
+    },
+    {
+      "finding_id": "acceptance-commands-do-not-reproduce-green-at-reviewed-revision",
+      "severity": "medium",
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "path": "tests/local-gateway.test.ts",
+      "line": 2542,
+      "summary": "Both Command Center acceptance commands exit 1 at the reviewed revision on this workstation, failing reproducibly on \"binds a general operator repository-inspection objective to governed evidence\"; the handoff records both as exit 0 with no failing test.",
+      "evidence": "Four independent runs in C:\\Projects\\iris-cc-review-gateway at 458cf11, clean tree:\n  corepack pnpm exec vitest run tests/local-gateway.test.ts  ->  exit 1, 1 failed | 69 passed | 1 skipped (x3)\n  corepack pnpm verify  ->  format/lint/typecheck/build pass; 53 files, 52 passed 1 failed; 327 passed | 1 failed | 4 skipped; exit 1\nFailure is always AssertionError: expected undefined to be defined at tests/local-gateway.test.ts:2542 - the operator run never reaches state \"completed\" inside the 40x50ms poll window.\nThe handoff records \"pnpm exec vitest run tests/local-gateway.test.ts tests/conversation-client.test.ts (after repair: 78 passed, 1 skipped)\" exit 0 and \"pnpm verify after the kernel module-tree digest rebind (53 files, 328 passed, 4 skipped)\" exit 0.\nAttribution work I did: re-running with the amended test excluded reproduces the identical failure, so it is not caused by the amended test's state changes. Code-path tracing shows the diff cannot reach it: POST /v1/operator goes through operatingExecutionContext (3431) -> operatingObjectiveFor, and for that objective text conversationToolIntent returns kind \"repository\", so at dd9b222 shortcutEligible was already false and no shortcut fired; the only change in operatingObjectiveFor is the emergency-stop branch, which does not match. runDialogue and barePresentationIntent are never invoked on that route. The gateway under test uses the hermetic Core fixture, so the operating-contract-runtime.mjs digest change is not exercised either. My conclusion is that the failure is environmental/pre-existing on this workstation, most plausibly a capability-provider probe or grant-scope condition on the general operator path - but I could not run the base revision dd9b222 to prove it, because doing so would require mutating a worktree or installing dependencies.",
+      "recommendation": "Before treating the acceptance commands as satisfied, run tests/local-gateway.test.ts at untouched dd9b222 on this workstation and attribute the failure exactly, as required_evidence item 1 demands (\"a green baseline ... or an exact attribution of every pre-existing failure\"). If it is pre-existing, record it in the handoff alongside the IRIS Core iris-dev-github timeout so the recorded exit codes match what a reviewer can reproduce. If it is not, it must be diagnosed before merge. Separately, the 2-second poll budget at tests/local-gateway.test.ts:2539 is thin for a machine-dependent run and is worth widening regardless."
+    },
+    {
+      "finding_id": "two-changed-paths-outside-allowed-paths-without-task-record-amendment",
+      "severity": "medium",
+      "repository": "stoic1712-IRIS/IRIS",
+      "path": ".iris/coordination/tasks/gateway-status-shortcut-false-completion.json",
+      "line": 33,
+      "summary": "scripts/operating-contract-runtime.mjs and tests/operating-decision-controller.test.mjs were changed outside the task record's allowed_paths; the deviation is disclosed but, unlike the earlier conversation-client widening, was never amended into the task record, so its authority rests entirely on a producer-authored claim of an in-session Founder instruction.",
+      "evidence": "allowed_paths (task record lines 33-41) lists seven paths and does not include scripts/operating-contract-runtime.mjs or tests/operating-decision-controller.test.mjs. Both are changed in the reviewed diff. Neither is in excluded_paths, so neither is prohibited outright.\nThe deviation is disclosed three times: handoff changed_paths entries (lines 42-43) and limitation 6 (\"The task record was not amended for these two paths\"), evidence limitation 8, and the commit message of Core 5461bb3.\nContrast with the earlier widening: when src/conversation-client.ts was needed, the producer reported the conflict and the Founder authorisation was written into the task record itself as permitted_actions[7] \"AMENDMENT 2026-08-12, authorized by explicit Founder instruction in session...\". No equivalent amendment exists for these two paths, so AGENTS.md's requirement that a material decision cite the exact controlling record and be reproducible without relying on model memory is not met for this expansion.\nOn the merits I judge both edits benign and, for the test file, a net strengthening: operating-contract-runtime.mjs changes one pinned digest value (fail-closed binding still intact - expectedCoreContractRevision remains an ancestor check and the module-tree digest still gates loading), and operating-decision-controller.test.mjs replaces a stale `completed` fixture with `cancelled` and adds a live guard asserting OPERATING_OBJECTIVE_TERMINAL_COMPLETION_NOT_ASSERTABLE against the real Core modules. Both files passed in my run. The issue is authority provenance, not code.",
+      "recommendation": "Have the Founder either amend allowed_paths in the task record with a dated authorisation clause matching the form of permitted_actions[7], or record an explicit acceptance of the deviation in the task record. Until then this scope expansion is not reproducible from the record by another operator. Note also that the merge-order constraint the rebind created was in fact honoured: Core PR #109 merged at 12:26:56 (62b9acd) before Command Center PR #61 at 12:28:49 (458cf11), both merge commits authored by the Founder."
+    },
+    {
+      "finding_id": "client-contract-disposition-id-nullable-for-all-decisions",
+      "severity": "low",
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "path": "src/conversation-client.ts",
+      "line": 71,
+      "summary": "controllerDispositionId was made unconditionally nullable rather than nullable only when decision is \"no-controller-decision\", so the browser contract no longer guarantees that a reply carrying one of the five canonical controller outcomes also carries a disposition identifier.",
+      "evidence": "src/conversation-client.ts:71-74 is now `controllerDispositionId: z.string().regex(/^disposition_[a-z0-9-]{8,100}$/u).nullable()` with no relation to the `decision` field at line 75-82. A reply claiming `controller.decision: \"execute-now\"` with `controllerDispositionId: null` now parses; before the change it could not. The task amendment authorised exactly \"make controllerDispositionId nullable\", so this is within the granted scope, and no consumer reads the field (only src/views/Presence.tsx:263 and :428 read controller.decision), so nothing is broken today. The new test at tests/conversation-client.test.ts:121 covers only the null-with-no-controller-decision case; there is no assertion that a canonical outcome still requires a non-null identifier.",
+      "recommendation": "Tie the two fields together, e.g. a superRefine that rejects a null controllerDispositionId whenever controller.decision is one of the five canonical outcomes, and rejects a non-null one when it is \"no-controller-decision\". Add the two negative assertions to tests/conversation-client.test.ts so the widened contract cannot drift further."
+    },
+    {
+      "finding_id": "evidence-rollback-bullet-stale-and-self-contradictory",
+      "severity": "low",
+      "repository": "stoic1712-IRIS/IRIS",
+      "path": "evidence/gateway-repair/status-shortcut-false-completion.md",
+      "line": 247,
+      "summary": "The evidence file's Command Center rollback bullet says the branch carries one commit touching four files and that PR #61 is unmerged with main untouched, contradicting its own delivery table in the same document and the reviewed state, and prescribing a revert that would leave the kernel digest rebind in place.",
+      "evidence": "Line 247: \"The branch is based on `dd9b222` and carries one commit touching only the four changed files; `main` is untouched and PR #61 is unmerged. Close PR #61, or `git revert cedb110` and push non-force.\"\nThe same document's table at line 236 lists two commits (cedb110 gateway repair, be79a7d kernel rebind) and its Changed paths section at lines 206-211 lists six files. The handoff's rollback field is correct (\"git revert be79a7d then cedb110\"); only the evidence file was left stale when the second commit was added.\nAt the reviewed revision the premise is also no longer true: Command Center 458cf11 is the merge of PR #61 into main, and C:\\Projects\\iris-founder-command-center-main is on main at 458cf11. Following line 247 as written (revert cedb110 only) would remove the gateway repair while leaving the kernel module-tree pin bound to the repaired Core - the opposite of the ordering the handoff prescribes.\nRelatedly, handoff protected_actions_remaining still lists both merges as not performed; both had occurred by 12:28:49 on 2026-08-12, authored by the Founder. That is expected drift for a record written before the merges, but it means the records do not describe the revision under review.",
+      "recommendation": "Correct evidence line 247 to match the handoff (two commits, six files, revert be79a7d before cedb110) and update both records to reflect that Core PR #109 and Command Center PR #61 are merged, so the rollback instructions describe a revert on main rather than closing an open pull request."
+    },
+    {
+      "finding_id": "emergency-stop-terminal-now-reachable-on-the-operator-run-path",
+      "severity": "informational",
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "path": "scripts/local-gateway.mjs",
+      "line": 3346,
+      "summary": "Removing the structure gate from the emergency-stop match also widens it on the operator-run path, where operatingObjectiveFor is reached via operatingExecutionContext and no revocation occurs, so a long operator objective merely mentioning the stop vocabulary now fails closed with a cancelled terminal that describes a stop nobody performed.",
+      "evidence": "operatingObjectiveFor is called from two places: runDialogue:3722 and operatingExecutionContext:3433, which is used by the operator runtime at lines 634 and 647. At dd9b222 the emergency-stop branch was gated by `!structured`, so a long (over 240 char) or enumerated operator objective containing \"emergency stop\"/\"pause all workers\"/\"shut down workers\" constructed a normal objective. At the reviewed revision emergencyStopRequested tests the raw utterance unconditionally (3316-3318, 3346), so such an objective now returns terminal `cancelled` with evidence \"Founder emergency stop requested. This objective is cancelled and no requirement stated in it was performed.\" and operatingExecutionContext throws IRIS_OPERATING_EXECUTION_BLOCKED:report-terminal. No deleteOperatorEntry/deleteDesktopControlEntry runs on that path - those live only in runDialogue:3695-3698 - so the evidence string asserts a Founder stop that did not occur.\nThe direction is fail-closed and the dialogue-path reasoning for ungating is sound and well argued in the records; the operator-path consequence is simply not mentioned in the handoff or evidence, which describe the ungating solely in terms of closing the silent-stop hole in runDialogue.",
+      "recommendation": "Either scope the terminal branch to the dialogue path (pass a flag from runDialogue, so operatingExecutionContext constructs an ordinary objective) or leave the behaviour and record it, and soften the terminal evidence text to something true for every caller, e.g. \"Objective cancelled: it names the emergency-stop vocabulary. No requirement stated in it was performed.\" I verified separately that the dialogue path is sound: revocation at runDialogue:3695-3698 precedes everything, the presentation path is skipped whenever emergencyStop is true (3704-3706), the objective always carries a terminal so the controller always returns report-terminal, and the acknowledgement branch at 3732-3733 is therefore always reached; the acknowledgement's claims about revocation and fastFailClosed provider evaluation are both true."
+    }
+  ],
+  "verdict": "needs_changes",
+  "independent": true,
+  "material_disagreement": true,
+  "protected_actions_authorized": false
+}
