@@ -32,8 +32,27 @@
 - 2026-08-12: the Founder instructed creation of the governed remote-control task record in the authenticated Claude session on branch `claude/remote-control-v1owqp`.
 - 2026-08-12: the Founder stated "I approve the record, proceed with the registry rows and operations doc", approving task `claude-code-remote-control-operator-channel` and authorizing this bounded implementation. The approval reference recorded in the task is `founder-remote-control-record-approval-2026-08-12`.
 
+## Contract-bound source defect and correction
+
+The first delivery of this task added a "Founder remote steering" row to `docs/registries/technology-and-platform-registry.md`. That file is one of eleven digest-bound sources of the canonical operating contract, pinned in `config/iris-operating-contract.v1.json` at `sha256:4da79b5d63e3ee48499248ebb15e65e06136cce879406ca9103efcd28646e750`. The edit changed the file digest to `sha256:a90490edf7853169b0b7baac250dde117e661f8acfac502d801f06fc53d1f113`, so `pnpm contract:compile --check` failed with `OPERATING_CONTRACT_SOURCE_DIGEST_MISMATCH` and the Founder runtime would have failed closed on startup.
+
+This reproduced the outage recorded in commit `52b0c41`, where an amendment to the contract-bound constitution shipped without full verification because the change was Markdown only. The same reasoning caused this one: the producer reported that verification was not runnable and delivered anyway.
+
+Correction applied: the technology and platform registry was reverted to its `main` content and its digest now matches the pin exactly. Two consequences were recorded rather than worked around.
+
+1. **Deviation from the approved objective.** The approved task objective names rows in both registries. Only the dependency attribution registry row was delivered. The technology and platform registry is deliberately left unchanged because it is contract-bound and describes IRIS's own capability and authority surface, whereas Remote Control is an external operator interface conferring no IRIS capability. Claude Code itself is absent from that registry, which is the governing precedent. Recording Remote Control there would change the canonical contract digest for a non-capability item and invalidate digest citations in existing evidence. The Founder may direct the alternative: add the row, rebind `config/iris-operating-contract.v1.json`, and recompile, following the procedure in `52b0c41`.
+2. **The task record as approved is unsatisfiable.** Its `allowed_paths` permit editing the contract-bound registry while its `excluded_paths` forbid `generated/**`, and it does not permit `config/iris-operating-contract.v1.json`. A task cannot legitimately change a bound source without the rebinding that must accompany it. This is a defect in the record's scoping, not in the producer's execution of it, and it is reported for the Founder's decision.
+
+## Verification performed
+
+The producing environment was brought up to the repository-pinned toolchain so the acceptance command could actually run:
+
+- Node `24.19.0` installed through the container's `nvm` to satisfy the `>=24.19.0 <25` engine pin; the container default was `22.22.2`.
+- `pnpm 11.20.0` activated through corepack, matching `packageManager`.
+- `pnpm install --frozen-lockfile --ignore-scripts`: exit 0, 244 packages, lifecycle scripts disabled, supply-chain policy passed. `pnpm-lock.yaml` digest `1fdce7147ce568614a2c07e74d52ee7603fe0b415cfb50e7cdf32048afa833a2` before and after, so no dependency was added, removed, or changed.
+- `pnpm verify` after the correction: `format:check`, `contract:compile`, `build`, `lint`, and `typecheck` all pass; 542 of 545 tests pass with 1 pre-existing skip.
+
 ## Limitations
 
-- `pnpm verify` could not run in the research environment because workspace dependencies are not installed and the task prohibits dependency installation; it remains the acceptance command to run on the Founder workstation before merge.
-- `node scripts/dev/iris-dev.mjs contract inspect --json` could not run for the same reason; the compiled contract `generated/iris-operating-contract.compiled.json` was validated directly (version `1.0.0`, digest `sha256:9ba317acac51f3592fb16db0f7c1beef49b867eb5759f5803230964753b1327a`).
+- Two test files fail in this container and are **not** caused by this change: `tests/founder-windows-startup.test.ts` fails with "The canonical Founder Command Center workspace was not found" because the sibling repository is not present, and `tests/iris-dev-github.test.ts` times out without the GitHub CLI and network preconditions. Both were run against clean `main` at `08f69f82846e40d1a428f4238da5f14918965fa1` in the same container and fail identically there, which establishes them as environmental and pre-existing. Full green therefore still requires a Founder workstation run.
 - The hash-bound workstation source library was unreachable from the cloud environment; this task is coordination- and registry-scoped and does not amend governance, so foundation-source verification was not required and was not claimed.

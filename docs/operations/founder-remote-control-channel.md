@@ -8,7 +8,9 @@
 
 ## Purpose
 
-This document defines the exact operating boundaries for Founder use of Claude Code Remote Control, the research-preview feature that lets claude.ai/code or the Claude mobile app steer a Claude Code session running on the Founder workstation. It implements the registry disposition recorded in `docs/registries/technology-and-platform-registry.md` and `docs/registries/dependency-attribution-registry.md`.
+This document defines the exact operating boundaries for Founder use of Claude Code Remote Control, the research-preview feature that lets claude.ai/code or the Claude mobile app steer a Claude Code session running on the Founder workstation. It implements the registry disposition recorded in `docs/registries/dependency-attribution-registry.md`.
+
+Remote Control is deliberately not recorded in `docs/registries/technology-and-platform-registry.md`. That registry is a digest-bound source of the canonical operating contract, and it describes IRIS's own capability and authority surface. Remote Control is an external operator interface that confers no IRIS capability, so recording it there would change the canonical contract digest for a non-capability item. Claude Code itself is likewise absent from that registry. See the adoption evidence for the full rationale.
 
 Remote Control is an external, replaceable provider feature. It may accelerate Founder steering; it may not own IRIS identity, governance, canonical memory, approvals, audit, or worker policy.
 
@@ -42,4 +44,4 @@ The channel is removed by not invoking it; nothing in this repository depends on
 
 - Task record: `.iris/coordination/tasks/claude-code-remote-control-operator-channel.json`
 - Evidence: `evidence/remote-control/claude-code-remote-control-adoption.md`
-- Registries: `docs/registries/technology-and-platform-registry.md`, `docs/registries/dependency-attribution-registry.md`
+- Registry: `docs/registries/dependency-attribution-registry.md`
