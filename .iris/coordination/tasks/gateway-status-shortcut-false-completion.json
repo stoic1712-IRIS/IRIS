@@ -1,7 +1,7 @@
 {
   "schema_version": "1.0.0",
   "task_id": "gateway-status-shortcut-false-completion",
-  "objective": "Repair the Founder Command Center gateway defect that collapses a structured multi-requirement objective into a canned deterministic report and marks it terminal state completed. A keyword shortcut must not claim completion for requirements it never addressed, and an ordinary objective containing a common word such as status, health, or active workers must reach normal objective construction, capability evaluation, and model routing. RE-SCOPED 2026-08-12 after the Core repair core-terminal-completion-verification: IRIS Core now rejects any caller-asserted completed with OPERATING_OBJECTIVE_TERMINAL_COMPLETION_NOT_ASSERTABLE, so narrowing the classification alone is no longer sufficient. Any surviving shortcut that still emits completed will throw instead of returning a report. The precise rule is narrower than removing terminal reporting: a shortcut may still emit a non-success terminal state, so an emergency stop may continue to report cancelled, but no shortcut may emit completed for any request. A genuine bare status or capability request must therefore either reach normal objective construction, or be rendered by the gateway as presentation without asking Core to declare a terminal state, consistent with the Command Center being a presentation and authenticated relay that owns no completion authority. The producer must choose and state which, and why. PRECONDITION: this repair must be produced and verified against an IRIS Core revision that already contains the terminal repair, otherwise the interaction cannot be exercised. Coordination records and evidence live in IRIS Core; gateway sources and their tests live in the Founder Command Center.",
+  "objective": "Repair the Founder Command Center gateway defect that collapses a structured multi-requirement objective into a canned deterministic report and marks it terminal state completed. RE-SCOPED AND SURVEYED 2026-08-12 against Command Center dd9b222. Verified: scripts/local-gateway.mjs has exactly one deterministic shortcut return, at lines 3311 to 3324, serving three triggers — showCapabilities, showStatus, and emergencyStop — and all three emit terminal state completed. IRIS Core now rejects any caller-asserted completed with OPERATING_OBJECTIVE_TERMINAL_COMPLETION_NOT_ASSERTABLE, so all three break once that repair merges, not only status. The emergency-stop effect itself survives, because deleteOperatorEntry and deleteDesktopControlEntry run at lines 3608 to 3611 before objective construction; what breaks is the Founder's acknowledgement, which is a real hazard on a safety path because the operator cannot tell whether the stop took effect. Root design flaw: the shortcut stuffs canned text into terminal.evidence and controllerReply at line 3417 renders it back, so completion state is being used as a transport for presentation. The repair must stop every shortcut from emitting completed, keep the emergency-stop acknowledgement working, narrow the classification so a structured objective never short-circuits, and let a genuine bare status or capability request either reach normal objective construction or be rendered locally. The existing rendering path at line 3617 already carries show-status, show-capabilities, and emergency-stop intents and is the natural seam. PRECONDITION: produce and verify against a Core revision containing the terminal repair. Coordination records and evidence live in IRIS Core; gateway sources and tests live in the Command Center.",
   "issuer": "Founder Cristofer Stoic Arellano",
   "executor": "unassigned",
   "assigned_role": "producer",
@@ -27,7 +27,7 @@
     {
       "repository": "stoic1712-IRIS/iris-founder-command-center",
       "branch": "main",
-      "commit": "dd098893c66c1aba4297fca4fbb85ee4feb44a92"
+      "commit": "dd9b22218ef10456851bdef06c38913e415bcd6f"
     }
   ],
   "allowed_paths": [
@@ -51,17 +51,18 @@
     "C:/Projects/STOIC-IRIS-source-library/**"
   ],
   "permitted_actions": [
-    "Survey every deterministic shortcut path in scripts/local-gateway.mjs and report, for each, the trigger condition and the terminal state it emits",
-    "Remove the emission of terminal state completed from every deterministic shortcut, so no shortcut can assert completion for any request, addressed or not",
-    "Preserve non-success terminal reporting where it is genuinely observed; an emergency stop may continue to emit cancelled, which IRIS Core still accepts from a caller",
+    "Stop every deterministic shortcut from emitting terminal state completed, so no shortcut can assert completion for any request, addressed or not",
+    "Preserve the Founder-visible emergency-stop acknowledgement, either by rendering it in the gateway at the existing line 3617 seam or by emitting a non-success terminal state such as cancelled, which IRIS Core still accepts from a caller; state the chosen approach and its rationale",
+    "Stop using terminal.evidence as a transport for canned presentation text, so completion state and displayed text are no longer the same channel",
     "Narrow the shortcut classification so it fires only for a genuine short unstructured status, capability, or emergency-stop request, and not for a structured objective that carries enumerated requirements or explicit constraints",
-    "For a genuine bare status or capability request, either route it through normal objective construction, capability evaluation, and model routing, or render the answer in the gateway as presentation without asking Core to declare a terminal state; state the chosen approach and its rationale",
-    "Add regression tests in tests/local-gateway.test.ts covering at minimum: a structured multi-item objective containing the token status does not short-circuit; a bare status request still returns a useful answer; no shortcut path emits completed; and the emergency-stop path still reports correctly",
+    "For a genuine bare status or capability request, either route it through normal objective construction, capability evaluation, and model routing, or render the answer in the gateway without asking Core to declare a terminal state; state the chosen approach and its rationale",
+    "Add regression tests in tests/local-gateway.test.ts covering at minimum: a structured multi-item objective containing the token status does not short-circuit; a bare status request still returns a useful answer; no shortcut path emits completed; and an emergency stop still both revokes access and returns a Founder-visible acknowledgement",
     "Report any change that would require a path outside allowed_paths rather than silently expanding scope"
   ],
   "prohibited_actions": [
     "Delete or weaken an existing test, guard, fail-closed path, or governance control to make the repair pass",
-    "Weaken, delay, or bypass the emergency-stop path in order to satisfy the no-completed rule",
+    "Weaken, delay, reorder, or bypass the emergency-stop revocation at lines 3608 to 3611 in order to satisfy the no-completed rule",
+    "Leave the emergency stop without a Founder-visible acknowledgement; a silent or error-only stop is not an acceptable outcome on a safety path",
     "Modify IRIS Core, the operating contract, the certification program, or the recorded Test One failure evidence",
     "Reintroduce a caller-asserted completed anywhere, including through a new code path, a default value, or a wrapper",
     "Produce or verify this repair against a Core revision that lacks the terminal repair",
@@ -84,11 +85,11 @@
   ],
   "required_evidence": [
     "Exact reproduction of the pre-repair misclassification and its absence after the repair",
-    "A survey naming every deterministic shortcut, its trigger, and the terminal state it emitted before and after",
-    "Proof that no shortcut path can emit terminal state completed, and that the emergency-stop path still reports its non-success terminal state correctly",
+    "A survey confirming every deterministic shortcut, its trigger, and the terminal state it emitted before and after, including confirmation that the single return at lines 3311 to 3324 no longer emits completed for any of its three triggers",
+    "Proof that an emergency stop still revokes operator and desktop-control access and still returns a Founder-visible acknowledgement, demonstrated against a Core revision containing the terminal repair",
+    "Proof that a genuine bare status or capability request still returns a useful answer under the chosen approach",
     "A regression test that fails against the pre-repair gateway and passes after it",
-    "Proof that a genuine bare status request still returns a useful answer under the chosen approach",
-    "An end-to-end demonstration that the exact Test One objective wording now reaches objective construction rather than a canned report, run against a Core revision containing the terminal repair, with that revision named",
+    "An end-to-end demonstration that the exact Test One objective wording now reaches objective construction rather than a canned report, with the Core revision named",
     "Confirmation that the canonical operating contract digest, the five decision outcomes, and protected-effect boundaries are unchanged",
     "Focused and full verification results for both repositories, exact changed paths, limitations, and rollback instructions"
   ],
