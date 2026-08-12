@@ -143,7 +143,7 @@ Required notices and provenance must be preserved. Use through a supported API d
 
 IRIS may propose improvements to itself but may not silently modify, approve, merge, deploy, or release those improvements.
 
-Development Independence is achieved only through the permanent Phase 0 graduation criterion: a genuinely deployed, Founder-operated, governed multi-file self-upgrade using a real model and the canonical repository, with an exact bounded proposal, authenticated typed approval, disposable workspace execution, tests and builds, governed repair and reapproval when needed, a private checkpoint, remote equality, history-preserving rollback evidence, cleanup, paid-resource termination, and provider-authoritative zero-resource verification. Claude and Codex must not modify the repository during that graduation workflow.
+Development Independence is achieved only through the permanent Phase 0 graduation criterion: a genuinely deployed, Founder-operated, governed multi-file self-upgrade using a real model and the canonical repository, with an exact bounded proposal, authenticated typed approval, disposable workspace execution, tests and builds, governed repair and reapproval when needed, a private checkpoint, remote equality, history-preserving rollback evidence, cleanup, paid-resource termination, and provider-authoritative zero-resource verification. No external coding agent, including Claude, may modify the repository during that graduation workflow.
 
 Offline fixtures, single-file demonstrations, or deployed machinery without the complete governed workflow do not satisfy graduation.
 

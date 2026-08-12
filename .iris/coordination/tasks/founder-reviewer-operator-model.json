@@ -1,0 +1,83 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "founder-reviewer-operator-model",
+  "objective": "Amend the active operator model so Claude is the primary Founder operator and the Founder is the named independent reviewer, removing the structural dependency on Codex without weakening independent verification, the producer-reviewer separation, or the Phase 0 graduation boundary. Historical evidence and completed coordination records are preserved unchanged.",
+  "issuer": "Founder Cristofer Stoic Arellano",
+  "executor": "Claude",
+  "assigned_role": "producer",
+  "created_at": "2026-08-12T01:09:42.0000000Z",
+  "status": "in_progress",
+  "risk_class": "R2",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "Founder instruction 2026-08-11, given in chat: recreate the canonical operator model and replace Codex, after the producer objected that naming Claude as its own reviewer would delete Core Reasoning Principle 6. The Founder selected the Founder as the named independent reviewer. Author the bounded amendment, verify, stage the exact paths, commit, push the branch non-force, and open a pull request for Founder review. Do not merge; the Founder is the reviewer and the approver.",
+  "completion_actions": ["edit", "verify", "stage", "commit", "push_branch", "create_pull_request"],
+  "completion_exclusions": [
+    "No merge; the Founder reviews and approves as the named independent reviewer",
+    "No modification of evidence/**, completed coordination records, or any historical statement of what an operator actually did; renaming a past producer would falsify the record",
+    "No weakening of the Phase 0 graduation boundary; the audit-only constraint is generalized to external coding agents including Claude, never narrowed or removed",
+    "No removal of producer-reviewer separation, independent verification, or the prohibition on a producer certifying its own material output",
+    "No change to the twelve Core Reasoning Principles, the canonical operating contract, or protected-effect boundaries"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "iris/founder-reviewer-operator-model",
+      "commit": "33d928256e78b5e753d7ffd7699d6dbc4a7e520c"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/handoffs/founder-reviewer-operator-model.json",
+    ".iris/coordination/tasks/founder-reviewer-operator-model.json",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "docs/governance/constitution.md",
+    "docs/governance/multi-agent-coordination-policy.md",
+    "docs/operations/claude-onboarding-runbook.md",
+    "docs/operations/stoic-iris-project-context.md"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    "C:/Projects/STOIC-IRIS-source-library/**",
+    "credentials/**",
+    "docs/architecture/**",
+    "docs/governance/worker-reasoning-framework-and-cognitive-identity.md",
+    "docs/operations/cycle-twelve-founder-certification-program.md",
+    "docs/registries/**",
+    "docs/specifications/**",
+    "evidence/**",
+    "generated/**"
+  ],
+  "permitted_actions": [
+    "Replace the co-primary Codex operator role with Claude as primary Founder operator and the Founder as the named independent reviewer, in the active operator model only",
+    "Generalize the Phase 0 audit-only constraint from a named pair to external coding agents including Claude, preserving the gate's meaning",
+    "Preserve every historical sentence describing what Codex actually did, including the Cycle Eight reconciliation and the onboarding validation repairs",
+    "Run local formatting checks and full verification, then stage the exact allowed paths, commit, push non-force, and open one pull request"
+  ],
+  "prohibited_actions": [
+    "Merge the pull request, self-approve, or claim independent certification of this change",
+    "Rewrite, delete, or rename any historical producer, reviewer, or publisher attribution in evidence or completed coordination records",
+    "Name Claude as the independent reviewer of Claude's own material output anywhere in canonical governance",
+    "Weaken the Phase 0 graduation criterion, the certification program, or any security, verification, or approval control",
+    "Force-push, rewrite history, administer repositories, or modify protected paths outside the allowed list"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec prettier --check AGENTS.md CLAUDE.md docs/governance/constitution.md docs/governance/multi-agent-coordination-policy.md docs/operations/claude-onboarding-runbook.md docs/operations/stoic-iris-project-context.md"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "Exact before and after wording for every changed line, grouped by whether it changes the operator model or generalizes the Phase 0 boundary",
+    "Proof that evidence/** and completed coordination records are unchanged",
+    "Proof that producer-reviewer separation and the prohibition on self-certification survive the amendment",
+    "Confirmation that the Phase 0 audit-only constraint still binds Claude",
+    "Formatting and full verification results, exact changed paths, and rollback instructions"
+  ],
+  "publisher": "Claude for branch push and pull-request creation only; merge and approval authority remain with the Founder",
+  "approval_reference": null,
+  "phase0_graduation": false
+}
