@@ -6,7 +6,7 @@
   "executor": "Claude",
   "assigned_role": "producer",
   "created_at": "2026-08-12T06:41:10Z",
-  "status": "ready_for_review",
+  "status": "approved",
   "risk_class": "R1",
   "authorization_mode": "single_action",
   "completion_mandate_text": null,
@@ -73,6 +73,6 @@
     "Handoff recording commands, exit codes, changed paths, limitations, and rollback information"
   ],
   "publisher": "Claude on branch claude/remote-control-v1owqp with the Founder as independent reviewer",
-  "approval_reference": null,
+  "approval_reference": "founder-remote-control-record-approval-2026-08-12",
   "phase0_graduation": false
 }
