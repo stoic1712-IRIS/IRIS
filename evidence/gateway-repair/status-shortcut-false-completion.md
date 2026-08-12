@@ -223,28 +223,68 @@ This was the fail-closed binding working as designed, not a defect. On explicit 
 9. This repair permits a fresh Certification Test One attempt from a new exact proposal. It does not certify Test One, and it does not change the recorded Test One failure.
 10. This record is producer-authored. It has not been independently reviewed.
 
+## Independent review, and the producer response to it
+
+The assigned agent reviewer reviewed this work at the merged revisions from separate clean worktrees and returned **`needs_changes`** with `material_disagreement: true` and seven findings. Its verdict, findings, commands and exit codes are recorded verbatim and unaltered at `.iris/coordination/reviews/gateway-status-shortcut-false-completion.json`. The producer authored none of that judgement and changed none of it, including the findings that land on the producer's own work.
+
+This section is the producer response. It does not modify any finding.
+
+### Finding 3, the acceptance commands, is attributed — and the cause is a designed guard, not a defect
+
+The reviewer observed `pnpm verify` and the focused suite exiting 1 at `458cf11`, against exit 0 in this record, and could not attribute it because attribution needed a worktree it was not permitted to mutate. It is now attributed exactly:
+
+| Worktree | Commit | HEAD state | Result |
+| -------- | ------ | ---------- | ------ |
+| `C:\Projects\iris-founder-command-center-main` | `458cf11` | branch `main` | 70 passed, exit 0 |
+| `C:\Projects\iris-cc-review-gateway` | `458cf11` | **detached** | 1 failed, exit 1 |
+| `C:\Projects\iris-cc-review-gateway` | `458cf11` | named branch | 70 passed, exit 0 |
+
+Identical commit, identical linked `node_modules`, identical machine. The only variable is detached HEAD, and the mechanism is explicit: `scripts/conversation-operator-tools.mjs:33` throws `REPOSITORY_DETACHED_HEAD` when `git branch --show-current` returns empty. The governed repository inspector **fail-closes on a detached-HEAD repository by design**, so the operator-run objective in that test can never complete there.
+
+The failing test is therefore neither a defect, nor a flake, nor caused by this repair, and the recorded exit 0 stands for any ordinary branch checkout. The fault was the producer's: the review worktrees were created with `git worktree add --detach`, so the reviewer was handed an environment in which one governed path cannot run, and spent part of its budget on it. **Operational note for future reviews: create review worktrees on a named branch, not detached.**
+
+The reviewer's secondary recommendation — widen the thin 2-second poll budget — is not adopted here, because the failure is deterministic rather than timing-dependent; the poll never succeeds under a detached HEAD regardless of budget. It remains reasonable on its own merits and is left for a separate change.
+
+### Finding 7, the emergency-stop terminal on the operator-run path, is fixed
+
+`operatingObjectiveFor` serves two callers. `runDialogue` revokes access before calling it; `operatingExecutionContext` revokes nothing. The terminal evidence read `Founder emergency stop requested. This objective is cancelled...`, which was false on the operator-run path. The wording now states only what is true for both callers: `Objective cancelled: it names the Founder emergency-stop vocabulary. No requirement stated in it was performed.` The proof that access was actually revoked continues to be rendered by the caller that revoked it, and the fail-closed behaviour the reviewer judged sound is unchanged.
+
+### Finding 6, the stale rollback bullet, is fixed
+
+The Rollback section above was written before the kernel rebind and again before the merges, and had been left describing one commit, four files, and an unmerged pull request. It now describes two commits, six files, the merged state, and the correct revert order — `be79a7d` before `cedb110`. Following the stale text would have removed the gateway repair while leaving the kernel pin bound to the repaired Core.
+
+### Findings 1 and 2 are fixed on a separate branch
+
+The dead capability trigger and the actionable-utterance collapse are repaired in Command Center commit `8fdac68` on `iris/gateway-presentation-narrowing-repair`, with regression tests that fail against `458cf11` and pass after. That branch is not merged.
+
+### Findings 4 and 5 remain open
+
+Finding 4, the two changed paths outside `allowed_paths` without a task-record amendment, is a Founder decision and is not something the producer can resolve. Finding 5, tying `controllerDispositionId` nullability to the decision value, is unaddressed.
+
 ## Unrelated pre-existing condition observed, not touched
 
 The Command Center primary worktree `C:\Projects\iris-founder-command-center` is checked out on a local branch named `iris/gateway-status-shortcut-false-completion` at `b8c36ff`, an ancestor of `origin/main` roughly 35,000 lines behind it, and carries eight uncommitted modified files. That worktree was left untouched, and this repair used `C:\Projects\iris-founder-command-center-main`, which was clean at `dd9b222`. The Founder may wish to inspect it separately; it is outside this task's scope.
 
 ## Rollback
 
-**Delivery performed.** On explicit Founder instruction after verification, both repositories were committed by exact path, both branches were pushed non-force, and one pull request was opened. No merge, force-push, history rewrite, or destructive reset was performed.
+**Delivery performed and merged.** On explicit Founder instruction after verification, both repositories were committed by exact path, both branches were pushed non-force, both pull requests were opened and merged in the required order, and the merged branches were deleted. No force-push, history rewrite, or destructive reset was performed at any point.
 
-| Repository | Branch | Commits | Remote |
-| ---------- | ------ | ------- | ------ |
-| iris-founder-command-center | `iris/gateway-status-shortcut-false-completion-repair` | `cedb110` gateway repair, `be79a7d` kernel rebind | pushed, `origin` equal. [PR #61](https://github.com/stoic1712-IRIS/iris-founder-command-center/pull/61) open against `main`, MERGEABLE, **must merge after Core PR #109** |
-| stoic1712-IRIS/IRIS | `claude/remote-control-v1owqp` | `2054fbb`, the follow-up recording delivered revisions, and the merge below | pushed, `origin` equal. Part of open PR #109 |
+| Repository | Merged into `main` | Merge commit | Source commits |
+| ---------- | ------------------ | ------------ | -------------- |
+| stoic1712-IRIS/IRIS | [PR #109](https://github.com/stoic1712-IRIS/IRIS/pull/109), merged 2026-08-12T18:26:57Z | `62b9acd` | `2054fbb`, `1725c6c`, and the concurrent-operator merge below |
+| iris-founder-command-center | [PR #61](https://github.com/stoic1712-IRIS/iris-founder-command-center/pull/61), merged 2026-08-12T18:28:49Z | `458cf11` | `cedb110` gateway repair, `be79a7d` kernel rebind |
 
-The IRIS Core records sit on `claude/remote-control-v1owqp`, which is the head branch of PR #109, because that is the branch the Core worktree is on. They are now part of that pull request.
+**The merge-order constraint was honoured.** Core PR #109 merged before Command Center PR #61, which the kernel rebind required. Confirmed independently by the reviewer from commit timestamps.
+
+The IRIS Core records landed on `claude/remote-control-v1owqp`, the head branch of PR #109, because that is the branch the Core worktree was on. Both source branches have since been deleted, local and remote; every commit remains reachable from `main`.
 
 **Concurrent-operator condition.** The first IRIS Core push was rejected: `origin/claude/remote-control-v1owqp` had advanced to `c737dae`, *coordination: record the Founder workstation verification*, pushed by another Claude session while these records were being produced. The two changesets are disjoint — `c737dae` updates three unrelated handoffs and touches none of this task's paths. It was integrated by **merge rather than rebase**, so `2054fbb` and `1725c6c` keep the identifiers the handoff and this record already cite. The merged tree was verified before pushing: `pnpm verify` reproduced 546 passed and 1 failed of 547, identical to the pre-merge run.
 
 **No CI on the Command Center branch.** That repository has no `.github` workflows on `main`, and PR #61 reports an empty status-check rollup. The results recorded here are the whole verification record for that branch.
 
-**Rollback is history-preserving revert, never force-push or reset**, because both branches are published.
+**Rollback is history-preserving revert, never force-push or reset**, because everything is merged and published. Both repositories protect `main`, so a revert goes through its own pull request; a direct push to `main` is refused with `GH013`.
 
-- **Command Center.** The branch is based on `dd9b222` and carries one commit touching only the four changed files; `main` is untouched and PR #61 is unmerged. Close PR #61, or `git revert cedb110` and push non-force. To retire the work entirely, close the pull request and delete the branch; nothing depends on it.
-- **IRIS Core.** Revert the two record commits and push non-force. That restores the task record's original `allowed_paths` and `permitted_actions` and removes this evidence file and the handoff, without disturbing `c737dae` or the Core terminal repair. No IRIS Core source, contract, generated artifact, certification program document, or Test One failure record was modified.
+- **Command Center.** Revert `be79a7d` **before** `cedb110`, in that order. `be79a7d` is the kernel module-tree digest rebind and `cedb110` is the gateway repair; reverting only the gateway repair would leave the pin bound to the repaired Core with the shortcut restored, which is the inverse of the ordering this repair requires. Reverting `be79a7d` alone is a valid narrower rollback: it restores the previous pin and removes the merge-order constraint, at the cost of the two contract tests failing again while Core carries the terminal repair.
+- **IRIS Core.** Revert `2054fbb` and `1725c6c`. That restores the task record's original `allowed_paths` and `permitted_actions` and removes this evidence file and the handoff, without disturbing `c737dae`, the concurrent-operator merge, or the Core terminal repair itself.
 
-**Worktree state to restore.** `C:\Projects\iris-founder-command-center-main` was on branch `main` at `dd9b222` before this task and was switched to the dedicated repair branch. `git switch main` in that worktree restores it.
+**Worktree state.** `C:\Projects\iris-founder-command-center-main` was on `main` at `dd9b222` before this task and is on `main` at `458cf11` after it. `C:\Projects\STOIC-IRIS` was on `claude/remote-control-v1owqp` and is on `main` at `62b9acd`. Both are clean and equal with origin.
