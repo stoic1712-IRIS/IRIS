@@ -7,7 +7,7 @@
     "supporting-context"
   ],
   "contract": "iris.stoic/operating-contract/v1",
-  "contractDigest": "sha256:cc1812bff1a668062e3fd1ebf374189a40d7d9e83f33bb6e82f637301e8e5ea9",
+  "contractDigest": "sha256:9ba317acac51f3592fb16db0f7c1beef49b867eb5759f5803230964753b1327a",
   "decisionOutcomes": [
     "execute-now",
     "acquire-capability",
@@ -81,7 +81,7 @@
   ],
   "sources": [
     {
-      "digest": "sha256:1643c370f0d0505e6144d2f16659ba1047a28dd439c6ffc21d6e8677a414d997",
+      "digest": "sha256:5dfea310090f9685399cc2ed2bce9a62fb733859ac6669b1fb03b9c72ce59364",
       "path": "docs/governance/constitution.md",
       "role": "origin"
     },
