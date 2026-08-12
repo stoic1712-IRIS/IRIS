@@ -35,7 +35,9 @@
     ".iris/coordination/handoffs/gateway-status-shortcut-false-completion.json",
     "evidence/gateway-repair/status-shortcut-false-completion.md",
     "scripts/local-gateway.mjs",
-    "tests/local-gateway.test.ts"
+    "tests/local-gateway.test.ts",
+    "src/conversation-client.ts",
+    "tests/conversation-client.test.ts"
   ],
   "excluded_paths": [
     ".github/**",
@@ -58,7 +60,8 @@
     "Answer a genuine bare status or capability request without a terminal claim, by handling the pure-presentation case before an operating objective is constructed; routing it through normal objective construction is disproven and must not be attempted, because Core then either throws OPERATING_EXECUTION_ACTIVE_GRANT_REQUIRED or returns execute-now and invokes a model. State the chosen structure and its rationale",
     "Amend tests/local-gateway.test.ts around line 4177, which pins the defect by asserting that the structured four-part request for status, active model, capabilities, and restrictions yields decision report-terminal with zero model invocations; this is the Command Center counterpart of the Core test already inverted at tests/operating-decision-engine.test.ts, and amending it removes an assertion of the defect rather than weakening a guard. Justify it explicitly in the handoff",
     "Add regression tests in tests/local-gateway.test.ts covering at minimum: a structured multi-item objective containing the token status does not short-circuit; a bare status request still returns a useful answer; no shortcut path emits completed; and an emergency stop still both revokes access and returns a Founder-visible acknowledgement",
-    "Report any change that would require a path outside allowed_paths rather than silently expanding scope"
+    "Report any change that would require a path outside allowed_paths rather than silently expanding scope",
+    "AMENDMENT 2026-08-12, authorized by explicit Founder instruction in session after Claude reported the conflict under the preceding action: src/conversation-client.ts and tests/conversation-client.test.ts are added to allowed_paths for a strictly additive change. The browser reply contract required controller.decision to be one of the five canonical decision outcomes and controllerDispositionId to be a non-null disposition identifier on every conversation reply, so a turn answered before objective construction could not be represented truthfully. Permitted change: add one further controller.decision value meaning no controller decision was made, and make controllerDispositionId nullable. The five canonical decision outcomes, the operating contract, its digest, and protected-effect boundaries are unchanged; no guard, fail-closed path, or existing assertion is weakened"
   ],
   "prohibited_actions": [
     "Delete or weaken an existing test, guard, fail-closed path, or governance control to make the repair pass",

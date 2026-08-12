@@ -1,0 +1,127 @@
+{
+  "schema_version": "1.0.0",
+  "handoff_id": "gateway-status-shortcut-false-completion",
+  "task_id": "gateway-status-shortcut-false-completion",
+  "producer": "Claude",
+  "recipient": "Founder Cristofer Stoic Arellano",
+  "created_at": "2026-08-12T17:27:02.0000000Z",
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "claude/remote-control-v1owqp",
+      "commit": "a1c16c252794029a437d93b2795db6f158934396"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "main",
+      "commit": "dd9b22218ef10456851bdef06c38913e415bcd6f"
+    }
+  ],
+  "result_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "claude/remote-control-v1owqp",
+      "commit": null,
+      "patch_digest": "sha256:c675fb7ec50ad4f914d0848802ce1798a4227e3a1a0439dec4283caff2a4b7b5"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "iris/gateway-status-shortcut-false-completion-repair",
+      "commit": null,
+      "patch_digest": "sha256:636bc47deac5b6e63bff23deed5135cd7899589a9d4f23827b877e761230f98e"
+    }
+  ],
+  "changed_paths": [
+    "stoic1712-IRIS/IRIS: .iris/coordination/tasks/gateway-status-shortcut-false-completion.json",
+    "stoic1712-IRIS/IRIS: .iris/coordination/handoffs/gateway-status-shortcut-false-completion.json",
+    "stoic1712-IRIS/IRIS: evidence/gateway-repair/status-shortcut-false-completion.md",
+    "stoic1712-IRIS/iris-founder-command-center: scripts/local-gateway.mjs",
+    "stoic1712-IRIS/iris-founder-command-center: src/conversation-client.ts",
+    "stoic1712-IRIS/iris-founder-command-center: tests/local-gateway.test.ts",
+    "stoic1712-IRIS/iris-founder-command-center: tests/conversation-client.test.ts"
+  ],
+  "commands": [
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm exec vitest run tests/local-gateway.test.ts (green baseline at untouched dd9b222: 70 passed, 1 skipped)",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "node classification reproduction against scripts/objective-classification.mjs and scripts/conversation-tools.mjs at dd9b222 (pre-repair misclassification reproduced)",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm exec vitest run tests/local-gateway.test.ts with amended tests and scripts/local-gateway.mjs plus src/conversation-client.ts restored to dd9b222 (regression proof: 2 failed, 68 passed, 1 skipped)",
+      "exit_code": 1
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm exec vitest run tests/local-gateway.test.ts tests/conversation-client.test.ts (after repair: 78 passed, 1 skipped)",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm exec vitest run tests/operating-contract-runtime.test.mjs tests/operating-decision-controller.test.mjs at untouched dd9b222 (attribution of the two pre-existing IRIS_OPERATING_CONTRACT_MISMATCH failures)",
+      "exit_code": 1
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm verify (format, lint, typecheck and build pass; 321 passed, 1 failed, 9 skipped; the only 2 failing files are the pre-existing contract-mismatch pair)",
+      "exit_code": 1
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "node canonical decision engine proof against packages/kernel/dist at a1c16c2 (pre-repair objectives rejected, cancelled accepted, Test One wording reaches execute-now)",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "node scripts/dev/iris-dev.mjs contract inspect --json (ok: true, digest sha256:9ba317acac51f3592fb16db0f7c1beef49b867eb5759f5803230964753b1327a, coreRevision a1c16c2)",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify (format, lint, typecheck and build pass; 546 passed, 1 failed of 547 - the pre-existing iris-dev-github timeout the Founder already recorded for this branch)",
+      "exit_code": 1
+    }
+  ],
+  "evidence": [
+    "Full record: evidence/gateway-repair/status-shortcut-false-completion.md in stoic1712-IRIS/IRIS.",
+    "Precondition verified before any change: IRIS Core on claude/remote-control-v1owqp at a1c16c2, with OPERATING_OBJECTIVE_TERMINAL_COMPLETION_NOT_ASSERTABLE present at packages/kernel/src/operating-decision-engine.ts:85 and in the built packages/kernel/dist/operating-decision-engine.js, dist newer than src.",
+    "Green baseline established before any edit: tests/local-gateway.test.ts at untouched dd9b222, 70 passed and 1 skipped, exit 0. The seven cloud-container failures noted in the task record did not occur on this workstation.",
+    "Shortcut survey: at dd9b222 all three triggers (showCapabilities, showStatus, emergencyStop) emitted terminal state completed from the single return at lines 3311 to 3324. After the repair, scripts/local-gateway.mjs contains exactly one caller-asserted operating-objective terminal, at line 3351, with state cancelled for the emergency stop only, and no occurrence of state completed anywhere in the file.",
+    "Correction to an assumption the task record's survey invites: the exact Test One opener already reached objective construction at dd9b222, because the merged repair 3665ec5 had already excluded declared-section and enumerated-item objectives. The surviving defect was the unstructured multi-requirement request, which is the shape the amended test pinned and the shape this repair removes.",
+    "Chosen approach for the emergency stop: revocation unchanged and still first; objective now asserts terminal cancelled, which Core accepts; the Founder-visible acknowledgement is composed in the gateway at the existing seam and is not read back out of terminal.evidence, so completion state and displayed text are separate channels. The emergency-stop pattern is also no longer gated by structure, closing a pre-existing path where a long utterance revoked access and then failed closed with no acknowledgement.",
+    "Chosen approach for status and capabilities: answered in runDialogue before operatingObjectiveFor is called and without touching controller.decide. The answer is composed from the loaded contract and the live access grant - digest, Founder Full access state, 25 registered ordinary capabilities, 9 protected effects - and closes by stating that no objective was constructed, nothing was executed, and nothing is claimed complete. Routing through the controller was disproven in the record and was not attempted.",
+    "Narrowed classification: a bare request must pass the existing deterministicShortcutEligible check, carry no explicit requirement language, and name at most one subject across seven subject groups. The four-part Test One-shaped request names four groups and is therefore constructed as an ordinary operating objective.",
+    "Regression proof: the hermetic Core fixture in tests/local-gateway.test.ts now mirrors the Core invariant and rejects an asserted completed. With that in place and the gateway restored to dd9b222, both amended tests fail with 503; with the repair applied all pass. This strengthens the fixture and removes no assertion.",
+    "Test amendment justification: the assertion at tests/local-gateway.test.ts:4177 that the four-part request yields report-terminal with zero model invocations was an assertion of the defect, not a guard. It is replaced by an assertion that the same request reaches execute-now and invokes a model, mirroring the inversion already applied to the Core counterpart at tests/operating-decision-engine.test.ts.",
+    "Behaviour against canonical Core a1c16c2, exercised directly against packages/kernel/dist rather than the fixture: both pre-repair shortcut objectives throw OPERATING_OBJECTIVE_TERMINAL_COMPLETION_NOT_ASSERTABLE; the repaired emergency-stop objective returns report-terminal with terminalState cancelled; the repaired Test One objective reaches grant evaluation, throwing OPERATING_EXECUTION_ACTIVE_GRANT_REQUIRED without access and returning execute-now with access.",
+    "Contract boundaries unchanged: digest sha256:9ba317acac51f3592fb16db0f7c1beef49b867eb5759f5803230964753b1327a, five decisionOutcomes, nine protectedEffects, none modified. No IRIS Core source, contract, generated artifact, certification program document, or Test One failure record was changed.",
+    "Command Center patch digest sha256:636bc47d... is the sha256 of the UTF-8 git diff over the four changed Command Center paths. The IRIS Core patch digest is the sha256 of the UTF-8 git diff over the task record and the evidence file after git add -N on the evidence file; it deliberately excludes this handoff, which cannot digest itself."
+  ],
+  "limitations": [
+    "A live gateway run against the repaired Core was not performed and is blocked by design. loadGatewayOperatingContract refuses to start when a pinned Core module-tree digest does not match, and the kernel digest is stale precisely because of the Core terminal repair: expected sha256:3e3d111e..., actual sha256:bb3e15f0.... All seven other pinned packages match and the pinned Core contract revision 08f69f82 is still an ancestor of Core HEAD.",
+    "REQUIRED FOLLOW-UP: expectedCoreModuleTreeDigests.kernel in scripts/operating-contract-runtime.mjs must be re-bound before Certification Test One can be re-attempted, and it must be re-bound against the merged Core revision rather than an unmerged branch. That file is outside this task's allowed_paths and no change was made to it.",
+    "pnpm verify in the Command Center therefore cannot reach exit 0 while IRIS Core sits on the unmerged terminal-repair branch. Its two failing files, tests/operating-contract-runtime.test.mjs and tests/operating-decision-controller.test.mjs, both fail with IRIS_OPERATING_CONTRACT_MISMATCH and reproduce identically at untouched dd9b222.",
+    "pnpm verify in IRIS Core exits 1 on one pre-existing failure, tests/iris-dev-github.test.ts > redacts credential-bearing URI schemes without hiding declared log truncation, which times out at 15000ms. This is the 546 of 547 state the Founder recorded for this branch before the task began.",
+    "A multi-subject question now fails closed when Founder Full access is inactive. Narrowing the shortcut means a request naming more than one subject is constructed as an ordinary operating objective, and without an active grant canonical Core refuses it with OPERATING_EXECUTION_ACTIVE_GRANT_REQUIRED, which the gateway returns as 503. That is the pre-existing behaviour of every non-shortcut conversation turn without access and it is the correct trade against a false completion, but it is a Founder-visible change for that class of request. Turning that refusal into a readable message is a separate improvement outside this task's scope.",
+    "The exact verbatim objective submitted in the failed Test One run is not preserved in evidence/cycle-twelve/certification-test-one-2026-08-11.md, which holds the opening clause verbatim and a paraphrase of the seven items. The wording used in the reproduction is a faithful reconstruction and is labelled as such.",
+    "Command Center commands ran from PowerShell through corepack pnpm rather than from WSL as instructed, because this worktree's node_modules is a Windows install and WSL vitest aborts at startup for a missing Linux rolldown binding. IRIS Core commands ran from WSL as instructed.",
+    "The scope amendment adding src/conversation-client.ts and tests/conversation-client.test.ts to allowed_paths was authorized by explicit Founder instruction in session on 2026-08-12, after Claude reported the conflict under permitted action seven. The amendment is recorded in the task record.",
+    "This repair permits a fresh Certification Test One attempt from a new exact proposal. It does not certify Test One and does not change the recorded Test One failure.",
+    "Unrelated pre-existing condition, left untouched: the Command Center primary worktree C:\\Projects\\iris-founder-command-center is on a local branch iris/gateway-status-shortcut-false-completion at b8c36ff, an ancestor of origin/main roughly 35,000 lines behind it, with eight uncommitted modified files. This repair used C:\\Projects\\iris-founder-command-center-main, which was clean at dd9b222.",
+    "This handoff and its evidence are producer-authored. Claude is the producer and is not the independent reviewer; nothing here is certified."
+  ],
+  "rollback": "Command Center: the branch iris/gateway-status-shortcut-false-completion-repair is based on dd9b222 and holds only the four changed files, uncommitted. Discard with: git -C C:\\Projects\\iris-founder-command-center-main checkout dd9b222 -- scripts/local-gateway.mjs src/conversation-client.ts tests/local-gateway.test.ts tests/conversation-client.test.ts. Then git switch main to restore the worktree to the branch it was on before this task, and delete the repair branch when it is no longer wanted. No commit, remote branch, pull request, merge, force-push, or history rewrite was performed. IRIS Core: the three changed paths are additive records, uncommitted; the task record is modified and the evidence file and this handoff are untracked. Discard with: git -C C:\\Projects\\STOIC-IRIS checkout -- .iris/coordination/tasks/gateway-status-shortcut-false-completion.json, then delete evidence/gateway-repair/ and .iris/coordination/handoffs/gateway-status-shortcut-false-completion.json. That restores the task record's original allowed_paths and permitted_actions. No IRIS Core source, contract, generated artifact, certification program document, or Test One failure record was modified.",
+  "protected_actions_remaining": [
+    "Exact-path staging and commit in both repositories - not performed, because the task is authorization_mode single_action with an empty completion_actions list and no Founder completion mandate was issued.",
+    "Non-force push of the Command Center branch iris/gateway-status-shortcut-false-completion-repair - not performed.",
+    "Pull-request creation, independent review, merge, local synchronization, and worktree cleanup - not performed.",
+    "Re-binding expectedCoreModuleTreeDigests.kernel in scripts/operating-contract-runtime.mjs against the merged Core revision - outside this task's allowed_paths, and required before Certification Test One can be re-attempted.",
+    "Merging the IRIS Core terminal repair on claude/remote-control-v1owqp, which this repair was deliberately produced ahead of."
+  ],
+  "ready_for_review": true
+}
