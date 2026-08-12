@@ -165,28 +165,33 @@ node scripts/dev/iris-dev.mjs contract inspect --json
 | ---------- | ------- | ---- | ------ |
 | iris-founder-command-center | `pnpm exec vitest run tests/local-gateway.test.ts` (baseline, untouched `dd9b222`) | 0 | 70 passed, 1 skipped |
 | iris-founder-command-center | `pnpm exec vitest run tests/local-gateway.test.ts tests/conversation-client.test.ts` | 0 | 78 passed, 1 skipped |
-| iris-founder-command-center | `pnpm verify` | 1 | format, lint, typecheck, build pass. 321 passed, 1 failed, 9 skipped across 53 files; 2 files failed, both pre-existing — see below |
+| iris-founder-command-center | `pnpm verify` before the kernel rebind | 1 | 321 passed, 1 failed, 9 skipped across 53 files; 2 files failed, both pre-existing — see below |
+| iris-founder-command-center | `pnpm verify` after the kernel rebind | **0** | **53 files, 328 passed, 4 skipped** |
 | stoic1712-IRIS/IRIS | `pnpm verify` | 1 | format, lint, typecheck, build pass. **546 passed, 1 failed (547)** across 65 files — exactly the 546/547 state the Founder recorded for this branch before the task began |
 
 ### Pre-existing IRIS Core failure
 
 `tests/iris-dev-github.test.ts > redacts credential-bearing URI schemes without hiding declared log truncation` fails with `Test timed out in 15000ms`. It is a timeout in a GitHub evidence CLI test, unrelated to this repair, and it reproduces the count the Founder stated for this branch. No IRIS Core source, contract, generated artifact, or test was modified by this task.
 
-### Pre-existing Command Center failures, exactly attributed
+### Command Center failures before the rebind, and how they were resolved
 
-`pnpm verify` fails on two files, both with `IRIS_OPERATING_CONTRACT_MISMATCH`:
+`pnpm verify` initially failed on two files, both with `IRIS_OPERATING_CONTRACT_MISMATCH`:
 
 - `tests/operating-contract-runtime.test.mjs > loads and freezes the exact Core contract`
 - `tests/operating-decision-controller.test.mjs` (suite-level failure)
 
-These are **not** caused by this repair. Verified by restoring the working tree to untouched `dd9b222` and running the two files alone: the same two failures, with the same error. The cause is that the Command Center pins the Core module-tree digests in `scripts/operating-contract-runtime.mjs`, and IRIS Core is currently on the branch that carries the terminal repair, which changes `packages/kernel/dist`:
+Neither was caused by the gateway repair. Verified by restoring the working tree to untouched `dd9b222` and running the two files alone: the same two failures, with the same error. The cause was that the Command Center pins the Core module-tree digests in `scripts/operating-contract-runtime.mjs`, and the Core terminal repair rebuilds `packages/kernel/dist`:
 
-| Pinned package | Status against Core `a1c16c2` |
-| -------------- | ----------------------------- |
+| Pinned package | Status against the repaired Core |
+| -------------- | -------------------------------- |
 | contracts, capabilities, model-gateway, orchestration, development, tool-gateway, workers | match |
 | **kernel** | **mismatch** — expected `sha256:3e3d111e…`, actual `sha256:bb3e15f0…` |
 
-The pinned Core contract revision `08f69f82…` is still an ancestor of Core HEAD, so only the kernel module-tree digest is stale. This is the fail-closed binding working as designed, not a defect. It is a required follow-up, described under Limitations.
+This was the fail-closed binding working as designed, not a defect. On explicit Founder instruction the pin was rebound to `sha256:bb3e15f084bf092758fd0781784f3d7de5f386d2b5f4ed4f0bb3b6be0281ba3c`.
+
+`expectedCoreContractRevision` was deliberately **left at `08f69f82…`**. It is verified by an *ancestor* check, `08f69f82` is still an ancestor of both the repaired Core branch and Core `origin/main`, and advancing it to an unmerged branch commit would buy nothing while risking a mismatch if the branch were ever integrated other than by merge commit. The digest itself is content-derived from `packages/kernel/dist`, which is **gitignored and built locally**; it was identical across three separate `pnpm build` runs, and IRIS Core integrates pull requests with merge commits, so the same build — and the same digest — will be produced from Core `main` once the terminal repair lands.
+
+**Correcting the pin unmasked a second stale assertion.** `tests/operating-decision-controller.test.mjs` asserted that an objective carrying `terminal.state: "completed"` returns `report-terminal`. That file had never run while the contract failed to load, so the claim survived the Core terminal repair unnoticed. Note this suite wires the controller to the **real Core modules at `C:\Projects\STOIC-IRIS`**, not to the hermetic fixture. The fixture case now uses `cancelled`, exercising the same behaviour, and the removed claim is pinned as a live guard asserting that a caller-asserted completion is refused — verified against real Core. That is a stronger proof of the invariant than the ad-hoc harness used earlier in this record.
 
 ## Changed paths
 
@@ -202,17 +207,21 @@ The pinned Core contract revision `08f69f82…` is still an ancestor of Core HEA
 - `src/conversation-client.ts`
 - `tests/local-gateway.test.ts`
 - `tests/conversation-client.test.ts`
+- `scripts/operating-contract-runtime.mjs` — kernel module-tree digest rebind, on explicit Founder instruction; outside the record's `allowed_paths`
+- `tests/operating-decision-controller.test.mjs` — the stale `completed` fixture the rebind unmasked; outside the record's `allowed_paths`
 
 ## Limitations
 
-1. **A live gateway run against the repaired Core is blocked by design and was not performed.** `loadGatewayOperatingContract` refuses to start when a pinned Core module-tree digest does not match, and the `kernel` digest is stale exactly because of the Core terminal repair. The behaviour against canonical Core was therefore demonstrated by driving the real Core decision engine with the exact objective shapes the gateway constructs, and the gateway's own behaviour was demonstrated through a running gateway process against the hermetic Core fixture, which now mirrors the Core invariant. A full live gateway-to-Core turn requires re-binding `expectedCoreModuleTreeDigests.kernel` in `scripts/operating-contract-runtime.mjs`. That file is outside this task's `allowed_paths`, and the re-bind should be made against the **merged** Core revision rather than an unmerged branch. **This is a required follow-up before Certification Test One can be re-attempted.**
-2. `pnpm verify` in the Command Center cannot reach exit 0 while IRIS Core sits on the unmerged terminal-repair branch, for the same reason. Its two failures are attributed above and reproduce identically at untouched `dd9b222`.
-3. **A multi-subject question now fails closed when Founder Full access is inactive.** Narrowing the shortcut means a request naming more than one subject is constructed as an ordinary operating objective. Without an active grant, canonical Core refuses it with `OPERATING_EXECUTION_ACTIVE_GRANT_REQUIRED` and the gateway returns 503. That is the pre-existing behaviour of every non-shortcut conversation turn without access, and it is the correct trade: the alternative was the false completion this repair removes. It is nonetheless a Founder-visible change for that class of request, and turning that refusal into a readable message is a separate improvement outside this task's scope.
-4. The exact verbatim wording submitted in the failed Test One run is not preserved in `evidence/cycle-twelve/certification-test-one-2026-08-11.md`; the record holds the opening clause verbatim and a paraphrase of the seven items. The reconstruction used here is faithful to that description but is a reconstruction, and is labelled as one.
-5. The post-repair classification is demonstrated end-to-end through a running gateway process rather than by a unit-level mirror of the classifier, so the evidence reflects real turn behaviour and cannot drift from the implementation.
-6. Command Center commands ran on Windows rather than WSL, for the reason given under the baseline. The Command Center `node_modules` is a Windows install and its WSL counterpart is absent.
-7. This repair permits a fresh Certification Test One attempt from a new exact proposal. It does not certify Test One, and it does not change the recorded Test One failure.
-8. This record is producer-authored. It has not been independently reviewed.
+1. **A full live gateway-to-Core HTTP turn was still not performed.** It is no longer blocked — the rebind lets the gateway load the repaired Core contract, and `tests/operating-decision-controller.test.mjs` now exercises the real Core modules and passes. A complete live turn would additionally require Founder credential and state files and a running local model provider, which is beyond what this task authorizes, so it was not attempted. The invariant itself is proven against real Core three ways: that controller suite, the direct decision-engine harness recorded above, and the gateway's own behaviour through a running gateway process against the hermetic fixture, which mirrors the Core invariant.
+2. **The rebind was made against an unmerged Core revision**, which this record had previously said should be avoided. The Founder instructed it directly. The residual risk is narrower than it first appears: the digest is content-derived from a locally built, gitignored `dist`, it was reproducible across three builds, and IRIS Core integrates pull requests with merge commits, so Core `main` will produce the same build after the terminal repair merges. The risk that remains is **ordering**, recorded next.
+3. **Merge order is now constrained.** Because the Command Center branch pins the repaired Core kernel, it must merge **after** IRIS Core pull request 109. Merging it first would leave Command Center `main` expecting a kernel build that Core `main` does not produce, and the gateway would fail closed for anyone on Core `main`. Before the rebind this branch was safe to merge in either order; it no longer is.
+4. **A multi-subject question now fails closed when Founder Full access is inactive.** Narrowing the shortcut means a request naming more than one subject is constructed as an ordinary operating objective. Without an active grant, canonical Core refuses it with `OPERATING_EXECUTION_ACTIVE_GRANT_REQUIRED` and the gateway returns 503. That is the pre-existing behaviour of every non-shortcut conversation turn without access, and it is the correct trade: the alternative was the false completion this repair removes. It is nonetheless a Founder-visible change for that class of request, and turning that refusal into a readable message is a separate improvement outside this task's scope.
+5. The exact verbatim wording submitted in the failed Test One run is not preserved in `evidence/cycle-twelve/certification-test-one-2026-08-11.md`; the record holds the opening clause verbatim and a paraphrase of the seven items. The reconstruction used here is faithful to that description but is a reconstruction, and is labelled as one.
+6. The post-repair classification is demonstrated end-to-end through a running gateway process rather than by a unit-level mirror of the classifier, so the evidence reflects real turn behaviour and cannot drift from the implementation.
+7. Command Center commands ran on Windows rather than WSL, for the reason given under the baseline. The Command Center `node_modules` is a Windows install and its WSL counterpart is absent.
+8. Two changed Command Center paths, `scripts/operating-contract-runtime.mjs` and `tests/operating-decision-controller.test.mjs`, are outside the task record's `allowed_paths`. Both were changed on explicit Founder instruction to perform the rebind, and the second only because the rebind unmasked a stale assertion in it. The task record was not amended for these two paths.
+9. This repair permits a fresh Certification Test One attempt from a new exact proposal. It does not certify Test One, and it does not change the recorded Test One failure.
+10. This record is producer-authored. It has not been independently reviewed.
 
 ## Unrelated pre-existing condition observed, not touched
 
@@ -224,7 +233,7 @@ The Command Center primary worktree `C:\Projects\iris-founder-command-center` is
 
 | Repository | Branch | Commits | Remote |
 | ---------- | ------ | ------- | ------ |
-| iris-founder-command-center | `iris/gateway-status-shortcut-false-completion-repair` | `cedb1109980eee34918bc648b6349d2b0511aabf` | pushed, `origin` equal. [PR #61](https://github.com/stoic1712-IRIS/iris-founder-command-center/pull/61) open against `main`, MERGEABLE |
+| iris-founder-command-center | `iris/gateway-status-shortcut-false-completion-repair` | `cedb110` gateway repair, `be79a7d` kernel rebind | pushed, `origin` equal. [PR #61](https://github.com/stoic1712-IRIS/iris-founder-command-center/pull/61) open against `main`, MERGEABLE, **must merge after Core PR #109** |
 | stoic1712-IRIS/IRIS | `claude/remote-control-v1owqp` | `2054fbb`, the follow-up recording delivered revisions, and the merge below | pushed, `origin` equal. Part of open PR #109 |
 
 The IRIS Core records sit on `claude/remote-control-v1owqp`, which is the head branch of PR #109, because that is the branch the Core worktree is on. They are now part of that pull request.
