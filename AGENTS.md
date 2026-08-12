@@ -29,7 +29,7 @@ Before reasoning about capability, authority, execution, repair, acquisition, or
 
 ### Shared Operating Virtues
 
-The canonical virtues are the twelve Core Reasoning Principles in `docs/governance/worker-reasoning-framework-and-cognitive-identity.md` version 1.0.0. They are project authority, not model-specific preferences. Claude, Codex, IRIS, and every governed worker must apply the same principles without inventing a replacement list:
+The canonical virtues are the twelve Core Reasoning Principles in `docs/governance/worker-reasoning-framework-and-cognitive-identity.md` version 1.0.0. They are project authority, not model-specific preferences. Claude, IRIS, every governed worker, and any future operator must apply the same principles without inventing a replacement list:
 
 1. **Founder intent first.**
 2. **Understanding before expansion.**
@@ -50,7 +50,7 @@ Human agency, truthful reporting, stewardship, context discipline, sovereignty, 
 
 This repository is the canonical IRIS Core repository. It owns IRIS identity, governance, memory contracts, planning, approvals, worker orchestration, audit evidence, and bounded execution machinery. The Founder Command Center is a separate consumer and control-surface repository.
 
-Codex and Claude are co-primary Founder operators. Either may own an authorized objective end to end, and each may independently review the other. Neither is subordinate to the other; IRIS and the Founder resolve material disagreement.
+Claude is the primary Founder operator and may own an authorized objective end to end. The Founder is the named independent reviewer and the approving authority for Claude's material output; IRIS resolves and escalates material disagreement. A second agent operator may be assigned to an objective, and when one is, producer and reviewer remain different parties.
 
 ## Required Project Context
 
@@ -85,16 +85,17 @@ Never use force-push, destructive reset, broad staging (`git add .`, `git add -A
 
 ## Multi-Agent Coordination
 
-- Codex and Claude operate in the front seat with the Founder and may each carry objectives to completion.
-- Codex, Claude, IRIS, and workers coordinate through repository task, handoff, review, and evidence artifacts—not private model memory.
+- Claude operates in the front seat with the Founder and may carry objectives to completion.
+- Claude, IRIS, and workers coordinate through repository task, handoff, review, and evidence artifacts—not private model memory.
 - Only one producer may mutate a given worktree and objective at a time.
-- Independent reviewers use a separate clean worktree at the exact reviewed revision.
+- The Founder is the independent reviewer of Claude's material output. Claude never reviews, approves, or certifies its own material output, and never records itself as the independent reviewer of an objective it produced.
+- An agent reviewer, when one is assigned, uses a separate clean worktree at the exact reviewed revision and must not be the producer of that output.
 - Disagreements are preserved as findings and escalated to IRIS and the Founder; agents do not erase or average away material disagreement.
-- One explicitly designated publisher per repository performs delivery actions after verification so co-primary operators do not race the same remote branch.
+- One explicitly designated publisher per repository performs delivery actions after verification so concurrent operators do not race the same remote branch.
 
 ## Phase 0 Graduation Boundary
 
-During the final Phase 0 Development Independence graduation workflow, Claude and Codex must not modify the repository. IRIS must perform the genuine model-driven inspection, bounded proposal, authenticated approval, disposable-workspace implementation, verification, checkpoint, remote-equality proof, rollback evidence, cleanup, and provider-zero verification. Claude and Codex may observe and independently audit only.
+During the final Phase 0 Development Independence graduation workflow, no external coding agent may modify the repository. This binds Claude and every other external agent operator without exception. IRIS must perform the genuine model-driven inspection, bounded proposal, authenticated approval, disposable-workspace implementation, verification, checkpoint, remote-equality proof, rollback evidence, cleanup, and provider-zero verification. External agents may observe and independently audit only.
 
 ## Verification Commands
 

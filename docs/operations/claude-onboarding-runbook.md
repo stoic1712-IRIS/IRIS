@@ -6,7 +6,7 @@
 
 ## Goal
 
-Onboard Claude Code as a co-primary Founder operator with Codex, capable of carrying authorized objectives from research through implementation, verification, GitHub delivery, synchronization, and cleanup while keeping the Founder, IRIS Core, repository governance, and exact task records authoritative.
+Onboard Claude Code as the primary Founder operator, capable of carrying authorized objectives from research through implementation, verification, GitHub delivery, synchronization, and cleanup while keeping the Founder, IRIS Core, repository governance, and exact task records authoritative.
 
 This runbook does not itself authorize installation, paid usage, authentication, credentials, repository mutation, staging, committing, pushing, pull requests, merging, deployment, or provider resources.
 
@@ -136,6 +136,6 @@ Onboarding is complete only when:
 - direct read-only access to the hash-bound foundation source library is verified;
 - permissions match the reviewed settings;
 - the Cycle Eight read-only review completes without mutation;
-- Codex independently verifies the review;
+- the Founder independently verifies the review;
 - no secrets appear in files or output; and
 - the Founder accepts the initial operator capability level.

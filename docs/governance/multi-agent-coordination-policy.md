@@ -1,21 +1,22 @@
 # Multi-Agent Coordination Policy
 
-**Status:** Canonical
+**Status:** Version 1.0.0 canonical; version 1.1.0 proposed and pending Founder approval
 
-**Version:** 1.0.0
+**Version:** 1.1.0 (proposed)
 
 ## Purpose
 
-This policy defines how IRIS, Codex, Claude, and governed workers collaborate without creating competing sources of truth, overlapping mutation authority, hidden handoffs, or self-review.
+This policy defines how the Founder, IRIS, Claude, and governed workers collaborate without creating competing sources of truth, overlapping mutation authority, hidden handoffs, or self-review.
 
-The Founder approved version 1.0.0 as canonical on 2026-08-06.
+The Founder approved version 1.0.0 as canonical on 2026-08-06. Version 1.1.0 replaces the co-primary Codex operator role with Claude as primary Founder operator and the Founder as the named independent reviewer, without weakening producer-reviewer separation or the Phase 0 boundary.
 
 ## Authority and Ownership
 
 - The Founder retains final authority.
 - IRIS Core remains the canonical owner of governance, memory contracts, planning, approvals, orchestration, and audit state.
 - Models and coding agents are replaceable executors and reviewers. They do not become canonical memory owners.
-- Codex and Claude are co-primary Founder operators with capability parity as the target. Either may produce, review, or deliver a task when assigned, subject to workspace isolation and producer-reviewer separation for the exact material output.
+- Claude is the primary Founder operator and may produce, deliver, or review a task when assigned, subject to workspace isolation and producer-reviewer separation for the exact material output.
+- The Founder is the named independent reviewer of Claude's material output. Claude may review the output of IRIS, a governed worker, or another assigned agent operator, and may never review its own.
 - The canonical repository and verified provider state prevail over private conversation history or model memory.
 - Technical access does not imply authorization.
 
@@ -112,15 +113,17 @@ New operators may be validated through these levels without treating lower valid
 4. **Branch publication:** push only an exact approved branch and revision.
 5. **Pull-request operation:** create or review an exact PR under separate authority.
 
-Claude's intended steady state is co-primary operational parity with Codex. Product-specific interfaces may differ, but repository, terminal, GitHub, research, browser, connector, implementation, verification, and delivery capabilities should be made equivalent where the installed products support them.
+Claude's steady state is full operational capability across repository, terminal, GitHub, research, browser, connector, implementation, verification, and delivery work. Breadth of capability is not authority: the Founder remains the independent reviewer, and no capability grants Claude the right to certify its own output.
 
 Repository administration, secrets, billing, organization management, force-push, history rewriting, destructive cleanup, and deployment are not silently granted by capability parity.
 
 ## Phase 0 Graduation
 
-During the final Development Independence graduation, Claude and Codex are audit-only. They must not modify the repository or perform IRIS's self-upgrade steps. IRIS must complete the governed workflow herself for the result to satisfy Phase 0.
+During the final Development Independence graduation, every external coding agent is audit-only. This binds Claude and any other external agent operator without exception. They must not modify the repository or perform IRIS's self-upgrade steps. IRIS must complete the governed workflow herself for the result to satisfy Phase 0.
 
 ## Founder Decision
+
+### Version 1.0.0
 
 - [x] Approved as canonical policy
 - [ ] Approved with amendments
@@ -129,6 +132,18 @@ During the final Development Independence graduation, Claude and Codex are audit
 **Founder:** Cristofer Stoic Arellano
 
 **Decision date:** 2026-08-06
+
+### Version 1.1.0 — Founder as named independent reviewer
+
+- [ ] Approved as canonical policy
+- [ ] Approved with amendments
+- [ ] Rejected for revision
+
+**Founder:** Cristofer Stoic Arellano
+
+**Decision date:** pending
+
+Version 1.0.0 remains canonical until this decision is recorded. Producer: Claude, which cannot approve this amendment.
 
 **Approved version or commit:** Version 1.0.0; activation commit `ed7f58b1cab2f9b7d41e693ac0216a422494d8d5`
 

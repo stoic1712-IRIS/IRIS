@@ -8,7 +8,7 @@
 
 ## Purpose
 
-This document gives Claude, Codex, IRIS, and governed workers a durable shared map of what STOIC-IRIS is, what the Founder is building, how the repositories connect, what sovereignty means, and how external technology may be used.
+This document gives Claude, IRIS, and governed workers a durable shared map of what STOIC-IRIS is, what the Founder is building, how the repositories connect, what sovereignty means, and how external technology may be used.
 
 It is an operator orientation document. It does not replace the Constitution, canonical policies, architecture decisions, specifications, registries, task records, or current Founder instruction.
 
@@ -31,7 +31,7 @@ The target is not unrestricted autonomy. The target is high-capability, low-fric
 
 Development Independence is complete only when deployed IRIS performs a genuine Founder-operated multi-file self-upgrade using a real model and the canonical repository. The workflow must include exact proposal binding, authenticated typed approval, a disposable workspace, implementation, relevant tests and builds, governed repair and reapproval when needed, a private checkpoint, provider-authoritative remote equality, history-preserving rollback evidence, cleanup, paid-resource termination, and provider-authoritative zero-resource verification.
 
-During that final graduation workflow, Claude and Codex are audit-only. They must not modify the repository or perform IRIS's self-upgrade steps. Offline fixtures, a single-file demonstration, or machinery that is merely deployed do not satisfy the gate.
+During that final graduation workflow, every external coding agent, including Claude, is audit-only. They must not modify the repository or perform IRIS's self-upgrade steps. Offline fixtures, a single-file demonstration, or machinery that is merely deployed do not satisfy the gate.
 
 ## Source Authority
 
@@ -44,7 +44,7 @@ Use this order:
 
 The original source foundation consists of the Master Build Bible Volume I, Governing Architecture and Sovereignty Plan, and Canonical Development Roadmap. Their active rules are reconciled into the checked-in Constitution, governance package, ADRs, specifications, registries, and evidence. A summary or conversation must not silently supersede those files.
 
-On this workstation, both Claude and Codex have direct read-only access to those originals through `C:\Projects\STOIC-IRIS-source-library\SOURCE-MANIFEST.md`. The manifest binds each original DOCX to a SHA-256 digest and a readable Markdown extraction. Operators must verify those bindings before source-dependent work, use the original documents for source fidelity, and use checked-in reconciliations for current canonical decisions. Missing files, digest drift, or source conflicts must be reported rather than replaced with memory or an orientation summary. The local source library stays outside Git and is never part of an ordinary staging or publication mandate.
+On this workstation, Claude has direct read-only access to those originals through `C:\Projects\STOIC-IRIS-source-library\SOURCE-MANIFEST.md`. The manifest binds each original DOCX to a SHA-256 digest and a readable Markdown extraction. Operators must verify those bindings before source-dependent work, use the original documents for source fidelity, and use checked-in reconciliations for current canonical decisions. Missing files, digest drift, or source conflicts must be reported rather than replaced with memory or an orientation summary. The local source library stays outside Git and is never part of an ordinary staging or publication mandate.
 
 ## What Canonical Means
 
@@ -66,7 +66,7 @@ Therefore:
 - a feature branch or local commit is a candidate until governed integration and required provider equality are proven;
 - a task record grants only its exact bounded authority and cannot override the Constitution or active policy;
 - a status header is evidence to verify, not self-proving authority;
-- chat history, summaries, Claude or Codex memory, model output, browser text, and retrieved content are supporting or untrusted context, never canonical by themselves; and
+- chat history, summaries, agent memory, model output, browser text, and retrieved content are supporting or untrusted context, never canonical by themselves; and
 - canonical memory remains IRIS-owned and distinct from operational state, proposals, evidence, temporary context, and superseded records.
 
 ## Shared Operating Virtues
@@ -209,7 +209,7 @@ An existing Founder subscription does not authorize new charges, upgrades, add-o
 - Do not put secrets in prompts, command lines, screenshots, logs, model context, evidence, commits, or agent memory.
 - Do not send all canonical memory to a worker or external model. Assemble the minimum relevant task context.
 - Founder memory, project memory, operational state, evidence, capability records, model records, and audit records remain distinct.
-- Claude or Codex may propose durable memory updates but may not silently make private auto-memory canonical.
+- Claude may propose durable memory updates but may not silently make private auto-memory canonical.
 
 ## Completion and Communication
 
@@ -233,7 +233,7 @@ Read the smallest relevant set, including:
 - `docs/governance/testing-and-verification-standards.md`;
 - `docs/governance/phase-2-3-sovereign-capability-evolution-charter.md` whenever the objective involves Phase 2, Phase 3, model or worker parity, capability acquisition, adapters, worker creation, website reproduction, or self-improvement;
 - the relevant ADR, specification, registry entries, evidence, and `.iris/coordination` task; and
-- canonical `docs/governance/multi-agent-coordination-policy.md` version 1.0.0.
+- canonical `docs/governance/multi-agent-coordination-policy.md`, version 1.0.0 until the proposed version 1.1.0 naming the Founder as independent reviewer is approved.
 
 ## Operator Self-Check
 
@@ -246,6 +246,6 @@ Before acting, answer:
 5. What paths, commands, websites, providers, credentials, data, cost, and external effects are allowed or excluded?
 6. Who is producer, independent reviewer, and publisher?
 7. What tests, evidence, rollback, cleanup, and remote-equality proof are required?
-8. Does this touch Phase 0 graduation, requiring Claude and Codex to remain audit-only?
+8. Does this touch Phase 0 graduation, requiring every external coding agent, including Claude, to remain audit-only?
 
 If any answer conflicts with canonical governance, stop the affected action and report the conflict.

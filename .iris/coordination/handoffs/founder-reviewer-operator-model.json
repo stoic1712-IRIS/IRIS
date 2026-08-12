@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0.0",
+  "handoff_id": "founder-reviewer-operator-model",
+  "task_id": "founder-reviewer-operator-model",
+  "producer": "Claude",
+  "recipient": "Founder Cristofer Stoic Arellano",
+  "created_at": "2026-08-12T01:09:42.0000000Z",
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "iris/founder-reviewer-operator-model",
+      "commit": "33d928256e78b5e753d7ffd7699d6dbc4a7e520c"
+    }
+  ],
+  "result_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "iris/founder-reviewer-operator-model",
+      "commit": null,
+      "patch_digest": "sha256:5f9e9dbae35a22728659982fc7d15548fe4804dbcc581ea5dccd653b9ed9068d"
+    }
+  ],
+  "changed_paths": [
+    ".iris/coordination/handoffs/founder-reviewer-operator-model.json",
+    ".iris/coordination/tasks/founder-reviewer-operator-model.json",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "docs/governance/constitution.md",
+    "docs/governance/multi-agent-coordination-policy.md",
+    "docs/operations/claude-onboarding-runbook.md",
+    "docs/operations/stoic-iris-project-context.md"
+  ],
+  "commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "node node_modules/prettier/bin/prettier.cjs --config prettier.config.mjs --check <the six amended documents and the new task record>",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "node <scratchpad>/check-task-record.mjs .iris/coordination/task.schema.json .iris/coordination/tasks/founder-reviewer-operator-model.json",
+      "exit_code": 0
+    }
+  ],
+  "evidence": [
+    "Operator model amended in six documents: Claude is the primary Founder operator and the Founder is the named independent reviewer; the co-primary Codex role is removed from forward-looking governance",
+    "Phase 0 boundary generalized rather than narrowed. AGENTS.md, constitution.md line 146, multi-agent-coordination-policy.md line 122, and stoic-iris-project-context.md lines 34 and 249 now bind every external coding agent including Claude, so removing Codex by name cannot be read as releasing Claude",
+    "Self-certification prohibition strengthened, not weakened. AGENTS.md retains the producer prohibition and adds an explicit rule that Claude never records itself as independent reviewer of an objective it produced; the coordination policy adds the same at line 19",
+    "Historical attribution preserved. The only remaining Codex references in changed files are the amendment note plus two factual records: claude-onboarding-runbook.md line 93 and stoic-iris-project-context.md line 106, both describing work Codex actually performed",
+    "evidence/** and every completed coordination record are unmodified; git status shows only the six amended documents and the two new coordination records",
+    "The coordination policy is versioned 1.1.0 proposed with an unchecked Founder decision block; version 1.0.0 remains canonical until the Founder records approval",
+    "Formatting passes for all changed paths and the new task record conforms to task.schema.json"
+  ],
+  "limitations": [
+    "Scope was bounded to the active operator model. Eighteen Codex references remain across docs/specifications/**, two in docs/architecture/decisions/**, and one in docs/registries/**; most describe decisions or cycles as they stood at the time. They were neither audited nor amended here and need a separate bounded pass",
+    "Removing the second agent operator removes the only party that could independently review Claude without Founder attention. The Founder now personally holds a role previously shared, which is a real throughput cost accepted by explicit instruction",
+    "The producer of this amendment is the party the amendment benefits. That conflict cannot be resolved by the producer and is the reason no self-approval is recorded",
+    "pnpm verify was not run in this worktree because dependencies are not installed there; the change is Markdown and JSON only, so format:check is the sole verify stage that inspects it, and the equivalent check was run directly",
+    "The certification program at docs/operations/cycle-twelve-founder-certification-program.md still names Codex as audit-only during activated runs. It is excluded from this task and unchanged"
+  ],
+  "rollback": "The change is additive documentation on a feature branch with no merge. To discard: close the pull request, then run `git worktree remove C:/Projects/STOIC-IRIS-operator-model` and `git push origin --delete iris/founder-reviewer-operator-model` from C:/Projects/STOIC-IRIS. Canonical main is untouched at 33d928256e78b5e753d7ffd7699d6dbc4a7e520c. If later merged, revert with `git revert -m 1 <merge-commit>`, which preserves history and restores version 1.0.0 wording.",
+  "protected_actions_remaining": [
+    "Founder review of the exact diff as the named independent reviewer of this amendment",
+    "Founder decision recorded in the version 1.1.0 block of docs/governance/multi-agent-coordination-policy.md",
+    "Merge of the pull request into main, which this task record excludes from producer authority",
+    "A separate bounded pass over the remaining Codex references in specifications, architecture decisions, and the registry",
+    "A separate decision on whether the certification program's Codex audit-only clause should be generalized the same way"
+  ],
+  "ready_for_review": true
+}
