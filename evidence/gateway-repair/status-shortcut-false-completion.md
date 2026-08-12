@@ -220,17 +220,22 @@ The Command Center primary worktree `C:\Projects\iris-founder-command-center` is
 
 ## Rollback
 
-**Delivery performed.** On explicit Founder instruction after verification, both repositories were committed by exact path and the Command Center branch was pushed non-force. No pull request, merge, force-push, history rewrite, or destructive reset was performed.
+**Delivery performed.** On explicit Founder instruction after verification, both repositories were committed by exact path, both branches were pushed non-force, and one pull request was opened. No merge, force-push, history rewrite, or destructive reset was performed.
 
-| Repository | Branch | Commit | Remote |
-| ---------- | ------ | ------ | ------ |
-| iris-founder-command-center | `iris/gateway-status-shortcut-false-completion-repair` | `cedb1109980eee34918bc648b6349d2b0511aabf` | pushed; `origin` equal at the same commit |
-| stoic1712-IRIS/IRIS | `claude/remote-control-v1owqp` | `2054fbbb4ec540afb79ca7098eb9e01e641b7fd3`, plus the follow-up commit recording these revisions | **not pushed**, one commit ahead of `origin` |
+| Repository | Branch | Commits | Remote |
+| ---------- | ------ | ------- | ------ |
+| iris-founder-command-center | `iris/gateway-status-shortcut-false-completion-repair` | `cedb1109980eee34918bc648b6349d2b0511aabf` | pushed, `origin` equal. [PR #61](https://github.com/stoic1712-IRIS/iris-founder-command-center/pull/61) open against `main`, MERGEABLE |
+| stoic1712-IRIS/IRIS | `claude/remote-control-v1owqp` | `2054fbb`, the follow-up recording delivered revisions, and the merge below | pushed, `origin` equal. Part of open PR #109 |
 
-The IRIS Core records were committed onto `claude/remote-control-v1owqp`, the branch that carries the Core terminal repair and pull request 109, because that is the branch the Core worktree is on. The commit is local and unpushed, so it can be moved if the records belong elsewhere.
+The IRIS Core records sit on `claude/remote-control-v1owqp`, which is the head branch of PR #109, because that is the branch the Core worktree is on. They are now part of that pull request.
 
-**Command Center.** The branch is based on `dd9b222` and carries one commit touching only the four changed files. `main` is untouched. To undo while preserving history, `git revert cedb110` on the branch and push non-force. To retire the work entirely, delete the local and remote branch; nothing depends on it.
+**Concurrent-operator condition.** The first IRIS Core push was rejected: `origin/claude/remote-control-v1owqp` had advanced to `c737dae`, *coordination: record the Founder workstation verification*, pushed by another Claude session while these records were being produced. The two changesets are disjoint — `c737dae` updates three unrelated handoffs and touches none of this task's paths. It was integrated by **merge rather than rebase**, so `2054fbb` and `1725c6c` keep the identifiers the handoff and this record already cite. The merged tree was verified before pushing: `pnpm verify` reproduced 546 passed and 1 failed of 547, identical to the pre-merge run.
 
-**IRIS Core.** The changed paths are additive records across two local commits. `git reset --keep` to the prior revision, or reverting both commits, restores the task record's original `allowed_paths` and `permitted_actions` and removes this evidence file and the handoff. No IRIS Core source, contract, generated artifact, certification program document, or Test One failure record was modified.
+**No CI on the Command Center branch.** That repository has no `.github` workflows on `main`, and PR #61 reports an empty status-check rollup. The results recorded here are the whole verification record for that branch.
+
+**Rollback is history-preserving revert, never force-push or reset**, because both branches are published.
+
+- **Command Center.** The branch is based on `dd9b222` and carries one commit touching only the four changed files; `main` is untouched and PR #61 is unmerged. Close PR #61, or `git revert cedb110` and push non-force. To retire the work entirely, close the pull request and delete the branch; nothing depends on it.
+- **IRIS Core.** Revert the two record commits and push non-force. That restores the task record's original `allowed_paths` and `permitted_actions` and removes this evidence file and the handoff, without disturbing `c737dae` or the Core terminal repair. No IRIS Core source, contract, generated artifact, certification program document, or Test One failure record was modified.
 
 **Worktree state to restore.** `C:\Projects\iris-founder-command-center-main` was on branch `main` at `dd9b222` before this task and was switched to the dedicated repair branch. `git switch main` in that worktree restores it.
