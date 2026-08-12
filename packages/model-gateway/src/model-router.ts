@@ -38,7 +38,16 @@ export interface ModelRoutingRequest {
 }
 
 const capabilityPurposes: readonly (readonly [string, ModelRoutePurpose])[] = [
-  ["repository.inspect", "agentic-coding"],
+  // `repository.inspect` reads branch, revision, working-tree state and file presence and reports
+  // them. It mutates nothing, so it is reporting work, not coding work, and it belongs beside
+  // `browser.inspect` rather than beside the editing and execution capabilities below.
+  //
+  // It was routed to `agentic-coding` until 2026-08-12. The coding specialist was handed a trusted
+  // inspection evidence block naming the branch and HEAD, and answered "I cannot inspect the
+  // repository due to insufficient access permissions" on three consecutive Founder runs. Forcing
+  // the same objective and the same evidence to `gpt-oss:20b` returned the correct branch and the
+  // exact 40-character revision. The capability is read-and-report; the route now says so.
+  ["repository.inspect", "research-review"],
   ["repository.edit-bounded", "agentic-coding"],
   ["repository.commit-candidate", "agentic-coding"],
   ["repository.address-review", "agentic-coding"],

@@ -1,0 +1,106 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "founder-conversation-surface-defects",
+  "objective": "Repair three defects the Founder hit while attempting Certification Test One, all found on 2026-08-12 and all in the Founder-facing conversation surface rather than in IRIS reasoning. ONE: src/voice-interface.ts treated the bare word `stop` as an emergency-stop command. That check runs from the failure path over the Founder's own submitted text and revokes the governed operator session and desktop control, so the ordinary safety instruction 'Stop before any protected effect' in a certification objective revoked Founder access when an unrelated provider call failed; a transient blip became a session revocation. TWO: packages/model-gateway routed the read-only capability repository.inspect to the coding role. The coding specialist was handed a trusted evidence block naming branch and HEAD and answered 'I cannot inspect the repository due to insufficient access permissions' on three consecutive Founder runs, while the same objective and evidence under gpt-oss:20b returned the correct branch and exact 40-character revision. THREE: the conversation transcript had no height ceiling, no scroll container of its own, and no auto-scroll, so the page grew without bound and pushed the composer below the fold, forcing the Founder to scroll to reach the input after every turn. Not repaired here and recorded as observed: the turn failed with COGNITIVE_ORCHESTRATOR_UNAVAILABLE because the model inventory read did not include the primary model, most plausibly a slow Ollama tags call under load against its 10 second cap.",
+  "issuer": "Founder Cristofer Stoic Arellano",
+  "executor": "Claude",
+  "assigned_role": "producer",
+  "created_at": "2026-08-12T21:05:00.0000000Z",
+  "status": "approved",
+  "risk_class": "R2",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "man just fix everything. router and everything even this. fix the layout make it look simple and nice fix all of the shit that should already be done ill be back",
+  "completion_actions": [
+    "research",
+    "edit",
+    "verify",
+    "repair",
+    "stage",
+    "commit",
+    "push_branch",
+    "create_pull_request",
+    "merge",
+    "synchronize",
+    "cleanup"
+  ],
+  "completion_exclusions": [
+    "No change to the seven certification tests, their pass conditions, or the recorded Test One evidence",
+    "No change to the canonical operating contract, its digest, the five decision outcomes, or protected-effect boundaries",
+    "No weakening of the emergency-stop effect itself; the three explicit stop commands must still revoke access",
+    "No Phase 0 graduation execution, approval, or completion claim",
+    "No speculative tuning of provider timeouts without evidence that the timeout is the defect"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "8bb395c7e896538ca8f5aad08e260672deeabb77"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "main",
+      "commit": "af77b3df438cb85bf4a81089742dff43095c8678"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/tasks/founder-conversation-surface-defects.json",
+    ".iris/coordination/handoffs/founder-conversation-surface-defects.json",
+    "evidence/founder-experience/conversation-surface-defects.md",
+    "packages/model-gateway/src/model-router.ts",
+    "tests/model-router.test.ts",
+    "src/voice-interface.ts",
+    "tests/voice-interface.test.ts",
+    "src/styles.css",
+    "src/views/Presence.tsx",
+    "scripts/operating-contract-runtime.mjs"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    ".claude/**",
+    "config/iris-operating-contract.v1.json",
+    "docs/governance/**",
+    "docs/operations/cycle-twelve-founder-certification-program.md",
+    "evidence/cycle-twelve/**",
+    "generated/**",
+    "packages/kernel/**",
+    "packages/contracts/**",
+    "C:/Projects/STOIC-IRIS-source-library/**"
+  ],
+  "permitted_actions": [
+    "Narrow the client emergency-stop vocabulary to the three explicit stop commands the gateway already recognises, so the two layers cannot disagree about what a stop is, and prove an ordinary use of the word stop no longer revokes a session",
+    "Move repository.inspect from the coding role to the reporting role, beside browser.inspect, and keep independent review required with a reviewer that is never the model that produced the answer",
+    "Amend the two model-router assertions that pin repository.inspect to the coding role, substituting repository.edit-bounded where the assertion is about capability precedence rather than about inspection, and justify the amendment explicitly",
+    "Give the transcript its own scroll container with a height ceiling, keep the composer outside it, and follow the newest line only when the Founder is already near the bottom",
+    "Rebind expectedCoreModuleTreeDigests.model-gateway in the Command Center to the rebuilt Core package, since the routing change rebuilds it and the gateway otherwise fails closed",
+    "Report any change that would require a path outside allowed_paths rather than silently expanding scope"
+  ],
+  "prohibited_actions": [
+    "Delete or weaken an existing test, guard, or fail-closed path to make a repair pass",
+    "Remove the emergency stop, or make an explicit stop command fail to revoke the governed operator session and desktop control",
+    "Change the keyword routing corpus that governs utterances carrying no resolved capability; only the capability mapping is in scope",
+    "Modify IRIS Core kernel or contracts packages, the operating contract, or the certification program",
+    "Force-push, rewrite history, bypass branch protection, administer repositories, or use broad staging",
+    "Claim that any of this certifies Certification Test One; it only removes platform faults that voided three attempts"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "A regression test that fails against the pre-repair revision and passes after it, for the stop keyword and for the routing change",
+    "Proof that the three explicit stop commands still revoke the session after the vocabulary is narrowed",
+    "The exact model-router behaviour before and after for a resolved repository.inspect, including the independent reviewer selection",
+    "The rebuilt model-gateway module-tree digest, and confirmation that every other pinned Core package is unchanged",
+    "Full verification results for both repositories, with every failure attributed exactly, including any pre-existing timeout",
+    "Exact changed paths, limitations, and rollback instructions"
+  ],
+  "publisher": "Claude, with the Founder as independent reviewer",
+  "approval_reference": "founder-fix-everything-mandate-2026-08-12",
+  "phase0_graduation": false
+}
