@@ -65,7 +65,7 @@ describe("IRIS governed model router", () => {
       routeIrisModel({
         utterance: "Tell me about this.",
         availableModels: allModels,
-        requiredCapabilities: ["repository.inspect"],
+        requiredCapabilities: ["repository.edit-bounded"],
       }),
     ).toMatchObject({ model: "qwen3-coder:30b", purpose: "agentic-coding" });
 
@@ -73,7 +73,7 @@ describe("IRIS governed model router", () => {
       routeIrisModel({
         utterance: "Research the official release and compare sources.",
         availableModels: allModels,
-        requiredCapabilities: ["repository.inspect"],
+        requiredCapabilities: ["repository.edit-bounded"],
       }),
     ).toMatchObject({ purpose: "agentic-coding" });
 
@@ -84,6 +84,27 @@ describe("IRIS governed model router", () => {
         requiredCapabilities: ["research.search"],
       }),
     ).toMatchObject({ purpose: "research-review" });
+  });
+
+  // A read-only inspection is reporting work. Routing it to the coding specialist produced a
+  // fabricated "insufficient access permissions" refusal on three consecutive Founder runs, while
+  // the same objective and the same evidence answered correctly under gpt-oss:20b. The capability
+  // mapping is the production path: the gateway always resolves repository.inspect for these
+  // objectives, so this assertion, not the keyword corpus below, governs what the Founder sees.
+  it("routes a resolved repository inspection to the reporting role, not the coding role", () => {
+    const route = routeIrisModel({
+      utterance: "Tell me about this.",
+      availableModels: allModels,
+      requiredCapabilities: ["repository.inspect"],
+    });
+    expect(route).toMatchObject({
+      model: "gpt-oss:20b",
+      purpose: "research-review",
+    });
+    // The reporting role still requires an independent reviewer, and it must never be the model
+    // that produced the answer.
+    expect(route.independentReviewModel).not.toBeNull();
+    expect(route.independentReviewModel).not.toBe(route.model);
   });
 
   it("keeps an explicit Founder model override above a resolved capability", () => {
