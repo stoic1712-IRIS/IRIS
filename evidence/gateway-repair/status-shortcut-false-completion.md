@@ -257,9 +257,29 @@ The Rollback section above was written before the kernel rebind and again before
 
 The dead capability trigger and the actionable-utterance collapse are repaired in Command Center commit `8fdac68` on `iris/gateway-presentation-narrowing-repair`, with regression tests that fail against `458cf11` and pass after. That branch is not merged.
 
-### Findings 4 and 5 remain open
+### Finding 5 is fixed
 
-Finding 4, the two changed paths outside `allowed_paths` without a task-record amendment, is a Founder decision and is not something the producer can resolve. Finding 5, tying `controllerDispositionId` nullability to the decision value, is unaddressed.
+`controllerDispositionId` had been widened to nullable in isolation, with no relation to the decision it describes, so a reply could claim a canonical controller outcome while carrying no disposition, or carry one for a turn that never reached the controller. The two fields are now checked together: a canonical outcome must carry a disposition identifier, and `no-controller-decision` must not. Command Center commit `13bccf1`, merged as `af77b3d`.
+
+### Finding 4 is resolved by a retrospective amendment to the task record
+
+The reviewer judged the two out-of-scope edits benign on the merits — a net strengthening in the test file — and objected to the **authority provenance**: the only evidence that the Founder authorized them was producer-authored text. On explicit Founder instruction, `scripts/operating-contract-runtime.mjs` and `tests/operating-decision-controller.test.mjs` are added to `allowed_paths`, recorded as `AMENDMENT TWO` in the task record's `permitted_actions`.
+
+That amendment is **explicitly marked retrospective**, and the distinction matters. Amendment one, the `conversation-client.ts` widening, was recorded *before* the change it authorized: the producer reported the conflict, the Founder authorized it, and only then was the file touched. Amendment two ratifies work already delivered and merged. Both are valid Founder authorizations; only one is prior approval. Writing the second as though it were the first would assert an approval sequence that did not happen, which is the same class of untruth this whole repair removed.
+
+### All seven findings are now closed
+
+| Finding | Severity | Resolution |
+| ------- | -------- | ---------- |
+| 1 — actionable utterances collapsing | medium | effect-verb disqualifier plus a protected-effect check, `8fdac68` |
+| 2 — dead capability trigger | medium | regex corrected; `your state` matched as a phrase, `8fdac68` |
+| 3 — acceptance commands not green | medium | attributed to a designed fail-closed guard, not a defect |
+| 4 — paths outside `allowed_paths` | medium | retrospective task-record amendment, on Founder instruction |
+| 5 — nullable disposition id | low | bound to the controller decision, `13bccf1` |
+| 6 — stale rollback bullet | low | corrected to merged reality |
+| 7 — emergency-stop evidence text | informational | made true for both call paths, `5f57e20` |
+
+**None of these six resolutions has been independently reviewed.** The review that produced the findings was performed at `458cf11` and `62b9acd`, before any of them existed. Each carries a regression proof — every fix fails against its pre-fix revision and passes after — but that is producer evidence about producer work, and the Command Center repository has no CI to supply a second opinion. Closing the findings is not the same as certifying the closures.
 
 ## Unrelated pre-existing condition observed, not touched
 
