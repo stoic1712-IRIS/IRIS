@@ -60,6 +60,28 @@ describe("IRIS governed model router", () => {
     });
   });
 
+  it("routes Git inspection vocabulary to the coding role even when evidence words appear", () => {
+    for (const utterance of [
+      'Report the current branch, HEAD revision, and whether the working tree is clean for "C:\\Projects\\STOIC-IRIS". Cite the exact source for each fact.',
+      "Which commit is checked out, and are there untracked or staged changes?",
+      "Inspect the Git worktree and report the head sha.",
+    ])
+      expect(routeIrisModel({ utterance, availableModels: allModels })).toMatchObject({
+        model: "qwen3-coder:30b",
+        purpose: "agentic-coding",
+      });
+  });
+
+  it("still routes genuine research requests away from the coding role", () => {
+    expect(
+      routeIrisModel({
+        utterance:
+          "Research the current official Node.js LTS release and compare authoritative sources.",
+        availableModels: allModels,
+      }),
+    ).toMatchObject({ purpose: "research-review" });
+  });
+
   it("honors an allowlisted Founder model override without changing authority", () => {
     expect(
       routeIrisModel({ utterance: "Use GPT OSS for this decision.", availableModels: allModels }),
