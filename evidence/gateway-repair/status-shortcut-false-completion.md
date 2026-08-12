@@ -220,14 +220,17 @@ The Command Center primary worktree `C:\Projects\iris-founder-command-center` is
 
 ## Rollback
 
-**Command Center.** The branch `iris/gateway-status-shortcut-false-completion-repair` is based on `dd9b222` and contains only the four changed files above. To discard the repair entirely:
+**Delivery performed.** On explicit Founder instruction after verification, both repositories were committed by exact path and the Command Center branch was pushed non-force. No pull request, merge, force-push, history rewrite, or destructive reset was performed.
 
-```text
-git -C C:\Projects\iris-founder-command-center-main checkout dd9b222 -- scripts/local-gateway.mjs src/conversation-client.ts tests/local-gateway.test.ts tests/conversation-client.test.ts
-```
+| Repository | Branch | Commit | Remote |
+| ---------- | ------ | ------ | ------ |
+| iris-founder-command-center | `iris/gateway-status-shortcut-false-completion-repair` | `cedb1109980eee34918bc648b6349d2b0511aabf` | pushed; `origin` equal at the same commit |
+| stoic1712-IRIS/IRIS | `claude/remote-control-v1owqp` | `2054fbbb4ec540afb79ca7098eb9e01e641b7fd3`, plus the follow-up commit recording these revisions | **not pushed**, one commit ahead of `origin` |
 
-To discard the branch after it is no longer wanted, switch the worktree back to `main` and delete the branch. No remote branch, pull request, merge, or history rewrite was performed by this task.
+The IRIS Core records were committed onto `claude/remote-control-v1owqp`, the branch that carries the Core terminal repair and pull request 109, because that is the branch the Core worktree is on. The commit is local and unpushed, so it can be moved if the records belong elsewhere.
 
-**IRIS Core.** The three changed paths are additive records. Reverting them restores the task record's original `allowed_paths` and `permitted_actions` and removes this evidence file and the handoff. No IRIS Core source, contract, generated artifact, certification program document, or Test One failure record was modified.
+**Command Center.** The branch is based on `dd9b222` and carries one commit touching only the four changed files. `main` is untouched. To undo while preserving history, `git revert cedb110` on the branch and push non-force. To retire the work entirely, delete the local and remote branch; nothing depends on it.
+
+**IRIS Core.** The changed paths are additive records across two local commits. `git reset --keep` to the prior revision, or reverting both commits, restores the task record's original `allowed_paths` and `permitted_actions` and removes this evidence file and the handoff. No IRIS Core source, contract, generated artifact, certification program document, or Test One failure record was modified.
 
 **Worktree state to restore.** `C:\Projects\iris-founder-command-center-main` was on branch `main` at `dd9b222` before this task and was switched to the dedicated repair branch. `git switch main` in that worktree restores it.

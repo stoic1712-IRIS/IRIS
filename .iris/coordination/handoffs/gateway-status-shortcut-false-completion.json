@@ -21,14 +21,14 @@
     {
       "repository": "stoic1712-IRIS/IRIS",
       "branch": "claude/remote-control-v1owqp",
-      "commit": null,
-      "patch_digest": "sha256:c675fb7ec50ad4f914d0848802ce1798a4227e3a1a0439dec4283caff2a4b7b5"
+      "commit": "2054fbbb4ec540afb79ca7098eb9e01e641b7fd3",
+      "patch_digest": null
     },
     {
       "repository": "stoic1712-IRIS/iris-founder-command-center",
       "branch": "iris/gateway-status-shortcut-false-completion-repair",
-      "commit": null,
-      "patch_digest": "sha256:636bc47deac5b6e63bff23deed5135cd7899589a9d4f23827b877e761230f98e"
+      "commit": "cedb1109980eee34918bc648b6349d2b0511aabf",
+      "patch_digest": null
     }
   ],
   "changed_paths": [
@@ -100,7 +100,8 @@
     "Test amendment justification: the assertion at tests/local-gateway.test.ts:4177 that the four-part request yields report-terminal with zero model invocations was an assertion of the defect, not a guard. It is replaced by an assertion that the same request reaches execute-now and invokes a model, mirroring the inversion already applied to the Core counterpart at tests/operating-decision-engine.test.ts.",
     "Behaviour against canonical Core a1c16c2, exercised directly against packages/kernel/dist rather than the fixture: both pre-repair shortcut objectives throw OPERATING_OBJECTIVE_TERMINAL_COMPLETION_NOT_ASSERTABLE; the repaired emergency-stop objective returns report-terminal with terminalState cancelled; the repaired Test One objective reaches grant evaluation, throwing OPERATING_EXECUTION_ACTIVE_GRANT_REQUIRED without access and returning execute-now with access.",
     "Contract boundaries unchanged: digest sha256:9ba317acac51f3592fb16db0f7c1beef49b867eb5759f5803230964753b1327a, five decisionOutcomes, nine protectedEffects, none modified. No IRIS Core source, contract, generated artifact, certification program document, or Test One failure record was changed.",
-    "Command Center patch digest sha256:636bc47d... is the sha256 of the UTF-8 git diff over the four changed Command Center paths. The IRIS Core patch digest is the sha256 of the UTF-8 git diff over the task record and the evidence file after git add -N on the evidence file; it deliberately excludes this handoff, which cannot digest itself."
+    "Delivered on explicit Founder instruction after the repair was verified: both repositories committed by exact path, and the Command Center branch pushed non-force. Command Center iris/gateway-status-shortcut-false-completion-repair is at cedb1109980eee34918bc648b6349d2b0511aabf and origin is equal at the same commit. IRIS Core claude/remote-control-v1owqp is at 2054fbbb4ec540afb79ca7098eb9e01e641b7fd3 locally and was deliberately not pushed, so it is one commit ahead of origin. Result revisions are identified by commit rather than by patch digest; the pre-commit digests recorded in the evidence file describe the same content before it was committed.",
+    "The IRIS Core records were committed onto claude/remote-control-v1owqp, the branch that carries the Core terminal repair and pull request 109, because that is the branch the Core worktree is on. If they belong on a separate branch instead, the commit is local and unpushed and can be moved."
   ],
   "limitations": [
     "A live gateway run against the repaired Core was not performed and is blocked by design. loadGatewayOperatingContract refuses to start when a pinned Core module-tree digest does not match, and the kernel digest is stale precisely because of the Core terminal repair: expected sha256:3e3d111e..., actual sha256:bb3e15f0.... All seven other pinned packages match and the pinned Core contract revision 08f69f82 is still an ancestor of Core HEAD.",
@@ -115,11 +116,11 @@
     "Unrelated pre-existing condition, left untouched: the Command Center primary worktree C:\\Projects\\iris-founder-command-center is on a local branch iris/gateway-status-shortcut-false-completion at b8c36ff, an ancestor of origin/main roughly 35,000 lines behind it, with eight uncommitted modified files. This repair used C:\\Projects\\iris-founder-command-center-main, which was clean at dd9b222.",
     "This handoff and its evidence are producer-authored. Claude is the producer and is not the independent reviewer; nothing here is certified."
   ],
-  "rollback": "Command Center: the branch iris/gateway-status-shortcut-false-completion-repair is based on dd9b222 and holds only the four changed files, uncommitted. Discard with: git -C C:\\Projects\\iris-founder-command-center-main checkout dd9b222 -- scripts/local-gateway.mjs src/conversation-client.ts tests/local-gateway.test.ts tests/conversation-client.test.ts. Then git switch main to restore the worktree to the branch it was on before this task, and delete the repair branch when it is no longer wanted. No commit, remote branch, pull request, merge, force-push, or history rewrite was performed. IRIS Core: the three changed paths are additive records, uncommitted; the task record is modified and the evidence file and this handoff are untracked. Discard with: git -C C:\\Projects\\STOIC-IRIS checkout -- .iris/coordination/tasks/gateway-status-shortcut-false-completion.json, then delete evidence/gateway-repair/ and .iris/coordination/handoffs/gateway-status-shortcut-false-completion.json. That restores the task record's original allowed_paths and permitted_actions. No IRIS Core source, contract, generated artifact, certification program document, or Test One failure record was modified.",
+  "rollback": "Command Center: the branch iris/gateway-status-shortcut-false-completion-repair is based on dd9b222 and carries one commit, cedb1109980eee34918bc648b6349d2b0511aabf, touching only the four changed files. main is untouched and no pull request or merge exists. To undo the change while preserving history, git revert cedb110 on the branch and push non-force. To retire the work entirely, delete the local branch and the remote branch; nothing depends on it. Then git switch main in C:\\Projects\\iris-founder-command-center-main to restore the worktree to the branch it was on before this task. IRIS Core: the records are one local commit, 2054fbbb4ec540afb79ca7098eb9e01e641b7fd3, on claude/remote-control-v1owqp, plus the follow-up commit that recorded these delivered revisions. Neither is pushed, so git reset --keep to the prior revision or git revert both commits removes them; reverting restores the task record's original allowed_paths and permitted_actions and removes the evidence file and this handoff. No force-push, history rewrite, branch deletion, or destructive reset was performed by this task, and no IRIS Core source, contract, generated artifact, certification program document, or Test One failure record was modified.",
   "protected_actions_remaining": [
-    "Exact-path staging and commit in both repositories - not performed, because the task is authorization_mode single_action with an empty completion_actions list and no Founder completion mandate was issued.",
-    "Non-force push of the Command Center branch iris/gateway-status-shortcut-false-completion-repair - not performed.",
-    "Pull-request creation, independent review, merge, local synchronization, and worktree cleanup - not performed.",
+    "Pull-request creation for the Command Center branch - not performed, and not authorized by the delivery instruction.",
+    "Independent review, merge, local synchronization, and worktree cleanup - not performed. Claude is the producer and cannot review or certify its own output.",
+    "Push of the IRIS Core branch claude/remote-control-v1owqp - not performed; the Founder authorized pushing the Command Center branch only, so IRIS Core is one commit ahead of origin.",
     "Re-binding expectedCoreModuleTreeDigests.kernel in scripts/operating-contract-runtime.mjs against the merged Core revision - outside this task's allowed_paths, and required before Certification Test One can be re-attempted.",
     "Merging the IRIS Core terminal repair on claude/remote-control-v1owqp, which this repair was deliberately produced ahead of."
   ],
