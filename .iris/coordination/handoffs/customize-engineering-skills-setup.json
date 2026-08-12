@@ -1,0 +1,74 @@
+{
+  "schema_version": "1.0.0",
+  "handoff_id": "customize-engineering-skills-setup",
+  "task_id": "customize-engineering-skills-setup",
+  "producer": "Claude",
+  "recipient": "Codex",
+  "created_at": "2026-08-11T23:32:08.0000000Z",
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "iris/customize-engineering-skills-setup",
+      "commit": "8d4496dd8cb601957a54dddc2136a00fc276fa89"
+    }
+  ],
+  "result_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "iris/customize-engineering-skills-setup",
+      "commit": null,
+      "patch_digest": "sha256:3edb562dd5b471864a522266774c8e37aee9551ee23255c808dd6a0482bad918"
+    }
+  ],
+  "changed_paths": [
+    ".claude/skills/setup-stoic-iris-engineering-skills/SKILL.md",
+    ".claude/skills/setup-stoic-iris-engineering-skills/agents/openai.yaml",
+    ".claude/skills/setup-stoic-iris-engineering-skills/domain.md",
+    ".claude/skills/setup-stoic-iris-engineering-skills/issue-tracker-iris-coordination.md",
+    ".claude/skills/setup-stoic-iris-engineering-skills/triage-status-map.md",
+    ".iris/coordination/handoffs/customize-engineering-skills-setup.json",
+    ".iris/coordination/tasks/customize-engineering-skills-setup.json"
+  ],
+  "commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "node scripts/dev/iris-dev.mjs contract inspect --json",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "node node_modules/prettier/bin/prettier.cjs --config prettier.config.mjs --check .claude/skills/setup-stoic-iris-engineering-skills/** .iris/coordination/tasks/customize-engineering-skills-setup.json",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "node <scratchpad>/check-task-record.mjs .iris/coordination/task.schema.json .iris/coordination/tasks/customize-engineering-skills-setup.json",
+      "exit_code": 0
+    }
+  ],
+  "evidence": [
+    "Canonical operating contract inspected before authority reasoning: contract iris.stoic/operating-contract/v1 version 1.0.0, digest sha256:cc1812bff1a668062e3fd1ebf374189a40d7d9e83f33bb6e82f637301e8e5ea9, coreRevision 8d4496dd8cb601957a54dddc2136a00fc276fa89",
+    "Work performed in the Claude-owned worktree C:/Projects/STOIC-IRIS-engineering-skills-setup on branch iris/customize-engineering-skills-setup at the base revision; no other worktree was touched",
+    "Formatting check passes for every created path under the repository-pinned Prettier configuration",
+    "The task record conforms to .iris/coordination/task.schema.json, including the single_action conditional requiring null completion_mandate_text and empty completion_actions",
+    "The new skill directs its own future output through the governed lifecycle: coordination record first, bounded worktree, exact-path staging, R3 protected actions gated on an explicit Founder completion mandate, and independent review before certification",
+    "Governance conflict recorded: the mattpocock-skills plugin supplying setup-matt-pocock-skills has no entry in docs/registries/technology-and-platform-registry.md, so it remains research-only and is not adopted tooling"
+  ],
+  "limitations": [
+    "pnpm verify was not run: the worktree has no installed dependencies and dependency installation is not authorized by this task record. The change is additive Markdown, JSON, and YAML only, so format:check is the sole verify stage that inspects it; the equivalent Prettier check was run directly and passes",
+    "Task-record conformance was checked with a purpose-written structural validator rather than a full JSON Schema implementation; no JSON Schema validator is installed in this repository",
+    "The skill is not active in C:/Projects/STOIC-IRIS until this branch merges to main; Claude Code loads project skills from the working tree it is running in",
+    "The skill has been authored but not exercised end to end; it has never been run against a live objective, so its step wording is unproven in use",
+    "The seed templates describe conventions for wayfinder, to-tickets, to-spec, and implement that this repository has not previously used; the mapping to docs/superpowers/plans and docs/superpowers/specs is proposed, not canonical",
+    "Whether the ## Agent skills pointer block should be added to AGENTS.md remains an open R2 proposal; no such edit was made"
+  ],
+  "rollback": "The change is one merge commit on local main, and origin is untouched. To undo: run `git revert -m 1 <merge-commit>` from C:/Projects/STOIC-IRIS, which preserves history. To discard the branch as well, run `git branch -D iris/customize-engineering-skills-setup` afterwards. To resynchronize local main with origin/main instead, run `git reset --keep origin/main` before any further local commits exist.",
+  "protected_actions_remaining": [
+    "Non-force push of the change to stoic1712-IRIS/IRIS, without which local main stays ahead of origin/main",
+    "Pull-request creation and merge on the remote",
+    "Independent Codex review; the Founder waived it before merge, so this change carries no independent certification",
+    "Founder decision on adding the ## Agent skills block to AGENTS.md",
+    "Founder decision on a technology and platform registry entry for the mattpocock-skills plugin"
+  ],
+  "ready_for_review": true
+}
