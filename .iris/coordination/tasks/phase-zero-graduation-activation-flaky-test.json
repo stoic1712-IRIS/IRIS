@@ -1,0 +1,79 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "phase-zero-graduation-activation-flaky-test",
+  "objective": "Repair the intermittent failure of tests/phase-zero-graduation-activation.test.ts, 'durably consumes one exact authenticated approval and activates the runtime once', which asserts at line 431 that the durable envelope state is 'concluded' and intermittently observes 'presented'. OBSERVED 2026-08-12 in provider CI: run 31633902072 failed on IRIS Core pull request 111 at head 81d734b, and run 31636600938 succeeded on the identical commit with no change between them, so the flake is proved rather than inferred. It passed 3 of 3 local runs on the Founder workstation and had 13 consecutive prior CI successes. TRACED ROOT CAUSE, evidence-based and not yet confirmed by reproducing the failure: the test synchronises on the wrong signal. PhaseZeroGraduationCoordinator #startActivation queues the runtime through queueMicrotask, and the durable state 'concluded' is written only by #conclude, which runs after execute resolves and then awaits #save. The test waits for the preflight counter to reach 1, which increments during execute, then immediately constructs a fresh coordinator over the same state path and reads it, so it reads a state that is persisted later. Under CI load the gap widens and the read observes the earlier 'presented'. This is a test-synchronisation defect, not a product defect: the durable write does occur. The suite guards the Phase 0 Development Independence graduation workflow, so an intermittently failing test here erodes trust in the one boundary no external agent may cross.",
+  "issuer": "Founder Cristofer Stoic Arellano",
+  "executor": "Unassigned; the Founder assigns a producer before work begins",
+  "assigned_role": "producer",
+  "created_at": "2026-08-12T20:17:54.0000000Z",
+  "status": "draft",
+  "risk_class": "R2",
+  "authorization_mode": "single_action",
+  "completion_mandate_text": null,
+  "completion_actions": [],
+  "completion_exclusions": [
+    "No Phase 0 graduation execution, approval, proposal activation, or completion claim",
+    "No change to the graduation state machine, its transitions, or the durable envelope contract in order to make the test pass",
+    "No weakening or removal of the assertion that the durable state reaches concluded, and no blind timeout increase substituted for correct synchronisation",
+    "No change to any other test file, and no change to unrelated CI workflow configuration"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "2dcfbda64ff879e99945c414e48cfd997b715e61"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/tasks/phase-zero-graduation-activation-flaky-test.json",
+    ".iris/coordination/handoffs/phase-zero-graduation-activation-flaky-test.json",
+    "evidence/phase-zero/graduation-activation-flaky-test.md",
+    "tests/phase-zero-graduation-activation.test.ts"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    ".claude/**",
+    "config/iris-operating-contract.v1.json",
+    "docs/governance/**",
+    "docs/operations/cycle-twelve-founder-certification-program.md",
+    "evidence/cycle-twelve/**",
+    "generated/**",
+    "packages/**",
+    "C:/Projects/STOIC-IRIS-source-library/**"
+  ],
+  "permitted_actions": [
+    "Reproduce the intermittent failure deterministically before repairing it, for example by delaying the durable save, by injecting load, or by running the file repeatedly under contention; record the exact method and how often the failure reproduced",
+    "Correct the test's synchronisation so it waits for the condition it asserts rather than for the preflight counter, for example by waiting on the durable envelope state read back from a fresh coordinator over the same state path",
+    "Confirm from packages/development/src/phase-zero-graduation-coordinator.ts that the durable write ordering is as traced, and report any divergence from the traced root cause rather than adapting the record silently",
+    "Report any change that would require a path outside allowed_paths rather than silently expanding scope; a repair that genuinely requires the coordinator or the transport is a product defect, not a test defect, and must be re-scoped by the Founder before it is attempted"
+  ],
+  "prohibited_actions": [
+    "Delete, skip, relax, or weaken the assertion that the durable state reaches concluded, or any other assertion in the file",
+    "Substitute a longer timeout or a retry for correct synchronisation without first proving the synchronisation is correct",
+    "Modify the graduation coordinator, the graduation transport, the durable envelope schema, or any other product source to make the test pass",
+    "Execute, approve, propose, or claim any part of the Phase 0 Development Independence graduation workflow",
+    "Disable, filter, or exclude the test from the verification suite or from provider CI",
+    "Force-push, rewrite history, bypass branch protection, administer repositories, or use broad staging"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm exec vitest run tests/phase-zero-graduation-activation.test.ts"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "A deterministic reproduction of the pre-repair failure, with the exact method stated, and its absence after the repair under the same method",
+    "The repaired test run repeatedly enough to give meaningful confidence, with the exact run count and results recorded; a single green run is not evidence against a flake",
+    "Confirmation that the assertion set is unchanged apart from synchronisation, shown as an exact diff, and that no assertion was removed, relaxed, or skipped",
+    "Confirmation that no product source was modified, and that the durable write ordering in the coordinator is unchanged",
+    "A green provider CI run on the pull request, plus a statement of how many runs were observed, since a single green CI run cannot distinguish a repaired flake from a lucky one",
+    "Full verification results for IRIS Core, exact changed paths, limitations, and rollback instructions"
+  ],
+  "publisher": "Assigned producer, with the Founder as independent reviewer",
+  "approval_reference": null,
+  "phase0_graduation": false
+}
