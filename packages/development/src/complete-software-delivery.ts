@@ -48,6 +48,16 @@ export const completeDeliveryObjectiveSchema = z
       .array(z.array(z.string().min(1).max(500)).min(1).max(30))
       .min(1)
       .max(20),
+    // Deterministic repository-owned formatters and fixers, run over the changed paths after a
+    // model mutation and before verification — the same stage the sibling executable-worker
+    // contract already defines. A language model cannot reliably imitate a linter, and asking it
+    // to spends the repair budget on mechanical style instead of on defects; the repository's own
+    // tool does that work exactly. Verification still runs afterward and must pass on its own, so
+    // normalization can never mask a failure.
+    normalizationCommands: z
+      .array(z.array(z.string().min(1).max(500)).min(1).max(30))
+      .max(5)
+      .optional(),
     maximumRepairAttempts: z.number().int().min(0).max(5),
     maximumChangedFiles: z.number().int().min(1).max(50),
     maximumChangedBytes: z.number().int().min(1).max(2_000_000),
