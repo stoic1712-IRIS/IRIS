@@ -191,12 +191,16 @@ function specialistRoute(model: IrisModelName) {
 export function passedSpecialistArtifact(
   model: IrisModelName,
   evidence: ExactEvidenceReference[] = [exactEvidence()],
+  // The artifact's bound route must equal the orchestrator's enforced route, so a test whose
+  // request routes by resolved capabilities rather than by the fixture's default keyword
+  // utterance supplies the matching route explicitly.
+  route: ReturnType<typeof routeIrisModel> = specialistRoute(model),
 ): CognitiveSpecialistArtifact {
   const material = {
     requestId,
     objectiveId,
     objectiveDigest,
-    route: specialistRoute(model),
+    route,
     status: "passed",
     summary: "The bounded specialist work and verification passed.",
     evidence,
@@ -212,13 +216,16 @@ export function passedSpecialistArtifact(
 export function passingReview(
   model: IrisModelName,
   evidence: ExactEvidenceReference[] = [exactEvidence()],
+  specialistArtifactDigest?: string,
 ): CognitiveReviewArtifact {
   const specialistModel = model === "qwen3.6:27b" ? "gpt-oss:20b" : "qwen3-coder:30b";
   return cognitiveReviewArtifactSchema.parse({
     requestId,
     objectiveId,
     objectiveDigest,
-    specialistArtifactDigest: passedSpecialistArtifact(specialistModel, evidence).artifactDigest,
+    specialistArtifactDigest:
+      specialistArtifactDigest ??
+      passedSpecialistArtifact(specialistModel, evidence).artifactDigest,
     reviewerModel: model,
     verdict: "pass",
     findings: [],

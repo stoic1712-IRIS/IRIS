@@ -1,0 +1,108 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "cognitive-turn-failure-audit-and-repair",
+  "objective": "Audit and repair every platform fault that made the governed cognitive turn fail with the masked code COGNITIVE_ORCHESTRATOR_UNAVAILABLE on three consecutive Founder submissions of the Certification Test One objective, using a disciplined reproduction loop instead of guesswork. Root causes found and repaired, each with evidence: ONE, error masking at two layers - the Core orchestrator collapsed every non-contract error to the safe code without recording the cause, and the gateway reported curl exit 28 (its own timeout) as DIALOGUE_PROVIDER_REJECTED, so a timeout was indistinguishable from a rejection. TWO, the gpt-oss:20b profile pinned the model to CPU with num_gpu 0; its measured load alone took 265 seconds against a 240 second budget, so every research-review call timed out deterministically; the identical request on GPU completed in 24 seconds. THREE, num_predict 2048 shared the completion budget with the model's thinking and could return empty content; raised to 6144 with the timeout at 600 seconds for CPU-fallback headroom. FOUR, capability-resolved purpose lost to keyword inference twice - Core enforceRoutePolicy re-labelled a capability-routed inspection and nulled the reviewer (COGNITIVE_REVIEWER_UNAVAILABLE), and the Command Center planner did the same so the delegation envelope disagreed with the route (COGNITIVE_ROUTE_MISMATCH). Both now resolve the controller's capabilities first. FIVE, the capability-purpose table listed repository.inspect first, so a mixed coding grant collapsed to the reporting role; mutating capabilities now take precedence. The full Test One objective now completes end to end through a throwaway gateway with scratch credentials: research-review route, gpt-oss:20b specialist, qwen3.6:27b reviewer, 59 seconds.",
+  "issuer": "Founder Cristofer Stoic Arellano",
+  "executor": "Claude",
+  "assigned_role": "producer",
+  "created_at": "2026-08-13T00:35:00.0000000Z",
+  "status": "approved",
+  "risk_class": "R2",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "ok thats enough guessing figure everything out first with an audit and use your skills or soemthing and fix the rproblems",
+  "completion_actions": [
+    "research",
+    "edit",
+    "verify",
+    "repair",
+    "stage",
+    "commit",
+    "push_branch",
+    "create_pull_request",
+    "merge",
+    "synchronize",
+    "cleanup"
+  ],
+  "completion_exclusions": [
+    "No change to the seven certification tests, their pass conditions, or the recorded Test One evidence",
+    "No change to the canonical operating contract, its digest, the decision outcomes, or protected-effect boundaries",
+    "No certification claim: this repair removes platform faults; Certification Test One itself must still be run by the Founder from a fresh proposal",
+    "No Phase 0 graduation execution, approval, or completion claim"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "2bd15cb02c3537017f45f23a1464c79100f7b8eb"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "main",
+      "commit": "418d2f6f503c1b27e4aca941613a2bc195463176"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/tasks/cognitive-turn-failure-audit-and-repair.json",
+    ".iris/coordination/handoffs/cognitive-turn-failure-audit-and-repair.json",
+    "packages/model-gateway/src/cognitive-orchestrator.ts",
+    "packages/model-gateway/src/model-router.ts",
+    "tests/model-router.test.ts",
+    "tests/qwen-primary-cognitive-orchestration-runtime.test.ts",
+    "tests/fixtures/qwen-primary-cognitive-orchestration-fixture.ts",
+    "scripts/local-gateway.mjs",
+    "scripts/ollama-provider-policy.mjs",
+    "scripts/operating-contract-runtime.mjs",
+    "tests/local-gateway.test.ts",
+    "tests/ollama-provider-policy.test.ts"
+  ],
+  "excluded_paths": [
+    ".github/**",
+    ".claude/**",
+    "config/iris-operating-contract.v1.json",
+    "docs/governance/**",
+    "docs/operations/cycle-twelve-founder-certification-program.md",
+    "evidence/cycle-twelve/**",
+    "generated/**",
+    "packages/kernel/**",
+    "packages/contracts/**",
+    "C:/Projects/STOIC-IRIS-source-library/**"
+  ],
+  "permitted_actions": [
+    "Reproduce the failing turn against a throwaway gateway on scratch ports with freshly minted disposable credentials, never the Founder's",
+    "Surface the true failure at every layer: record the underlying error and capped stack where the orchestrator collapses to a safe code, log the gateway request failure, and split provider timeout from provider rejection",
+    "Remove the gpt-oss:20b CPU pin and raise its completion and timeout budgets to the measured requirement, citing the measurements in place",
+    "Make the controller's resolved capabilities take precedence over keyword inference in both the Core route policy and the Command Center planner, and order the capability-purpose table so mutating capabilities decide mixed grants",
+    "Add regression tests that fail against the pre-repair revision for each behavioural fix, and update the hermetic Core fixture to mirror the repaired router faithfully",
+    "Rebind expectedCoreModuleTreeDigests.model-gateway in the Command Center to the rebuilt Core package",
+    "Report any change that would require a path outside allowed_paths rather than silently expanding scope"
+  ],
+  "prohibited_actions": [
+    "Delete or weaken an existing test, guard, or fail-closed path to make a repair pass",
+    "Leave diagnostic instrumentation in the committed code",
+    "Handle or store the Founder's credentials; diagnostic runs use scratch credentials only",
+    "Modify IRIS Core kernel or contracts packages, the operating contract, or the certification program",
+    "Force-push, rewrite history, bypass branch protection, administer repositories, or use broad staging",
+    "Claim that any of this certifies Certification Test One; it only removes platform faults that voided three attempts"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "The unmasked failure chain, code by code, from COGNITIVE_ORCHESTRATOR_UNAVAILABLE to the exact provider timeout, with the measurements that attribute each hop",
+    "A green end-to-end run of the exact Test One objective through the throwaway gateway, with route, specialist, reviewer, and duration recorded",
+    "Regression tests for the route-policy precedence, the planner precedence, the mixed-grant table order, and the provider options",
+    "The rebuilt model-gateway module-tree digest, and confirmation that every other pinned Core package is unchanged",
+    "Full verification results for both repositories, with every failure attributed exactly, including the recorded iris-dev-github timeout flake",
+    "Exact changed paths, limitations, and rollback instructions"
+  ],
+  "publisher": "Claude, with the Founder as independent reviewer",
+  "approval_reference": "founder-audit-and-fix-mandate-2026-08-12",
+  "phase0_graduation": false
+}

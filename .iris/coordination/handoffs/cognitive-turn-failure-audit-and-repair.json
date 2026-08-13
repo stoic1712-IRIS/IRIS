@@ -1,0 +1,93 @@
+{
+  "schema_version": "1.0.0",
+  "handoff_id": "cognitive-turn-failure-audit-and-repair",
+  "task_id": "cognitive-turn-failure-audit-and-repair",
+  "producer": "Claude",
+  "recipient": "Founder Cristofer Stoic Arellano",
+  "created_at": "2026-08-13T00:35:00.0000000Z",
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "2bd15cb02c3537017f45f23a1464c79100f7b8eb"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "main",
+      "commit": "418d2f6f503c1b27e4aca941613a2bc195463176"
+    }
+  ],
+  "result_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "iris/unmask-cognitive-turn-failures",
+      "commit": null,
+      "patch_digest": null
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "iris/log-request-failure-stacks",
+      "commit": null,
+      "patch_digest": null
+    }
+  ],
+  "changed_paths": [
+    ".iris/coordination/handoffs/cognitive-turn-failure-audit-and-repair.json",
+    ".iris/coordination/tasks/cognitive-turn-failure-audit-and-repair.json",
+    "packages/model-gateway/src/cognitive-orchestrator.ts",
+    "packages/model-gateway/src/model-router.ts",
+    "tests/model-router.test.ts",
+    "tests/qwen-primary-cognitive-orchestration-runtime.test.ts",
+    "tests/fixtures/qwen-primary-cognitive-orchestration-fixture.ts",
+    "scripts/local-gateway.mjs",
+    "scripts/ollama-provider-policy.mjs",
+    "scripts/operating-contract-runtime.mjs",
+    "tests/local-gateway.test.ts",
+    "tests/ollama-provider-policy.test.ts"
+  ],
+  "commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify",
+      "exit_code": 1
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm vitest run tests/iris-dev-github.test.ts",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm verify",
+      "exit_code": 0
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "node <scratchpad>/repro-loop.mjs",
+      "exit_code": 0
+    }
+  ],
+  "evidence": [
+    "Unmasked failure chain: COGNITIVE_ORCHESTRATOR_UNAVAILABLE was the orchestrator's blanket catch; beneath it the gateway raised DIALOGUE_PROVIDER_REJECTED; beneath that, curl exited 28 (the gateway's own --max-time), and the 240 second budget was exceeded by the gpt-oss:20b CPU load alone, measured at 265 seconds under Ollama 0.32.9 with total 335 seconds for the call",
+    "The identical failing request replayed on GPU completed in 24 seconds; num_predict 2048 returned empty content with done_reason length because thinking shared the budget, and 6144 returned a clean stop",
+    "After the provider repair the next masked failure was COGNITIVE_REVIEWER_UNAVAILABLE from Core enforceRoutePolicy re-labelling the capability-routed turn by keywords, then COGNITIVE_ROUTE_MISMATCH from the Command Center planner doing the same; both now resolve the controller's capabilities first",
+    "Mixed-grant precedence: the capability-purpose table listed repository.inspect first, so a coding grant carrying inspection collapsed to research-review; mutating capabilities now precede it, with a regression test for the mixed grant and for the untouched singleton inspection route",
+    "Final end-to-end proof: the exact Test One objective through a throwaway gateway with scratch credentials returned HTTP 200 in 59 seconds, routing research-review on gpt-oss:20b with independent reviewer qwen3.6:27b, cognitive phase completed, completion completed, degraded false",
+    "Command Center pnpm verify green: 54 files, 332 passed, 4 skipped. Core pnpm verify: 550 of 551 passed; the single failure is the recorded iris-dev-github timeout flake (task record phase-zero-graduation-activation-flaky-test), and the file passes in isolation, 16 of 16",
+    "expectedCoreModuleTreeDigests.model-gateway rebound to sha256:f5a26fb84a591cef7a7c03f788d2292f61b2d4265afcb007d4ad1142cc51dfcc; every other pinned Core package digest unchanged"
+  ],
+  "limitations": [
+    "Producer-authored throughout; no independent review has occurred. The Founder is the named independent reviewer of this output",
+    "The green run is a diagnostic reproduction with scratch credentials, not a certification run; Certification Test One must be rerun by the Founder from a fresh proposal on the repaired build",
+    "An open reviewer-consistency defect is observed but not repaired or recorded as a task: the gpt-oss reviewer passed a fabricated specialist claim in one run that it had blocked in two earlier runs; review quality is not deterministic",
+    "The iris-dev-github timeout flake remains open under its own draft task record and was not addressed here",
+    "The Ollama load measurements are specific to this workstation and Ollama 0.32.9; the 600 second budget is headroom for a CPU fallback, not a guarantee"
+  ],
+  "rollback": "Both branches are additive on top of their recorded base revisions. Before merge: delete the branches (git push origin --delete iris/unmask-cognitive-turn-failures in Core, iris/log-request-failure-stacks in the Command Center) and discard the worktrees; both mains are untouched. After merge: git revert -m 1 <merge-commit> in each repository, reverting the Command Center first so its digest pin never points at a Core build that no longer exists.",
+  "protected_actions_remaining": [
+    "Founder independent review of both pull requests",
+    "A fresh Certification Test One run operated by the Founder on the repaired build",
+    "Founder decision on recording the gpt-oss reviewer-consistency defect as its own task"
+  ],
+  "ready_for_review": true
+}

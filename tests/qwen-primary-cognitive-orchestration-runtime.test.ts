@@ -5,6 +5,7 @@ import {
   type CognitiveTurnSnapshot,
 } from "../packages/model-gateway/src/cognitive-turn-contracts.js";
 import type { CognitiveTurnStore } from "../packages/model-gateway/src/cognitive-orchestrator.js";
+import { routeIrisModel } from "../packages/model-gateway/src/model-router.js";
 
 import {
   codingEnvelope,
@@ -107,6 +108,45 @@ describe("Qwen primary cognitive orchestration runtime", () => {
       policy(["research.search", "research.verify-source"]),
     );
     expect(result.presentation?.exactEvidence).toEqual([exact]);
+  });
+
+  // A read-only inspection resolved to repository.inspect routes research-review with gpt-oss as
+  // specialist. Its wording is dense with git vocabulary, and enforceRoutePolicy used to re-label
+  // such turns agentic-coding from keywords alone; the agentic-coding reviewer rule — gpt-oss
+  // unless the specialist already is gpt-oss — then nulled the reviewer and every Certification
+  // Test One turn died as reviewer-model-unavailable. Resolved capabilities outrank keywords.
+  it("keeps the capability-resolved purpose over keyword inference and a distinct reviewer", async () => {
+    const request = researchRequest({
+      utterance:
+        "Inspect the Git repository at C:\\Projects\\STOIC-IRIS and report the current branch, the exact HEAD revision, and whether the working tree is clean.",
+      requiredCapabilities: ["repository.inspect"],
+    });
+    const capabilityRoute = routeIrisModel({
+      utterance: request.utterance,
+      availableModels: new Set(request.availableModels),
+      hasImage: request.hasImage,
+      requiredCapabilities: request.requiredCapabilities,
+    });
+    const specialist = passedSpecialistArtifact("gpt-oss:20b", undefined, capabilityRoute);
+    const harness = cognitiveHarness({
+      planningEnvelope: researchEnvelope(),
+      specialist,
+      review: passingReview("qwen3.6:27b", undefined, specialist.artifactDigest),
+      synthesis: synthesis([requiredEvidenceId]),
+    });
+    const result = await harness.runtime.start(
+      request,
+      policy(["research.search", "research.verify-source"]),
+    );
+
+    expect(result.phase).toBe("completed");
+    expect(result.route?.purpose).toBe("research-review");
+    expect(result.presentation?.provenance).toEqual({
+      orchestratorModel: "qwen3.6:27b",
+      specialistModel: "gpt-oss:20b",
+      reviewerModel: "qwen3.6:27b",
+    });
+    expect(harness.worker.reviewerModels).toEqual(["qwen3.6:27b"]);
   });
 
   it("allows one synthesis repair and then preserves evidence in synthesis-failed state", async () => {
