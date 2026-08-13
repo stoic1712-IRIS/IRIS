@@ -5,6 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
   CompleteSoftwareDeliveryRuntime,
   MemoryCompleteDeliveryStore,
+  completeDeliveryObjectiveSchema,
   type CompleteDeliveryAdapter,
   type CompleteDeliveryObjective,
 } from "../packages/development/src/index.js";
@@ -363,5 +364,31 @@ describe("Cycle Eleven complete software delivery", () => {
     expect(cancelled.state).toBe("cancelled");
     expect(cancelled.summary).toContain("DELIVERY_TERMINATION_TIMEOUT");
     expect((await running).state).toBe("cancelled");
+  });
+
+  // A delivery may carry the repository's own deterministic fixers, the same stage the sibling
+  // executable-worker contract already defines. A language model cannot reliably imitate a
+  // linter, and without this stage the repair budget is spent on mechanical style rather than on
+  // defects. The field is optional, bounded, and never replaces verification.
+  it("accepts bounded repository normalization commands and keeps them optional", () => {
+    const withNormalization = completeDeliveryObjectiveSchema.parse(
+      objective({
+        normalizationCommands: [
+          ["pnpm", "exec", "eslint", "--fix", "."],
+          ["pnpm", "exec", "prettier", "--write", "."],
+        ],
+      }),
+    );
+    expect(withNormalization.normalizationCommands).toHaveLength(2);
+    expect(
+      completeDeliveryObjectiveSchema.parse(objective()).normalizationCommands,
+    ).toBeUndefined();
+    expect(() =>
+      completeDeliveryObjectiveSchema.parse(
+        objective({
+          normalizationCommands: Array.from({ length: 6 }, () => ["pnpm", "exec", "prettier"]),
+        }),
+      ),
+    ).toThrow();
   });
 });
