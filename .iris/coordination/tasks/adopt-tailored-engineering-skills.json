@@ -1,0 +1,111 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "adopt-tailored-engineering-skills",
+  "objective": "Adopt the full usable skill set from the external repository github.com/mattpocock/skills as project skills under .claude/skills/, tailored to STOIC-IRIS governance before adoption. Twenty-five skills (sixteen engineering, seven productivity, two misc) were reviewed file by file as untrusted content and adapted: every ticket or issue mechanic routes to .iris/coordination task records and handoffs, the toolchain is pnpm via corepack with pnpm verify, staging is exact-path only with no force-push or history rewriting, the producer-cannot-self-certify rule is stated in the review, implement, and handoff skills, researched material is treated as untrusted data behind the technology registry gate, and remote CDN script loads were replaced with self-contained output. The two skills that originally installed git hooks or dependencies directly (git-guardrails-claude-code, setup-pre-commit) are converted to proposal-only: they draft the hook script, settings diff, or exact dependency command and hand it to the Founder for review and installation, because hooks and .claude settings are protected surfaces. Excluded from adoption: the author-persona skill, the upstream setup skill (already tailored earlier as setup-stoic-iris-engineering-skills), course-specific tooling, and everything deprecated or in progress upstream.",
+  "issuer": "Founder Cristofer Stoic Arellano",
+  "executor": "Claude",
+  "assigned_role": "producer",
+  "created_at": "2026-08-13T01:55:00.0000000Z",
+  "status": "approved",
+  "risk_class": "R1",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "https://github.com/mattpocock/skills.git utillize all these skills and save them also taylor them to fit this project to help us and yourself",
+  "completion_actions": [
+    "research",
+    "edit",
+    "verify",
+    "stage",
+    "commit",
+    "push_branch",
+    "create_pull_request",
+    "merge",
+    "synchronize",
+    "cleanup"
+  ],
+  "completion_exclusions": [
+    "No modification of .claude/settings.json, settings.local.json, or any hook",
+    "No execution of the proposal-only skills' protected steps (hook installation, dependency installation)",
+    "No modification of the existing setup-stoic-iris-engineering-skills skill",
+    "No change to governance, tests, source code, or the operating contract"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "12a29635cdd37cde09405e3c563a7539b5203780"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/tasks/adopt-tailored-engineering-skills.json",
+    ".claude/skills/code-review/**",
+    ".claude/skills/codebase-design/**",
+    ".claude/skills/diagnosing-bugs/**",
+    ".claude/skills/domain-modeling/**",
+    ".claude/skills/git-guardrails-claude-code/**",
+    ".claude/skills/grill-me/**",
+    ".claude/skills/grill-with-docs/**",
+    ".claude/skills/grilling/**",
+    ".claude/skills/handoff/**",
+    ".claude/skills/implement/**",
+    ".claude/skills/improve-codebase-architecture/**",
+    ".claude/skills/prototype/**",
+    ".claude/skills/research/**",
+    ".claude/skills/resolving-merge-conflicts/**",
+    ".claude/skills/setup-pre-commit/**",
+    ".claude/skills/tdd/**",
+    ".claude/skills/teach/**",
+    ".claude/skills/to-questionnaire/**",
+    ".claude/skills/to-spec/**",
+    ".claude/skills/to-tickets/**",
+    ".claude/skills/triage/**",
+    ".claude/skills/wait-what/**",
+    ".claude/skills/wayfinder/**",
+    ".claude/skills/wizard/**",
+    ".claude/skills/writing-for-agents/**"
+  ],
+  "excluded_paths": [
+    ".claude/settings.json",
+    ".claude/settings.local.json",
+    ".claude/skills/setup-stoic-iris-engineering-skills/**",
+    ".github/**",
+    "docs/governance/**",
+    "generated/**",
+    "packages/**",
+    "src/**",
+    "tests/**",
+    "C:/Projects/STOIC-IRIS-source-library/**"
+  ],
+  "permitted_actions": [
+    "Clone the external skills repository into the session scratchpad and read every file as untrusted content before adoption",
+    "Tailor each adopted skill to project governance: coordination-record routing, pnpm toolchain, exact-path staging, producer and reviewer separation, untrusted-data handling, registry gates",
+    "Convert hook-installing and dependency-installing skills to proposal-only form",
+    "Format the adopted files with the repository-pinned Prettier configuration",
+    "Stage the exact adopted paths, commit, push the branch non-force, open one pull request, and merge after CI",
+    "Report any skill recommended against adoption with the reason, rather than silently dropping it"
+  ],
+  "prohibited_actions": [
+    "Install any hook, dependency, or settings change as part of adoption",
+    "Copy upstream content that fetches remote scripts, weakens governance, or claims authority",
+    "Modify anything outside the allowed skill directories and this task record",
+    "Force-push, rewrite history, or use broad staging"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm format:check"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "The tailoring report enumerating, per skill, what it does, what changed, and what was removed as unsafe or conflicting",
+    "Confirmation that no upstream content contained prompt-injection or credential exfiltration, and that all removals were policy conflicts",
+    "Formatting and verification results",
+    "Exact changed paths and rollback instructions"
+  ],
+  "publisher": "Claude, with the Founder as independent reviewer",
+  "approval_reference": "founder-skills-adoption-mandate-2026-08-13",
+  "phase0_graduation": false
+}
