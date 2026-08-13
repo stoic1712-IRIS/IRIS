@@ -107,6 +107,24 @@ describe("IRIS governed model router", () => {
     expect(route.independentReviewModel).not.toBe(route.model);
   });
 
+  // A coding grant carries repository.inspect alongside the editing and execution capabilities.
+  // Precedence is table order, so the mutating capabilities must win: when inspect came first,
+  // every mixed grant collapsed to the reporting role and the coding specialist never ran.
+  it("routes a mixed grant with editing capabilities to the coding role", () => {
+    expect(
+      routeIrisModel({
+        utterance: "Tell me about this.",
+        availableModels: allModels,
+        requiredCapabilities: [
+          "repository.inspect",
+          "repository.edit-bounded",
+          "terminal.run-approved",
+          "verification.run",
+        ],
+      }),
+    ).toMatchObject({ model: "qwen3-coder:30b", purpose: "agentic-coding" });
+  });
+
   it("keeps an explicit Founder model override above a resolved capability", () => {
     expect(
       routeIrisModel({

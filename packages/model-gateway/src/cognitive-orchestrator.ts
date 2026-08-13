@@ -34,6 +34,7 @@ import { CognitiveTurnError } from "./cognitive-turn-errors.js";
 import { ModelGatewayError } from "./errors.js";
 import { ModelLeaseScheduler } from "./model-lease-scheduler.js";
 import {
+  resolvedCapabilityPurpose,
   routeIrisModel,
   type IrisModelName,
   type ModelRoute,
@@ -143,7 +144,13 @@ function distinctReviewer(
 }
 
 function enforceRoutePolicy(request: CognitiveTurnRequest, routed: ModelRoute): ModelRoute {
-  const purpose = materialPurpose(request);
+  // Capabilities the controller resolved outrank keyword inference here exactly as they do in the
+  // router. Without this precedence, a capability-routed inspection whose wording is dense with
+  // git vocabulary was re-labelled agentic-coding, and the agentic-coding reviewer rule — gpt-oss
+  // unless the specialist already is gpt-oss — nulled the reviewer and failed the turn as
+  // reviewer-model-unavailable.
+  const purpose =
+    resolvedCapabilityPurpose(request.requiredCapabilities) ?? materialPurpose(request);
   if (purpose === null) {
     if (routed.model === "qwen3:8b" && request.riskClass !== "R0")
       throw new CognitiveTurnError("COGNITIVE_SPECIALIST_UNAVAILABLE", {
@@ -349,6 +356,17 @@ export class CognitiveOrchestrator {
       }
       const safeFailureCode =
         error instanceof CognitiveTurnError ? error.code : "COGNITIVE_ORCHESTRATOR_UNAVAILABLE";
+      // The snapshot carries only the safe code, so without this line the underlying failure is
+      // unobservable anywhere: the Founder sees "unavailable" and the operator has nothing to
+      // diagnose. Two Certification Test One attempts were lost to exactly that blindness. The
+      // name and message identify the fault; the stack is capped and payload-bearing provider
+      // bodies are not printed.
+      console.error(
+        "COGNITIVE_TURN_FAILURE",
+        error instanceof Error
+          ? `${error.name}: ${error.message}\n${(error.stack ?? "").split("\n").slice(1, 5).join("\n")}`
+          : String(error),
+      );
       const failed = cognitiveTurnSnapshotSchema.parse({
         ...current,
         safeFailureCode,

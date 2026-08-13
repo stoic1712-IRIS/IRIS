@@ -38,9 +38,18 @@ export interface ModelRoutingRequest {
 }
 
 const capabilityPurposes: readonly (readonly [string, ModelRoutePurpose])[] = [
+  // Table order is precedence for mixed capability sets. Mutating capabilities come first: an
+  // objective granted editing or execution alongside inspection is coding work, and letting the
+  // read-only entry below win would hand a mutation plan to the reporting specialist.
+  ["repository.edit-bounded", "agentic-coding"],
+  ["repository.commit-candidate", "agentic-coding"],
+  ["repository.address-review", "agentic-coding"],
+  ["repair.execute-bounded", "agentic-coding"],
+  ["verification.run", "agentic-coding"],
+  ["terminal.run-approved", "agentic-coding"],
   // `repository.inspect` reads branch, revision, working-tree state and file presence and reports
-  // them. It mutates nothing, so it is reporting work, not coding work, and it belongs beside
-  // `browser.inspect` rather than beside the editing and execution capabilities below.
+  // them. When it is the whole grant it mutates nothing, so it is reporting work, not coding work,
+  // and it belongs beside `browser.inspect` rather than beside the editing capabilities above.
   //
   // It was routed to `agentic-coding` until 2026-08-12. The coding specialist was handed a trusted
   // inspection evidence block naming the branch and HEAD, and answered "I cannot inspect the
@@ -48,17 +57,11 @@ const capabilityPurposes: readonly (readonly [string, ModelRoutePurpose])[] = [
   // the same objective and the same evidence to `gpt-oss:20b` returned the correct branch and the
   // exact 40-character revision. The capability is read-and-report; the route now says so.
   ["repository.inspect", "research-review"],
-  ["repository.edit-bounded", "agentic-coding"],
-  ["repository.commit-candidate", "agentic-coding"],
-  ["repository.address-review", "agentic-coding"],
-  ["repair.execute-bounded", "agentic-coding"],
-  ["verification.run", "agentic-coding"],
-  ["terminal.run-approved", "agentic-coding"],
   ["research.search", "research-review"],
   ["browser.inspect", "research-review"],
 ];
 
-function resolvedCapabilityPurpose(
+export function resolvedCapabilityPurpose(
   requiredCapabilities: readonly string[] | undefined,
 ): ModelRoutePurpose | null {
   if (requiredCapabilities === undefined || requiredCapabilities.length === 0) return null;
