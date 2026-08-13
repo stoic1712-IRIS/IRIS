@@ -64,6 +64,31 @@ function delegation(overrides: Record<string, unknown> = {}) {
 }
 
 describe("Qwen primary cognitive contracts", () => {
+  // Four consecutive Certification Test One attempts were voided because the orchestrator
+  // re-routed by keywords alone: a read-only inspection dense with git vocabulary was handed to
+  // the coding specialist, which fabricated a permissions refusal over evidence it was holding.
+  // The request now carries the controller's resolved capabilities, and routing must honour them.
+  it("routes by the resolved capabilities carried on the request, not by keywords", () => {
+    const parsed = cognitiveTurnRequestSchema.parse({
+      ...request(),
+      utterance:
+        "Inspect the Git repository at C:\\Projects\\STOIC-IRIS and report the current branch and HEAD revision.",
+      requiredCapabilities: ["repository.inspect"],
+    });
+    expect(parsed.requiredCapabilities).toEqual(["repository.inspect"]);
+    const route = routeIrisModel({
+      utterance: parsed.utterance,
+      availableModels: allModels,
+      requiredCapabilities: parsed.requiredCapabilities,
+    });
+    expect(route).toMatchObject({
+      model: "gpt-oss:20b",
+      purpose: "research-review",
+    });
+    // Absent the field, the schema defaults it to an empty list rather than failing old callers.
+    expect(request().requiredCapabilities).toEqual([]);
+  });
+
   it("rejects request extras and objective-binding drift", () => {
     const input = request();
     expect(() => cognitiveTurnRequestSchema.parse({ ...input, extra: true })).toThrow();

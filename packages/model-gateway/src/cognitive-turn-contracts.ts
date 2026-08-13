@@ -83,6 +83,12 @@ export const cognitiveTurnRequestSchema = z
     pathScope: z.array(z.string().min(1).max(500)).max(100),
     availableModels: z.array(irisModelNameSchema).min(1).max(4),
     hasImage: z.boolean().default(false),
+    // The capabilities the operating controller already resolved for this turn. Routing must
+    // honour them: without this field the orchestrator re-routed every turn by keyword alone, so
+    // a read-only repository inspection dense with git vocabulary was handed to the coding
+    // specialist, which voided four consecutive Certification Test One attempts by fabricating a
+    // permissions refusal over evidence it was holding.
+    requiredCapabilities: z.array(z.string().min(1).max(200)).max(25).default([]),
     occurredAt: timestampSchema,
   })
   .strict();

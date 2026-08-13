@@ -393,6 +393,9 @@ export class CognitiveOrchestrator {
         utterance: request.utterance,
         availableModels: new Set(request.availableModels),
         hasImage: request.hasImage,
+        // Honour what the controller resolved instead of re-deriving purpose from keywords; the
+        // keyword fallback misroutes inspection objectives to the coding specialist.
+        requiredCapabilities: request.requiredCapabilities,
       }),
     );
     if (!request.availableModels.includes(primaryIrisOrchestratorModel)) {
