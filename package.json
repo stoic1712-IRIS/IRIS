@@ -20,10 +20,11 @@
     "format": "prettier . --write",
     "format:check": "prettier . --check",
     "diagnostics": "node scripts/diagnostics/repository.mjs",
+    "gate:defect-class": "node scripts/dev/defect-class-gate.mjs",
     "blueprint:compile": "node scripts/blueprints/iris-blueprint-compile.mjs",
     "iris-dev": "node scripts/dev/iris-dev.mjs",
     "workflow": "node scripts/workflow/iris-workflow.mjs",
-    "verify": "pnpm format:check && pnpm contract:compile && pnpm build && pnpm lint && pnpm typecheck && pnpm test && pnpm diagnostics"
+    "verify": "pnpm format:check && pnpm contract:compile && pnpm build && pnpm lint && pnpm typecheck && pnpm test && pnpm diagnostics && pnpm gate:defect-class"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

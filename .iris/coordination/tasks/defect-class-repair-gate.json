@@ -1,0 +1,99 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "defect-class-repair-gate",
+  "objective": "Establish a checked-in development control that requires every `fix:` commit in IRIS Core to name the class of defect it repairs and record where else on the same path that class was looked for. Between 2026-08-10 and 2026-08-13 the two repositories merged 84 pull requests with 39 `fix:` commits against 15 features and zero reverts: nothing was undone, but the same defect classes were repaired one site at a time. Command Center pull requests #87, #88, and #96 each fixed one instance of \"the delivery worker cannot see context it needs\"; #55 and #61 fixed two shapes of one shortcut defect 17 hours apart, with #61 recording that #55 had covered only part of it; and scripts/complete-delivery-adapter.mjs took 14 commits in one day and grew 20% while the path it serves still did not complete. The governing rule already existed as principle 2 of the canonical reasoning framework and was loaded into every operator session throughout, and it did not bind, because a completion mandate and principle 2 pull in opposite directions inside a repair loop and nothing in the process resolved that conflict. This control therefore fails the build rather than relying on operator memory.",
+  "issuer": "Founder Cristofer Stoic Arellano",
+  "executor": "Claude",
+  "assigned_role": "producer",
+  "created_at": "2026-08-14T13:45:22Z",
+  "status": "approved",
+  "risk_class": "R1",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "yes write the gate before anything else",
+  "completion_actions": [
+    "edit",
+    "verify",
+    "stage",
+    "commit",
+    "push_branch",
+    "create_pull_request",
+    "independent_review"
+  ],
+  "completion_exclusions": [
+    "No merge: the Founder is the independent reviewer of this control and merges it",
+    "No modification of any digest-bound operating-contract source",
+    "No modification of .claude/settings.json, settings.local.json, or any hook",
+    "No weakening of an existing test, lint rule, workflow, or security control",
+    "No work on the frontier-worker-model question until this control is delivered"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "branch": "main",
+      "commit": "64e3745d88844004984a5a6101e06595e882df77"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/tasks/defect-class-repair-gate.json",
+    ".iris/coordination/tasks/command-center-defect-class-gate-adoption.json",
+    "docs/governance/defect-class-repair-gate.md",
+    "scripts/dev/defect-class-gate.mjs",
+    "tests/defect-class-repair-gate.test.ts",
+    ".github/workflows/verify.yml",
+    "package.json",
+    "AGENTS.md"
+  ],
+  "excluded_paths": [
+    ".claude/settings.json",
+    ".claude/settings.local.json",
+    "docs/governance/constitution.md",
+    "docs/governance/worker-reasoning-framework-and-cognitive-identity.md",
+    "docs/governance/approval-and-authorization-policy.md",
+    "docs/governance/security-and-secrets-policy.md",
+    "docs/governance/licensing-and-dependency-policy.md",
+    "docs/governance/protected-path-and-branch-policy.md",
+    "docs/governance/phase-2-3-sovereign-capability-evolution-charter.md",
+    "docs/registries/technology-and-platform-registry.md",
+    "generated/**",
+    "packages/**",
+    "src/**",
+    "pnpm-lock.yaml",
+    "C:/Projects/STOIC-IRIS-source-library/**"
+  ],
+  "permitted_actions": [
+    "Add a dependency-free gate script under scripts/dev/ that validates `fix:` commit messages in a revision range",
+    "Add the canonical policy document describing the rule, its evidence, and the limits of a mechanical check",
+    "Add an integration test that exercises the script against temporary repositories",
+    "Wire the gate into the package verify script and the existing Verify workflow, including the fetch depth the range requires",
+    "Add one AGENTS.md working rule pointing operators at the control",
+    "Record the Command Center adoption as a separate task rather than claiming this control covers that repository"
+  ],
+  "prohibited_actions": [
+    "Weaken, relax, or exclude any existing check to make this control pass",
+    "Claim the control binds the Founder Command Center, which has no continuous integration at all",
+    "Overstate what a mechanical check achieves; the stated limits are part of the deliverable",
+    "Modify any digest-bound operating-contract source or recompile the contract",
+    "Merge this pull request, or record the producer as its independent reviewer",
+    "Force-push, rewrite history, or use broad staging"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm gate:defect-class"
+    },
+    {
+      "repository": "stoic1712-IRIS/IRIS",
+      "command": "pnpm verify"
+    }
+  ],
+  "required_evidence": [
+    "The gate failing on a commit that omits the record, and passing once the record is present, demonstrated rather than asserted",
+    "Confirmation that the rule requiring a scanned path outside the commit's own changed paths is enforced",
+    "Confirmation that a follow-up verdict naming a non-existent path is rejected",
+    "Full verification results and the exact changed paths",
+    "An explicit statement of what the control does not achieve"
+  ],
+  "publisher": "Claude, with the Founder as independent reviewer and the merging authority",
+  "approval_reference": "founder-defect-class-gate-mandate-2026-08-14",
+  "phase0_graduation": false
+}

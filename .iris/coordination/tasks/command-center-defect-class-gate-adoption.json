@@ -1,0 +1,84 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "command-center-defect-class-gate-adoption",
+  "objective": "Adopt the defect-class repair gate in the Founder Command Center repository, which is where the churn that motivated the control actually happened, and which today has no continuous integration of any kind. Between 2026-08-10 and 2026-08-13 that repository merged 55 pull requests — 38 of them `fix:` — with no automated check gating a single one. Adoption requires standing up a GitHub Actions workflow that runs the repository's own `pnpm verify` plus the copied gate script, on a checkout deep enough to resolve the pull request base. The gate script is dependency-free and is adopted by copying `scripts/dev/defect-class-gate.mjs` from IRIS Core unchanged; the policy remains owned by IRIS Core at docs/governance/defect-class-repair-gate.md and is referenced rather than duplicated.",
+  "issuer": "Founder Cristofer Stoic Arellano",
+  "executor": "Claude",
+  "assigned_role": "producer",
+  "created_at": "2026-08-14T13:45:22Z",
+  "approved_at": "2026-08-14T14:30:00Z",
+  "status": "approved",
+  "risk_class": "R1",
+  "authorization_mode": "completion_mandate",
+  "completion_mandate_text": "now do the command center adoption",
+  "completion_actions": [
+    "research",
+    "edit",
+    "verify",
+    "stage",
+    "commit",
+    "push_branch",
+    "create_pull_request",
+    "independent_review"
+  ],
+  "completion_exclusions": [
+    "No merge of a workflow that has never produced a green run on a real pull request",
+    "No relaxation of the repository's existing verify script to make first CI pass",
+    "No secrets, credentials, deployment, or paid runner resources"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "main",
+      "commit": "da91432ac3db855d81c70a6c47e87675f03f339c"
+    }
+  ],
+  "allowed_paths": [
+    "stoic1712-IRIS/IRIS :: .iris/coordination/tasks/command-center-defect-class-gate-adoption.json",
+    "stoic1712-IRIS/iris-founder-command-center :: .github/workflows/verify.yml",
+    "stoic1712-IRIS/iris-founder-command-center :: scripts/dev/defect-class-gate.mjs",
+    "stoic1712-IRIS/iris-founder-command-center :: package.json",
+    "stoic1712-IRIS/iris-founder-command-center :: .prettierignore"
+  ],
+  "excluded_paths": [
+    "eslint.config.js",
+    "src/**",
+    "scripts/local-gateway.mjs",
+    "scripts/complete-delivery-adapter.mjs",
+    "tests/**",
+    "pnpm-lock.yaml"
+  ],
+  "permitted_actions": [
+    "Copy the dependency-free gate script from IRIS Core without modification",
+    "Add a Verify workflow running format:check, lint, typecheck, build, test, and the gate",
+    "Set the checkout fetch depth the gate's revision range requires",
+    "Check out the public IRIS Core repository as a sibling and build it, so the gateway's pinned ancestor revision and exact module-tree digests can be verified without any credential",
+    "Exempt only the copied gate script from the destination repository's Prettier run, so the two copies stay byte-identical and drift between them is detectable by comparing hashes",
+    "Report honestly if the existing suite does not pass headless in CI, rather than narrowing it to go green"
+  ],
+  "prohibited_actions": [
+    "Weaken, skip, or narrow any existing check to obtain a first green run",
+    "Modify the gate script during adoption; a needed change belongs in IRIS Core",
+    "Treat a passing workflow as evidence that the historical churn was reviewed",
+    "Force-push, rewrite history, or use broad staging"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm verify"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "node scripts/dev/defect-class-gate.mjs --base origin/main"
+    }
+  ],
+  "required_evidence": [
+    "A real pull request showing the workflow running and its result",
+    "The gate demonstrated failing and passing in that repository, not only in IRIS Core",
+    "An explicit statement of any existing test that does not pass headless, with no change made to hide it"
+  ],
+  "publisher": "Claude, with the Founder as independent reviewer and the merging authority",
+  "approval_reference": "founder-command-center-gate-adoption-2026-08-14",
+  "phase0_graduation": false,
+  "notes": "Drafted as part of defect-class-repair-gate and approved by the Founder instruction 'now do the command center adoption' on 2026-08-14. Amended at approval in three ways, recorded here rather than applied silently. First, allowed_paths now name their repository explicitly: the task record itself lives in IRIS Core, which owns coordination records, while the work targets the Command Center, and the original list mixed the two without saying so. Second, checking out and building the public IRIS Core in CI was added: measurement on 2026-08-14 showed the suite needs a built Core at IRIS_ROOT, and because Core is public this needs no credential and no protected effect, which allows the whole suite to run with nothing excluded. Third, a single Prettier exemption for the copied gate script was added, because IRIS Core pins printWidth 100 while the Command Center has no Prettier configuration and so uses the 80-column default: formatting the copy would satisfy the local formatter but break byte-identity with the IRIS Core original and make later drift indistinguishable from a formatting difference. The exemption changes no other file and the script remains Prettier-formatted under the configuration of the repository that owns it."
+}
