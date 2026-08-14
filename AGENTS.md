@@ -72,6 +72,7 @@ For an external technology, website, repository, model, or service, also read th
 - When the Founder issues a completion mandate such as “finish this objective to completion,” record the exact mandate and continue through every included local and GitHub delivery step without repeatedly requesting approval for each intermediate action.
 - A completion mandate includes research, bounded implementation, verification, exact-path staging, commit, non-force branch push, pull-request creation, independent review, repair, merge, local synchronization, and safe cleanup unless the Founder narrows the scope.
 - Run the narrowest relevant checks first, followed by the full applicable verification suite.
+- Repair by defect class, not by symptom. Before committing a `fix:`, name the class the defect belongs to, look for that class everywhere else on the same path, and record the result in the commit message in the form `docs/governance/defect-class-repair-gate.md` requires. A completion mandate does not license repairing one site at a time; when the mandate and this rule pull against each other, this rule wins and `pnpm gate:defect-class` enforces it.
 - Record commands, exit codes, changed paths, limitations, and rollback information in the handoff.
 - A producer cannot approve or independently certify its own material output.
 

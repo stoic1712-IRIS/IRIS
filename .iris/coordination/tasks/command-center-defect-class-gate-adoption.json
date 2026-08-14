@@ -1,0 +1,70 @@
+{
+  "schema_version": "1.0.0",
+  "task_id": "command-center-defect-class-gate-adoption",
+  "objective": "Adopt the defect-class repair gate in the Founder Command Center repository, which is where the churn that motivated the control actually happened, and which today has no continuous integration of any kind. Between 2026-08-10 and 2026-08-13 that repository merged 55 pull requests — 38 of them `fix:` — with no automated check gating a single one. Adoption requires standing up a GitHub Actions workflow that runs the repository's own `pnpm verify` plus the copied gate script, on a checkout deep enough to resolve the pull request base. The gate script is dependency-free and is adopted by copying `scripts/dev/defect-class-gate.mjs` from IRIS Core unchanged; the policy remains owned by IRIS Core at docs/governance/defect-class-repair-gate.md and is referenced rather than duplicated.",
+  "issuer": "Founder Cristofer Stoic Arellano",
+  "executor": "unassigned",
+  "assigned_role": "producer",
+  "created_at": "2026-08-14T13:45:22Z",
+  "status": "draft",
+  "risk_class": "R1",
+  "authorization_mode": "explicit_approval_required",
+  "completion_actions": [],
+  "completion_exclusions": [
+    "No merge of a workflow that has never produced a green run on a real pull request",
+    "No relaxation of the repository's existing verify script to make first CI pass",
+    "No secrets, credentials, deployment, or paid runner resources"
+  ],
+  "base_revisions": [
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "branch": "main",
+      "commit": "da91432ac3db855d81c70a6c47e87675f03f339c"
+    }
+  ],
+  "allowed_paths": [
+    ".iris/coordination/tasks/command-center-defect-class-gate-adoption.json",
+    ".github/workflows/verify.yml",
+    "scripts/dev/defect-class-gate.mjs",
+    "package.json"
+  ],
+  "excluded_paths": [
+    "eslint.config.js",
+    "src/**",
+    "scripts/local-gateway.mjs",
+    "scripts/complete-delivery-adapter.mjs",
+    "tests/**",
+    "pnpm-lock.yaml"
+  ],
+  "permitted_actions": [
+    "Copy the dependency-free gate script from IRIS Core without modification",
+    "Add a Verify workflow running format:check, lint, typecheck, build, test, and the gate",
+    "Set the checkout fetch depth the gate's revision range requires",
+    "Report honestly if the existing suite does not pass headless in CI, rather than narrowing it to go green"
+  ],
+  "prohibited_actions": [
+    "Weaken, skip, or narrow any existing check to obtain a first green run",
+    "Modify the gate script during adoption; a needed change belongs in IRIS Core",
+    "Treat a passing workflow as evidence that the historical churn was reviewed",
+    "Force-push, rewrite history, or use broad staging"
+  ],
+  "acceptance_commands": [
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "pnpm verify"
+    },
+    {
+      "repository": "stoic1712-IRIS/iris-founder-command-center",
+      "command": "node scripts/dev/defect-class-gate.mjs --base origin/main"
+    }
+  ],
+  "required_evidence": [
+    "A real pull request showing the workflow running and its result",
+    "The gate demonstrated failing and passing in that repository, not only in IRIS Core",
+    "An explicit statement of any existing test that does not pass headless, with no change made to hide it"
+  ],
+  "publisher": "unassigned",
+  "approval_reference": "pending-founder-approval",
+  "phase0_graduation": false,
+  "notes": "Drafted as part of defect-class-repair-gate. Recorded as draft with no executor because the instruction was to write the gate, not to approve work in a second repository. It needs Founder approval and a named producer before any work starts."
+}

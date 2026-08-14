@@ -28,10 +28,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
+      # Full history: the defect-class gate reads commit messages across the pull request's
+      # range, and a shallow checkout cannot resolve it.
       - name: Check out the exact revision
         uses: actions/checkout@v4
         with:
           persist-credentials: false
+          fetch-depth: 0
 
       # Pinned explicitly rather than read from the engines range, so the CI runtime matches the
       # workstation evidence exactly. Keep in sync with the engines.node pin in package.json.
@@ -73,3 +76,12 @@ jobs:
 
       - name: Repository diagnostics
         run: pnpm diagnostics
+
+      # Pull requests only. A push to main is already merged, so failing it there would block
+      # nothing and would leave main permanently red for a commit that can no longer be amended.
+      # See docs/governance/defect-class-repair-gate.md.
+      - name: Defect-class repair gate
+        if: github.event_name == 'pull_request'
+        run: >-
+          node scripts/dev/defect-class-gate.mjs
+          --base ${{ github.event.pull_request.base.sha }}
